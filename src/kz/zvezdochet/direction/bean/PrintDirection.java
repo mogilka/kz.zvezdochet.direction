@@ -4,7 +4,7 @@ import kz.zvezdochet.bean.SkyPoint;
 
 /**
  * Класс, предствляющий дирекцию для отчета
- * @author nataly
+ * @author Nataly Didenko
  *
  */
 public class PrintDirection {
