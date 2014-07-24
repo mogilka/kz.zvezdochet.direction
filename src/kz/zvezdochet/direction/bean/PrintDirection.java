@@ -7,7 +7,7 @@ import kz.zvezdochet.bean.SkyPoint;
  * @author Nataly Didenko
  *
  */
-public class PrintDirection {
+public class PrintDirection { 
 	/**
 	 * Движущаяся небесная точка
 	 */
@@ -26,7 +26,7 @@ public class PrintDirection {
 		this.skyPoint2 = p2;
 		this.age = age;
 	}
-	
+
 	public SkyPoint getSkyPoint1() {
 		return skyPoint1;
 	}

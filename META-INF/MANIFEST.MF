@@ -1,13 +1,18 @@
 Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: Direction
-Bundle-SymbolicName: kz.zvezdochet.direction
+Bundle-SymbolicName: kz.zvezdochet.direction;singleton:=true
 Bundle-Version: 1.0.0.qualifier
 Bundle-Activator: kz.zvezdochet.direction.Activator
 Bundle-Vendor: Звездочёт
 Require-Bundle: org.eclipse.ui,
  org.eclipse.core.runtime,
- kz.zvezdochet;bundle-version="1.0.0"
+ kz.zvezdochet;bundle-version="1.0.0",
+ kz.zvezdochet.core,
+ org.eclipse.e4.core.di,
+ org.eclipse.e4.ui.model.workbench,
+ org.eclipse.e4.core.contexts,
+ org.eclipse.e4.ui.workbench
 Bundle-RequiredExecutionEnvironment: JavaSE-1.7
-Bundle-ActivationPolicy: lazy
 Import-Package: kz.zvezdochet.core.bean
+Bundle-ActivationPolicy: lazy
