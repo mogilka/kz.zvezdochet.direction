@@ -53,4 +53,9 @@ public class HousePart extends ListView {
 			}
 		}
 	}
+
+	@Override
+	protected String[] initTableColumns() {
+		return null;
+	}
 }
