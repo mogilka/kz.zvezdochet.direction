@@ -5,6 +5,7 @@ import javax.inject.Inject;
 
 import kz.zvezdochet.bean.Planet;
 import kz.zvezdochet.core.ui.view.ListView;
+import kz.zvezdochet.core.ui.view.View;
 import kz.zvezdochet.core.util.CalcUtil;
 import kz.zvezdochet.util.Configuration;
 
@@ -28,7 +29,7 @@ public class HousePart extends ListView {
 	}
 
 	@PostConstruct @Override
-	public Composite create(Composite parent) {
+	public View create(Composite parent) {
 		return super.create(parent);
 	}
 
