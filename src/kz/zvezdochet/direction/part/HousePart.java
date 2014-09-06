@@ -59,4 +59,9 @@ public class HousePart extends ListView {
 	protected String[] initTableColumns() {
 		return null;
 	}
+
+	@Override
+	public boolean check(int mode) throws Exception {
+		return false;
+	}
 }
