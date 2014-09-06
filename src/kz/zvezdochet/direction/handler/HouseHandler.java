@@ -56,8 +56,8 @@ public class HouseHandler extends Handler {
 				Planet planet = (Planet)planets.get(c);
 				for (int r = 0; r < hcount; r++) {
 					House house = (House)houses.get(r);
-					double one = Math.abs(CalcUtil.degToDec(planet.getCoord()));
-					double two = Math.abs(CalcUtil.degToDec(house.getCoord()));
+					double one = Math.abs(planet.getCoord());
+					double two = Math.abs(house.getCoord());
 					double res;
 					if (one - two > 0)
 						if (one - two < 189)
@@ -69,7 +69,7 @@ public class HouseHandler extends Handler {
 						else
 							res = 360 - two + one;
 					if (res < 100) //TODO корректировать лимит возраста по дате смерти? =)
-						data[r][c + 1] = String.valueOf(CalcUtil.roundTo(Math.abs(CalcUtil.degToDec(res)), 1));
+						data[r][c + 1] = String.valueOf(CalcUtil.roundTo(Math.abs(res), 1));
 				}
 			}
 			updateStatus("Расчёт дирекций завершён", false);
