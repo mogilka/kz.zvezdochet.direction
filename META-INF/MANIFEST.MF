@@ -12,7 +12,8 @@ Require-Bundle: org.eclipse.ui,
  org.eclipse.e4.core.di,
  org.eclipse.e4.ui.model.workbench,
  org.eclipse.e4.core.contexts,
- org.eclipse.e4.ui.workbench
+ org.eclipse.e4.ui.workbench,
+ javax.inject
 Bundle-RequiredExecutionEnvironment: JavaSE-1.7
 Import-Package: kz.zvezdochet.core.bean
 Bundle-ActivationPolicy: lazy

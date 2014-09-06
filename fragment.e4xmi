@@ -2,14 +2,27 @@
 <fragment:ModelFragments xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:basic="http://www.eclipse.org/ui/2010/UIModel/application/ui/basic" xmlns:commands="http://www.eclipse.org/ui/2010/UIModel/application/commands" xmlns:fragment="http://www.eclipse.org/ui/2010/UIModel/fragment" xmlns:menu="http://www.eclipse.org/ui/2010/UIModel/application/ui/menu" xmi:id="_-xgVEBHAEeSRINSX4-qBSA">
   <fragments xsi:type="fragment:StringModelFragment" xmi:id="_AFsg0BHBEeSRINSX4-qBSA" featurename="commands" parentElementId="org.eclipse.e4.ide.application">
     <elements xsi:type="commands:Command" xmi:id="_OpDckBHBEeSRINSX4-qBSA" elementId="kz.zvezdochet.direction.command.house" commandName="houseCommand"/>
+    <elements xsi:type="commands:Command" xmi:id="_3xQbEDGhEeSgQvy0ehax-Q" elementId="kz.zvezdochet.direction.command.age" commandName="ageCommand"/>
+    <elements xsi:type="commands:Command" xmi:id="_Y-gtUDGmEeSgQvy0ehax-Q" elementId="kz.zvezdochet.direction.command.agecalc" commandName="ageCalcCommand"/>
+    <elements xsi:type="commands:Command" xmi:id="_eX5M0DGmEeSgQvy0ehax-Q" elementId="kz.zvezdochet.direction.command.agesave" commandName="ageSaveCommand"/>
   </fragments>
   <fragments xsi:type="fragment:StringModelFragment" xmi:id="_W-MikBHBEeSRINSX4-qBSA" featurename="handlers" parentElementId="org.eclipse.e4.ide.application">
     <elements xsi:type="commands:Handler" xmi:id="_axB7ABHBEeSRINSX4-qBSA" elementId="kz.zvezdochet.direction.handler.house" contributionURI="bundleclass://kz.zvezdochet.direction/kz.zvezdochet.direction.handler.HouseHandler" command="_OpDckBHBEeSRINSX4-qBSA"/>
+    <elements xsi:type="commands:Handler" xmi:id="_7q4_EDGhEeSgQvy0ehax-Q" elementId="kz.zvezdochet.direction.handler.age" contributionURI="bundleclass://kz.zvezdochet.direction/kz.zvezdochet.direction.handler.AgeHandler" command="_3xQbEDGhEeSgQvy0ehax-Q"/>
+    <elements xsi:type="commands:Handler" xmi:id="_iElhADGmEeSgQvy0ehax-Q" elementId="kz.zvezdochet.direction.handler.agecalc" contributionURI="bundleclass://kz.zvezdochet.direction/kz.zvezdochet.direction.handler.AgeCalcHandler" command="_Y-gtUDGmEeSgQvy0ehax-Q"/>
+    <elements xsi:type="commands:Handler" xmi:id="_r56AUDGmEeSgQvy0ehax-Q" elementId="kz.zvezdochet.direction.handler.agesave" contributionURI="bundleclass://kz.zvezdochet.direction/kz.zvezdochet.direction.handler.AgeSaveHandler" command="_eX5M0DGmEeSgQvy0ehax-Q"/>
   </fragments>
   <fragments xsi:type="fragment:StringModelFragment" xmi:id="_dbJ-8BHBEeSRINSX4-qBSA" featurename="children" parentElementId="org.eclipse.ui.main.menu">
     <elements xsi:type="menu:HandledMenuItem" xmi:id="_oLZ1cBHBEeSRINSX4-qBSA" elementId="kz.zvezdochet.direction.handledmenuitem.house" label="&#x414;&#x438;&#x440;&#x435;&#x43a;&#x446;&#x438;&#x438;" iconURI="platform:/plugin/kz.zvezdochet.direction/icons/direction.gif" command="_OpDckBHBEeSRINSX4-qBSA"/>
+    <elements xsi:type="menu:HandledMenuItem" xmi:id="_LS3ZgDGiEeSgQvy0ehax-Q" elementId="kz.zvezdochet.direction.handledmenuitem." label="&#x421;&#x43e;&#x431;&#x44b;&#x442;&#x438;&#x44f; &#x432;&#x43e;&#x437;&#x440;&#x430;&#x441;&#x442;&#x430;" command="_3xQbEDGhEeSgQvy0ehax-Q"/>
   </fragments>
   <fragments xsi:type="fragment:StringModelFragment" xmi:id="_5XvsABHJEeSRINSX4-qBSA" featurename="children" parentElementId="kz.zvezdochet.runner.partstack.main">
     <elements xsi:type="basic:Part" xmi:id="_VmwfcBHKEeSRINSX4-qBSA" elementId="kz.zvezdochet.direction.part.houses" visible="false" contributionURI="bundleclass://kz.zvezdochet.direction/kz.zvezdochet.direction.part.HousePart" label="&#x414;&#x438;&#x440;&#x435;&#x43a;&#x446;&#x438;&#x438; &#x43f;&#x43b;&#x430;&#x43d;&#x435;&#x442; &#x43f;&#x43e; &#x434;&#x43e;&#x43c;&#x430;&#x43c;" iconURI="platform:/plugin/kz.zvezdochet.direction/icons/direction.gif" closeable="true"/>
+    <elements xsi:type="basic:Part" xmi:id="_qo1zUDGhEeSgQvy0ehax-Q" elementId="kz.zvezdochet.direction.part.age" visible="false" contributionURI="bundleclass://kz.zvezdochet.direction/kz.zvezdochet.direction.part.AgePart" label="&#x421;&#x43e;&#x431;&#x44b;&#x442;&#x438;&#x44f; &#x43d;&#x430; &#x443;&#x43a;&#x430;&#x437;&#x430;&#x43d;&#x43d;&#x44b;&#x439; &#x432;&#x43e;&#x437;&#x440;&#x430;&#x441;&#x442;" closeable="true">
+      <toolbar xmi:id="_rezyADGhEeSgQvy0ehax-Q" elementId="kz.zvezdochet.direction.toolbar.age">
+        <children xsi:type="menu:HandledToolItem" xmi:id="_Wem8YDGmEeSgQvy0ehax-Q" elementId="kz.zvezdochet.direction.handledtoolitem.agecalc" label="&#x420;&#x430;&#x441;&#x447;&#x451;&#x442;" iconURI="platform:/plugin/kz.zvezdochet/icons/calc.png" command="_Y-gtUDGmEeSgQvy0ehax-Q"/>
+        <children xsi:type="menu:HandledToolItem" xmi:id="_CzeZEDGnEeSgQvy0ehax-Q" elementId="kz.zvezdochet.direction.handledtoolitem.agesave" label="&#x421;&#x43e;&#x445;&#x440;&#x430;&#x43d;&#x438;&#x442;&#x44c;" iconURI="platform:/plugin/kz.zvezdochet.core/icons/applyElement.gif" command="_eX5M0DGmEeSgQvy0ehax-Q"/>
+      </toolbar>
+    </elements>
   </fragments>
 </fragment:ModelFragments>
