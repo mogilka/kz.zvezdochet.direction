@@ -5,6 +5,7 @@ import java.util.List;
 import javax.annotation.PostConstruct;
 import javax.inject.Inject;
 
+import kz.zvezdochet.bean.AspectType;
 import kz.zvezdochet.bean.Event;
 import kz.zvezdochet.bean.House;
 import kz.zvezdochet.bean.Planet;
@@ -16,6 +17,7 @@ import kz.zvezdochet.core.ui.util.DialogUtil;
 import kz.zvezdochet.core.ui.view.ModelLabelProvider;
 import kz.zvezdochet.core.ui.view.ModelListView;
 import kz.zvezdochet.core.ui.view.View;
+import kz.zvezdochet.service.AspectTypeService;
 import kz.zvezdochet.service.HouseService;
 import kz.zvezdochet.service.PlanetService;
 
@@ -28,7 +30,7 @@ import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Image;
-import org.eclipse.swt.widgets.Combo;
+import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Group;
@@ -43,14 +45,12 @@ public class AgePart extends ModelListView {
 	private Spinner spFrom;
 	private Spinner spTo;
 	private ComboViewer cvPlanet;
-	private Combo cmbPlanet;
 	private ComboViewer cvHouse;
-	private Combo cmbHouse;
-	
+	private ComboViewer cvAspect;
+	private Button btRetro;
+
 	@Inject
-	public AgePart() {
-		
-	}
+	public AgePart() {}
 
 	@PostConstruct @Override
 	public View create(Composite parent) {
@@ -68,41 +68,50 @@ public class AgePart extends ModelListView {
 		spFrom = new Spinner(grFilter, SWT.BORDER);
 		spFrom.setMinimum(0);
 		spFrom.setMaximum(150);
-		spFrom.setSelection(20);
 
 		spTo = new Spinner(grFilter, SWT.BORDER);
 		spTo.setMinimum(0);
 		spTo.setMaximum(150);
-		spTo.setSelection(20);
 
 		lb = new Label(grFilter, SWT.NONE);
 		lb.setText("Сфера жизни");
 		cvPlanet = new ComboViewer(grFilter, SWT.READ_ONLY | SWT.BORDER);
-		cmbPlanet = cvPlanet.getCombo();
-
 		cvHouse = new ComboViewer(grFilter, SWT.READ_ONLY | SWT.BORDER);
-		cmbHouse = cvHouse.getCombo();
 
-		GridLayoutFactory.swtDefaults().numColumns(6).applyTo(grFilter);
+		lb = new Label(grFilter, SWT.NONE);
+		lb.setText("Аспекты");
+		cvAspect = new ComboViewer(grFilter, SWT.READ_ONLY | SWT.BORDER);
+
+		btRetro = new Button(grFilter, SWT.BORDER | SWT.CHECK);
+		lb = new Label(grFilter, SWT.NONE);
+		lb.setText("R");
+		lb.setToolTipText("Включая ретроградные аспекты");
+
+		GridLayoutFactory.swtDefaults().numColumns(10).applyTo(grFilter);
 		GridDataFactory.fillDefaults().grab(true, false).applyTo(grFilter);
 		GridDataFactory.fillDefaults().align(SWT.FILL, SWT.CENTER).
 			grab(true, false).applyTo(spFrom);
 		GridDataFactory.fillDefaults().align(SWT.FILL, SWT.CENTER).
 			grab(true, false).applyTo(spTo);
 		GridDataFactory.fillDefaults().align(SWT.FILL, SWT.CENTER).
-			grab(true, false).applyTo(cmbPlanet);
+			grab(true, false).applyTo(cvPlanet.getCombo());
 		GridDataFactory.fillDefaults().align(SWT.FILL, SWT.CENTER).
-			grab(true, false).applyTo(cmbHouse);
+			grab(true, false).applyTo(cvHouse.getCombo());
+		GridDataFactory.fillDefaults().align(SWT.FILL, SWT.CENTER).
+			grab(true, false).applyTo(cvAspect.getCombo());
+		GridDataFactory.fillDefaults().align(SWT.LEFT, SWT.CENTER).
+			grab(false, false).applyTo(btRetro);
 	}
 
 	@Override
 	protected String[] initTableColumns() {
 		String[] columns = {
 			"Возраст",
-			"",
-			"",
-			"",
-			"" };
+			"Точка 1",
+			"Аспект",
+			"Точка 2",
+			"Направление",
+			"Величина аспекта" };
 		return columns;
 	}
 
@@ -113,11 +122,12 @@ public class AgePart extends ModelListView {
 			public String getColumnText(Object element, int columnIndex) {
 				SkyPointAspect aspect = (SkyPointAspect)element;
 				switch (columnIndex) {
-					case 0: return String.valueOf(aspect.getScore());
+					case 0: return String.valueOf(aspect.getAge());
 					case 1: return aspect.getSkyPoint1().getName();
 					case 2: return aspect.getAspect().getName();
 					case 3: return aspect.getSkyPoint2().getName();
 					case 4: return aspect.isRetro() ? "R" : "";
+					case 5: return String.valueOf(aspect.getScore());
 				}
 				return null;
 			}
@@ -160,6 +170,8 @@ public class AgePart extends ModelListView {
 	 */
 	public void setEvent(Event event) {
 		this.event = event;
+		spFrom.setSelection(0);
+		spTo.setSelection(event.getAge());
 	}
 
 	@Override
@@ -170,7 +182,7 @@ public class AgePart extends ModelListView {
 			List<Model> list = new PlanetService().getList();
 			Planet planet = new Planet();
 			planet.setId(0L);
-			list.add(planet);
+			list.add(0, planet);
 			cvPlanet.setInput(list);
 
 			cvHouse.setContentProvider(new ArrayContentProvider());
@@ -178,8 +190,16 @@ public class AgePart extends ModelListView {
 			list = new HouseService().getList();
 			House house = new House();
 			house.setId(0L);
-			list.add(house);
+			list.add(0, house);
 			cvHouse.setInput(list);
+
+			cvAspect.setContentProvider(new ArrayContentProvider());
+			cvAspect.setLabelProvider(new DictionaryLabelProvider());
+			list = new AspectTypeService().getList();
+			AspectType aspect = new AspectType();
+			aspect.setId(0L);
+			list.add(0, aspect);
+			cvAspect.setInput(list);
 		} catch (DataAccessException e) {
 			e.printStackTrace();
 		}
@@ -199,15 +219,27 @@ public class AgePart extends ModelListView {
 		}
 		return true;
 	}
-	
+
+	/**
+	 * Возвращает выбранный начальный возраст
+	 * @return начальный возраст
+	 */
 	public int getInitialAge() {
 		return spFrom.getSelection();
 	}
 
+	/**
+	 * Возвращает выбранный конечный возраст
+	 * @return конечный возраст
+	 */
 	public int getFinalAge() {
 		return spTo.getSelection();
 	}
 
+	/**
+	 * Возвращает выбранную планету как сферу жизни
+	 * @return планета
+	 */
 	public Planet getPlanet() {
 		IStructuredSelection selection = (IStructuredSelection)cvPlanet.getSelection();
 		if (selection.getFirstElement() != null) {
@@ -218,6 +250,10 @@ public class AgePart extends ModelListView {
 		return null;
 	}
 
+	/**
+	 * Возвращает выбранный дом как сферу жизни
+	 * @return астрологический дом
+	 */
 	public House getHouse() {
 		IStructuredSelection selection = (IStructuredSelection)cvHouse.getSelection();
 		if (selection.getFirstElement() != null) {
@@ -226,5 +262,27 @@ public class AgePart extends ModelListView {
 				return house;
 		}
 		return null;
+	}
+
+	/**
+	 * Возвращает выбранный тип аспекта
+	 * @return тип аспекта
+	 */
+	public AspectType getAspect() {
+		IStructuredSelection selection = (IStructuredSelection)cvAspect.getSelection();
+		if (selection.getFirstElement() != null) {
+			AspectType type = (AspectType)selection.getFirstElement();
+			if (type.getId() > 0)
+				return type;
+		}
+		return null;
+	}
+
+	/**
+	 * Возвращает выбранное направление аспектов
+	 * @return true|false только директные|включая попятные
+	 */
+	public boolean getRetro() {
+		return btRetro.getSelection();
 	}
 }
