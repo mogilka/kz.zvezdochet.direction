@@ -39,7 +39,8 @@ public class HousePart extends ListView {
 	 */
 	public void setConfiguration(Configuration configuration) {
 		conf = configuration;
-		addColumns();
+		if (0 == table.getColumnCount())
+			addColumns();
 	}
 
 	@Override
@@ -50,7 +51,9 @@ public class HousePart extends ListView {
 			for (int i = 0; i < conf.getPlanets().size(); i++) {
 				Planet planet = (Planet)conf.getPlanets().get(i);
 				tableColumn = new TableColumn(table, SWT.NONE);
-				tableColumn.setText(planet.getName() + " (" + CalcUtil.roundTo(planet.getCoord(), 1) + ")");		
+				tableColumn.setText(CalcUtil.roundTo(planet.getCoord(), 1) + "");
+				tableColumn.setImage(planet.getImage());
+				tableColumn.setToolTipText(planet.getName());
 			}
 		}
 	}
