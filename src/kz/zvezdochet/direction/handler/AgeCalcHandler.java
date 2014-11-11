@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import kz.zvezdochet.bean.Aspect;
+import kz.zvezdochet.bean.AspectType;
 import kz.zvezdochet.bean.Event;
 import kz.zvezdochet.bean.House;
 import kz.zvezdochet.bean.Planet;
@@ -31,6 +32,8 @@ public class AgeCalcHandler extends Handler {
 	private boolean agedp[][][] = null;
 	private boolean agedh[][][] = null;
 	private List<SkyPointAspect> aged = null;
+	private String aspectype;
+	private boolean retro = false;
 
 	@Execute
 	public void execute(@Active MPart activePart) {
@@ -64,6 +67,14 @@ public class AgeCalcHandler extends Handler {
 				}
 			else
 				selhouses.addAll(houses);
+
+			AspectType selaspect = agePart.getAspect();
+			if (null == selaspect)
+				aspectype = null;
+			else
+				aspectype = selaspect.getCode();
+			
+			retro = agePart.getRetro();
 
 			int initage = agePart.getInitialAge();
 			int finage = agePart.getFinalAge() + 1;
@@ -110,6 +121,7 @@ public class AgeCalcHandler extends Handler {
 	private void manageCalc(SkyPoint point1, SkyPoint point2, int age) {
 		if (point1.getCode().equals(point2.getCode())) return;
 		calc(point1, point2, age, false);
+		if (!retro) return;
 		if (point2 instanceof Planet && point1 instanceof Planet) {
 			//если неретроградная итерация выявила дирекцию по аспекту,
 			//пропускаем расчёт ретроградного транзита
@@ -132,7 +144,7 @@ public class AgeCalcHandler extends Handler {
 		try {
 			//если дирекция между планетами уже рассчитана в первом (неретроградном) заходе,
 			//игнорируем (ретроградную) итерацию
-			if (point2 instanceof Planet && point1 instanceof Planet
+			if (retro && point2 instanceof Planet && point1 instanceof Planet
 					&& point1.getNumber() > point2.getNumber())
 				return;
 	
@@ -150,11 +162,14 @@ public class AgeCalcHandler extends Handler {
 			}
 			for (Model realasp : aspects) {
 				Aspect a = (Aspect)realasp;
+				if (aspectype != null && !aspectype.equals(a.getType().getCode()))
+					continue;
 				if (a.isExactTruncAspect(res)) {
 					SkyPointAspect aspect = new SkyPointAspect();
 					aspect.setSkyPoint1(point1);
 					aspect.setSkyPoint2(point2);
-					aspect.setScore(age);
+					aspect.setScore(res);
+					aspect.setAge(age);
 					aspect.setAspect(a);
 					aspect.setRetro(retro);
 					aged.add(aspect);
