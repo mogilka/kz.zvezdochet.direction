@@ -465,7 +465,7 @@ public class TransitPart extends ModelListView implements ICalculable {
 		try {
 			super.addModel(model);
 			if (null == model.getId()) {
-				((Event)model).calc();
+				((Event)model).calc(true);
 				model = new EventService().save(model);
 			}
 			//сразу сохраняем событие в базу
