@@ -43,6 +43,14 @@ public class HousePart extends ListView {
 			addColumns();
 	}
 
+	/**
+	 * Возвращает конфигурацию события
+	 * @return конфигурация
+	 */
+	public Configuration getConfiguration() {
+		return conf;
+	}
+
 	@Override
 	protected void addColumns() {
 		if (conf != null) {

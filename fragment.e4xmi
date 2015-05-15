@@ -8,6 +8,7 @@
     <elements xsi:type="commands:Command" xmi:id="_tNsp4F9NEeStt41griRQxQ" elementId="kz.zvezdochet.direction.command.transit" commandName="transitCommand"/>
     <elements xsi:type="commands:Command" xmi:id="_D5aHIGfxEeSSZffxnqlLeQ" elementId="kz.zvezdochet.direction.command.transitcalc" commandName="transitCalcCommand"/>
     <elements xsi:type="commands:Command" xmi:id="_NdAOMGf6EeSSZffxnqlLeQ" elementId="kz.zvezdochet.direction.command.transitswitch" commandName="transitswitchCommand"/>
+    <elements xsi:type="commands:Command" xmi:id="_8BbNQPsnEeSIu-7bgMS65Q" elementId="kz.zvezdochet.direction.command.savehouse" commandName="saveHouseCommand"/>
   </fragments>
   <fragments xsi:type="fragment:StringModelFragment" xmi:id="_W-MikBHBEeSRINSX4-qBSA" featurename="handlers" parentElementId="org.eclipse.e4.ide.application">
     <elements xsi:type="commands:Handler" xmi:id="_axB7ABHBEeSRINSX4-qBSA" elementId="kz.zvezdochet.direction.handler.house" contributionURI="bundleclass://kz.zvezdochet.direction/kz.zvezdochet.direction.handler.HouseHandler" command="_OpDckBHBEeSRINSX4-qBSA"/>
@@ -17,9 +18,14 @@
     <elements xsi:type="commands:Handler" xmi:id="_wqEDEF9NEeStt41griRQxQ" elementId="kz.zvezdochet.direction.handler.transit" contributionURI="bundleclass://kz.zvezdochet.direction/kz.zvezdochet.direction.handler.TransitHandler" command="_tNsp4F9NEeStt41griRQxQ"/>
     <elements xsi:type="commands:Handler" xmi:id="_Jcf8QGfxEeSSZffxnqlLeQ" elementId="kz.zvezdochet.direction.handler.transitcalc" contributionURI="bundleclass://kz.zvezdochet.direction/kz.zvezdochet.direction.handler.TransitCalcHandler" command="_D5aHIGfxEeSSZffxnqlLeQ"/>
     <elements xsi:type="commands:Handler" xmi:id="_Q8KcsGf6EeSSZffxnqlLeQ" elementId="kz.zvezdochet.direction.handler.transitswitch" contributionURI="bundleclass://kz.zvezdochet.direction/kz.zvezdochet.direction.handler.TransitSwitchHandler" command="_NdAOMGf6EeSSZffxnqlLeQ"/>
+    <elements xsi:type="commands:Handler" xmi:id="_EywgAPsoEeSIu-7bgMS65Q" elementId="kz.zvezdochet.direction.handler.savehouse" contributionURI="bundleclass://kz.zvezdochet.direction/kz.zvezdochet.direction.handler.HouseSaveHandler" command="_8BbNQPsnEeSIu-7bgMS65Q"/>
   </fragments>
   <fragments xsi:type="fragment:StringModelFragment" xmi:id="_5XvsABHJEeSRINSX4-qBSA" featurename="children" parentElementId="kz.zvezdochet.runner.partstack.main">
-    <elements xsi:type="basic:Part" xmi:id="_VmwfcBHKEeSRINSX4-qBSA" elementId="kz.zvezdochet.direction.part.houses" visible="false" contributionURI="bundleclass://kz.zvezdochet.direction/kz.zvezdochet.direction.part.HousePart" label="&#x414;&#x438;&#x440;&#x435;&#x43a;&#x446;&#x438;&#x438; &#x43f;&#x43b;&#x430;&#x43d;&#x435;&#x442; &#x43f;&#x43e; &#x434;&#x43e;&#x43c;&#x430;&#x43c;" iconURI="platform:/plugin/kz.zvezdochet.direction/icons/direction.gif" closeable="true"/>
+    <elements xsi:type="basic:Part" xmi:id="_VmwfcBHKEeSRINSX4-qBSA" elementId="kz.zvezdochet.direction.part.houses" visible="false" contributionURI="bundleclass://kz.zvezdochet.direction/kz.zvezdochet.direction.part.HousePart" label="&#x421;&#x432;&#x43e;&#x434;&#x43d;&#x430;&#x44f; &#x442;&#x430;&#x431;&#x43b;&#x438;&#x446;&#x430; &#x434;&#x438;&#x440;&#x435;&#x43a;&#x446;&#x438;&#x439;" iconURI="platform:/plugin/kz.zvezdochet.direction/icons/direction.gif" closeable="true">
+      <toolbar xmi:id="_aFqc8PsoEeSIu-7bgMS65Q" elementId="kz.zvezdochet.direction.toolbar.1">
+        <children xsi:type="menu:HandledToolItem" xmi:id="_OrF3EPsoEeSIu-7bgMS65Q" elementId="kz.zvezdochet.direction.handledtoolitem.savehouse" label="&#x421;&#x43e;&#x445;&#x440;&#x430;&#x43d;&#x438;&#x442;&#x44c;" iconURI="platform:/plugin/kz.zvezdochet.core/icons/applyElement.gif" command="_8BbNQPsnEeSIu-7bgMS65Q"/>
+      </toolbar>
+    </elements>
     <elements xsi:type="basic:Part" xmi:id="_qo1zUDGhEeSgQvy0ehax-Q" elementId="kz.zvezdochet.direction.part.age" visible="false" contributionURI="bundleclass://kz.zvezdochet.direction/kz.zvezdochet.direction.part.AgePart" label="&#x421;&#x43e;&#x431;&#x44b;&#x442;&#x438;&#x44f; &#x43d;&#x430; &#x443;&#x43a;&#x430;&#x437;&#x430;&#x43d;&#x43d;&#x44b;&#x439; &#x432;&#x43e;&#x437;&#x440;&#x430;&#x441;&#x442;" iconURI="platform:/plugin/kz.zvezdochet/icons/calendar_view_week.png" closeable="true">
       <toolbar xmi:id="_rezyADGhEeSgQvy0ehax-Q" elementId="kz.zvezdochet.direction.toolbar.age">
         <children xsi:type="menu:HandledToolItem" xmi:id="_Wem8YDGmEeSgQvy0ehax-Q" elementId="kz.zvezdochet.direction.handledtoolitem.agecalc" label="&#x420;&#x430;&#x441;&#x447;&#x451;&#x442;" iconURI="platform:/plugin/kz.zvezdochet/icons/calc.png" command="_Y-gtUDGmEeSgQvy0ehax-Q"/>
