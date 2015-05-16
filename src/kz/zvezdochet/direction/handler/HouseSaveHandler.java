@@ -10,15 +10,17 @@ import java.util.Map;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
-import kz.zvezdochet.analytics.bean.PlanetHouseText;
+import kz.zvezdochet.bean.Event;
 import kz.zvezdochet.bean.House;
 import kz.zvezdochet.bean.Planet;
 import kz.zvezdochet.core.bean.Model;
+import kz.zvezdochet.core.bean.TextGender;
 import kz.zvezdochet.core.handler.Handler;
 import kz.zvezdochet.core.ui.util.DialogUtil;
 import kz.zvezdochet.core.util.CoreUtil;
 import kz.zvezdochet.core.util.PlatformUtil;
 import kz.zvezdochet.direction.Activator;
+import kz.zvezdochet.direction.bean.DirectionText;
 import kz.zvezdochet.direction.bean.PrintDirection;
 import kz.zvezdochet.direction.part.HousePart;
 import kz.zvezdochet.direction.service.DirectionService;
@@ -29,7 +31,7 @@ import org.eclipse.e4.core.di.annotations.Execute;
 import org.eclipse.e4.ui.model.application.ui.basic.MPart;
 
 /**
- * Сохранение в файл положительных дирекций планет по домам
+ * Сохранение в файл положительных дирекций планет по домам (только соединения)
  * @author Nataly Didenko
  */
 public class HouseSaveHandler extends Handler {
@@ -41,7 +43,8 @@ public class HouseSaveHandler extends Handler {
 			Configuration conf = eventPart.getConfiguration();
 			if (null == conf) return; //TODO выдавать сообщение
 			if (null == conf.getHouses()) return; //TODO выдавать сообщение
-			int age = conf.getEvent().getAge();
+			Event event = conf.getEvent();
+			int age = event.getAge();
 			updateStatus("Сохранение дирекций в файл", false);
 
 			List<Model> planets = conf.getPlanets();
@@ -53,6 +56,7 @@ public class HouseSaveHandler extends Handler {
 			Map<Integer, List<PrintDirection>> map = new HashMap<Integer, List<PrintDirection>>();
 			for (int c = 0; c < pcount; c++) {
 				Planet planet = (Planet)planets.get(c);
+				if (planet.getCode().equals("Kethu")) continue;
 				double one = Math.abs(planet.getCoord());
 				for (int r = 0; r < hcount; r++) {
 					House house = (House)houses.get(r);
@@ -82,15 +86,22 @@ public class HouseSaveHandler extends Handler {
 			int i = 0;
 			for (Integer key : keys) {
 				List<PrintDirection> list = map.get(key);
+				boolean child = key < event.MAX_TEEN_AGE;
 				for (PrintDirection dir : list) {
 					Planet planet = (Planet)dir.getSkyPoint1();
 					House house = (House)dir.getSkyPoint2();
-					PlanetHouseText dirText = (PlanetHouseText)service.find(planet, house, null);
-					if (dirText != null) {
-						String row = ++i + ") " + CoreUtil.getAgeString(key) + " - " + dirText.getText() + "\n\n";
-						data.append(row);
+					DirectionText dirText = (DirectionText)service.find(planet, house, null);
+					String row = ++i + ") " + CoreUtil.getAgeString(key) + " [" + planet.getName() + " " + house.getCombination() + "] - ";
+					if (null == dirText)
+						row += "\n\n";
+					else {
+						row += dirText.getText() + "\n\n";
+						List<TextGender> genders = dirText.getGenderTexts(event.isFemale(), child);
+						for (TextGender gender : genders)
+							row += gender.getText() + "\n\n";
 					}
-				}				
+					data.append(row);
+				}
 			}
 			updateStatus("Расчёт дирекций завершён", false);
 
