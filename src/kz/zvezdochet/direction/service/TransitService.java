@@ -32,17 +32,19 @@ public class TransitService extends ModelService {
 		try {
 			String sql;
 			if (null == model.getId()) 
-				sql = "insert into " + tableName + " values(0,?,?)";
+				sql = "insert into " + tableName + " values(0,?,?,?)";
 			else
 				sql = "update " + tableName + " set " +
 					"eventid = ?, " +
-					"personid = ? " +
+					"personid = ?, " +
+					"description = ? " +
 					"where id = ?";
 			ps = Connector.getInstance().getConnection().prepareStatement(sql);
 			ps.setLong(1, transit.getEventid());
 			ps.setLong(2, transit.getPersonid());
+			ps.setString(3, transit.getDescription());
 			if (model.getId() != null) 
-				ps.setLong(3, model.getId());
+				ps.setLong(4, model.getId());
 
 			result = ps.executeUpdate();
 			if (1 == result) {

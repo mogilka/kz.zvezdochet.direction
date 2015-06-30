@@ -25,7 +25,17 @@ public class Transit extends Model {
 	 * Идентификатор персоны
 	 */
 	private long personid;
+	/**
+	 * Описание
+	 */
+	private String description;
 
+	public String getDescription() {
+		return description;
+	}
+	public void setDescription(String description) {
+		this.description = description;
+	}
 	public long getEventid() {
 		return eventid;
 	}
