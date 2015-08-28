@@ -9,6 +9,7 @@
     <elements xsi:type="commands:Command" xmi:id="_D5aHIGfxEeSSZffxnqlLeQ" elementId="kz.zvezdochet.direction.command.transitcalc" commandName="transitCalcCommand"/>
     <elements xsi:type="commands:Command" xmi:id="_NdAOMGf6EeSSZffxnqlLeQ" elementId="kz.zvezdochet.direction.command.transitswitch" commandName="transitswitchCommand"/>
     <elements xsi:type="commands:Command" xmi:id="_8BbNQPsnEeSIu-7bgMS65Q" elementId="kz.zvezdochet.direction.command.savehouse" commandName="saveHouseCommand"/>
+    <elements xsi:type="commands:Command" xmi:id="_3zDAAE1zEeWI6IF5iMt-Kg" elementId="kz.zvezdochet.direction.command.aspects" commandName="aspectsCommand"/>
   </fragments>
   <fragments xsi:type="fragment:StringModelFragment" xmi:id="_W-MikBHBEeSRINSX4-qBSA" featurename="handlers" parentElementId="org.eclipse.e4.ide.application">
     <elements xsi:type="commands:Handler" xmi:id="_axB7ABHBEeSRINSX4-qBSA" elementId="kz.zvezdochet.direction.handler.house" contributionURI="bundleclass://kz.zvezdochet.direction/kz.zvezdochet.direction.handler.HouseHandler" command="_OpDckBHBEeSRINSX4-qBSA"/>
@@ -19,6 +20,7 @@
     <elements xsi:type="commands:Handler" xmi:id="_Jcf8QGfxEeSSZffxnqlLeQ" elementId="kz.zvezdochet.direction.handler.transitcalc" contributionURI="bundleclass://kz.zvezdochet.direction/kz.zvezdochet.direction.handler.TransitCalcHandler" command="_D5aHIGfxEeSSZffxnqlLeQ"/>
     <elements xsi:type="commands:Handler" xmi:id="_Q8KcsGf6EeSSZffxnqlLeQ" elementId="kz.zvezdochet.direction.handler.transitswitch" contributionURI="bundleclass://kz.zvezdochet.direction/kz.zvezdochet.direction.handler.TransitSwitchHandler" command="_NdAOMGf6EeSSZffxnqlLeQ"/>
     <elements xsi:type="commands:Handler" xmi:id="_EywgAPsoEeSIu-7bgMS65Q" elementId="kz.zvezdochet.direction.handler.savehouse" contributionURI="bundleclass://kz.zvezdochet.direction/kz.zvezdochet.direction.handler.HouseSaveHandler" command="_8BbNQPsnEeSIu-7bgMS65Q"/>
+    <elements xsi:type="commands:Handler" xmi:id="_DIKeIE10EeWI6IF5iMt-Kg" elementId="kz.zvezdochet.direction.handler.aspects" contributionURI="bundleclass://kz.zvezdochet.direction/kz.zvezdochet.direction.handler.AspectHandler" command="_3zDAAE1zEeWI6IF5iMt-Kg"/>
   </fragments>
   <fragments xsi:type="fragment:StringModelFragment" xmi:id="_5XvsABHJEeSRINSX4-qBSA" featurename="children" parentElementId="kz.zvezdochet.runner.partstack.main">
     <elements xsi:type="basic:Part" xmi:id="_VmwfcBHKEeSRINSX4-qBSA" elementId="kz.zvezdochet.direction.part.houses" visible="false" contributionURI="bundleclass://kz.zvezdochet.direction/kz.zvezdochet.direction.part.HousePart" label="&#x421;&#x432;&#x43e;&#x434;&#x43d;&#x430;&#x44f; &#x442;&#x430;&#x431;&#x43b;&#x438;&#x446;&#x430; &#x434;&#x438;&#x440;&#x435;&#x43a;&#x446;&#x438;&#x439;" iconURI="platform:/plugin/kz.zvezdochet.direction/icons/direction.gif" closeable="true">
@@ -36,6 +38,7 @@
       <toolbar xmi:id="__6ZecGfxEeSSZffxnqlLeQ" elementId="kz.zvezdochet.direction.toolbar.0">
         <children xsi:type="menu:HandledToolItem" xmi:id="_BsLlIGfyEeSSZffxnqlLeQ" elementId="kz.zvezdochet.direction.handledtoolitem.transitcalc" label="&#x420;&#x430;&#x441;&#x447;&#x451;&#x442;" iconURI="platform:/plugin/kz.zvezdochet/icons/calc.png" command="_D5aHIGfxEeSSZffxnqlLeQ"/>
         <children xsi:type="menu:HandledToolItem" xmi:id="_XqKC4GfzEeSSZffxnqlLeQ" elementId="kz.zvezdochet.direction.handledtoolitem.transitswitch" label="&#x41f;&#x435;&#x440;&#x435;&#x43a;&#x43b;&#x44e;&#x447;&#x438;&#x442;&#x44c;" iconURI="platform:/plugin/kz.zvezdochet.core/icons/cp_order_obj.gif" tooltip="&#x41f;&#x43b;&#x430;&#x43d;&#x435;&#x442;&#x44b; &#x441;&#x43e;&#x431;&#x44b;&#x442;&#x438;&#x44f; &#x432; &#x43a;&#x430;&#x440;&#x442;&#x435; &#x43f;&#x435;&#x440;&#x441;&#x43e;&#x43d;&#x44b; &#x43b;&#x438;&#x431;&#x43e; &#x43f;&#x43b;&#x430;&#x43d;&#x435;&#x442;&#x44b; &#x43f;&#x435;&#x440;&#x441;&#x43e;&#x43d;&#x44b; &#x432; &#x43a;&#x430;&#x440;&#x442;&#x435; &#x441;&#x43e;&#x431;&#x44b;&#x442;&#x438;&#x44f;" command="_NdAOMGf6EeSSZffxnqlLeQ"/>
+        <children xsi:type="menu:HandledToolItem" xmi:id="_Mj4xsE10EeWI6IF5iMt-Kg" elementId="kz.zvezdochet.direction.handledtoolitem.aspects" label="&#x410;&#x441;&#x43f;&#x435;&#x43a;&#x442;&#x44b;" iconURI="platform:/plugin/kz.zvezdochet/icons/aspect.gif" command="_3zDAAE1zEeWI6IF5iMt-Kg"/>
       </toolbar>
     </elements>
   </fragments>

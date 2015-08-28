@@ -34,7 +34,6 @@ import kz.zvezdochet.provider.EventProposalProvider;
 import kz.zvezdochet.provider.EventProposalProvider.EventContentProposal;
 import kz.zvezdochet.service.AspectTypeService;
 import kz.zvezdochet.service.EventService;
-import kz.zvezdochet.service.PlaceService;
 import kz.zvezdochet.util.Configuration;
 
 import org.eclipse.jface.bindings.keys.KeyStroke;
@@ -86,6 +85,7 @@ public class TransitPart extends ModelListView implements ICalculable {
 	private Text txGreenwich;
 	private Label lbBirth;
 	private CDateTime dtBirth;
+	private Text txDescr;
 	
 	/**
 	 * Режим расчёта транзитов.
@@ -403,7 +403,9 @@ public class TransitPart extends ModelListView implements ICalculable {
 		lb = new Label(secPlace, SWT.NONE);
 		lb.setText(Messages.getString("PersonView.Zone")); //$NON-NLS-1$
 		txZone = new Text(secPlace, SWT.BORDER);
-		
+
+		txDescr = new Text(secEvent, SWT.MULTI | SWT.BORDER | SWT.WRAP | SWT.V_SCROLL);
+
 		Button bt = new Button(secEvent, SWT.NONE);
 		bt.setText("Добавить");
 		bt.addSelectionListener(new SelectionListener() {
@@ -436,6 +438,8 @@ public class TransitPart extends ModelListView implements ICalculable {
 			grab(true, false).applyTo(txGreenwich);
 		GridDataFactory.fillDefaults().align(SWT.FILL, SWT.CENTER).
 			grab(false, false).applyTo(bt);
+		GridDataFactory.fillDefaults().span(2, 1).align(SWT.FILL, SWT.CENTER).
+			hint(SWT.DEFAULT, 48).grab(true, false).applyTo(txDescr);
 
 		try {
 			initDefaultEvent();
@@ -458,6 +462,7 @@ public class TransitPart extends ModelListView implements ICalculable {
 			refreshCard(event2, event);
 			refreshTabs(event2, event);
 		}
+		trevent = event;
 	}
 
 	@Override
@@ -472,7 +477,9 @@ public class TransitPart extends ModelListView implements ICalculable {
 			Transit transit = new Transit();
 			transit.setEventid(model.getId());
 			transit.setPersonid(person.getId());
+			transit.setDescription(txDescr.getText());
 			new TransitService().save(transit);
+			reset();
 		} catch (DataAccessException e) {
 			e.printStackTrace();
 		}
@@ -483,12 +490,11 @@ public class TransitPart extends ModelListView implements ICalculable {
 	 * @throws DataAccessException 
 	 */
 	private void initDefaultEvent() throws DataAccessException {
-		Event event = new Event();
-		((Event)event).setZone(6.0); //TODO задавать через конфиг
-		Place place = (Place)new PlaceService().find(115L); //TODO задавать через конфиг
-		((Event)event).setPlace(place);
+		trevent = new Event();
+		trevent.setZone(0);
+		Place place = new Place().getDefault();
+		trevent.setPlace(place);
 		initPlace(place);
-		trevent = event;
 	}
 
 	/**
@@ -518,16 +524,12 @@ public class TransitPart extends ModelListView implements ICalculable {
 	private void syncModel() {
 		try {
 			if (!check()) return;
-			if (null == trevent)
-				initDefaultEvent();
+			initDefaultEvent();
 			trevent.setName(txName.getText());
-			if (null == trevent.getPlace()) { //TODO использовать модель из базы с айдишником
-				Place place = new Place();
-				place.setLatitude(51.48);
-				place.setLongitude(0);
-				trevent.setPlace(place);
-			}
+			if (null == trevent.getPlace())
+				trevent.setPlace(new Place().getDefault());
 			trevent.setBirth(dtBirth.getSelection());
+			trevent.setText(txDescr.getText());
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -562,5 +564,25 @@ public class TransitPart extends ModelListView implements ICalculable {
 	 */
 	public int getModeCalc() {
 		return MODE_CALC;
+	}
+
+	/**
+	 * Поиск персоны, для которой рассчитывается транзит
+	 * @return персона
+	 */
+	public Event getPerson() {
+		return person;
+	}
+
+	@Override
+	public void reset() {
+		txName.setText(""); //$NON-NLS-1$
+		txPlace.setText(""); //$NON-NLS-1$
+		txLatitude.setText(""); //$NON-NLS-1$
+		txLongitude.setText(""); //$NON-NLS-1$
+		txZone.setText(""); //$NON-NLS-1$
+		txGreenwich.setText(""); //$NON-NLS-1$
+		dtBirth.setSelection(new Date());
+		txDescr.setText(""); //$NON-NLS-1$
 	}
 }

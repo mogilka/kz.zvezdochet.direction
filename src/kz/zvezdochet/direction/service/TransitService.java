@@ -54,7 +54,7 @@ public class TransitService extends ModelService {
 					if (rsid.next()) {
 				        autoIncKeyFromApi = rsid.getLong(1);
 				        model.setId(autoIncKeyFromApi);
-					    System.out.println("inserted " + tableName + "\t" + autoIncKeyFromApi);
+					    System.out.println(autoIncKeyFromApi + "\t" + ps);
 					}
 					if (rsid != null)
 						rsid.close();
