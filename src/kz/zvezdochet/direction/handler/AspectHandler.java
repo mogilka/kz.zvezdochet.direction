@@ -23,6 +23,11 @@ import org.eclipse.e4.ui.model.application.ui.basic.MPart;
 import org.eclipse.e4.ui.workbench.modeling.EPartService;
 import org.eclipse.e4.ui.workbench.modeling.EPartService.PartState;
 
+/**
+ * Расчёт аспектов транзита
+ * @author Nataly Didenko
+ *
+ */
 public class AspectHandler extends Handler {
 	@Inject
 	private EPartService partService;

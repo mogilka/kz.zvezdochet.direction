@@ -453,6 +453,14 @@ public class TransitPart extends ModelListView implements ICalculable {
 		MODE_CALC = (int)mode;
 		System.out.println("onCalc" + MODE_CALC);
 		Event event = (Event)getModel();
+		if (null == event) {
+			try {
+				initDefaultEvent();
+			} catch (DataAccessException e) {
+				e.printStackTrace();
+			}
+			event = trevent;
+		}
 		event.init();
 		Event event2 = person;
 		if (mode.equals(0)) {
