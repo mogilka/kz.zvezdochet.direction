@@ -24,9 +24,8 @@ import org.eclipse.e4.core.di.annotations.Execute;
 import org.eclipse.e4.ui.model.application.ui.basic.MPart;
 
 /**
- * Обработчик расчёта событий на указанный возраст
+ * Обработчик расчёта транзитов на указанный возраст
  * @author Nataly Didenko
- *
  */
 public class AgeCalcHandler extends Handler {
 	private boolean agedp[][][] = null;

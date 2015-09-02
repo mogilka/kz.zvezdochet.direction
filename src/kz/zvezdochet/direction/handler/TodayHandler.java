@@ -10,7 +10,7 @@ import org.eclipse.e4.core.di.annotations.Execute;
 import org.eclipse.e4.ui.model.application.ui.basic.MPart;
 
 /**
- * Расчёт транзитов на сегодня
+ * Обработчик расчёта транзитов на сегодня
  * @author nataly
  *
  */

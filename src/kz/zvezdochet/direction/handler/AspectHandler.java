@@ -24,7 +24,7 @@ import org.eclipse.e4.ui.workbench.modeling.EPartService;
 import org.eclipse.e4.ui.workbench.modeling.EPartService.PartState;
 
 /**
- * Расчёт аспектов транзита
+ * Обработчик расчёта аспектов транзита
  * @author Nataly Didenko
  *
  */
