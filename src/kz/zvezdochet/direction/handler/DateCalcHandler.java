@@ -28,7 +28,10 @@ import org.eclipse.e4.core.di.annotations.Execute;
 import org.eclipse.e4.ui.model.application.ui.basic.MPart;
 
 /**
- * Обработчик расчёта транзитов на указанную дату
+ * Обработчик расчёта транзитов на указанную дату.
+ * Двигаем натальные планеты от первоначального положения
+ * на количество градусов, соответствующих текущему возрасту персоны,
+ * и анализируем данные как транзиты
  * @author Nataly Didenko
  */
 public class DateCalcHandler extends Handler {
