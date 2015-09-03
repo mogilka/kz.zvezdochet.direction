@@ -40,9 +40,9 @@ public class DateCalcHandler extends Handler {
 			aged = new ArrayList<SkyPointAspect>();
 			DatePart datePart = (DatePart)activePart.getObject();
 			if (!datePart.check(0)) return;
-			Event event = datePart.getEvent();
+			Event person = datePart.getPerson();
 
-			Configuration conf = event.getConfiguration();
+			Configuration conf = person.getConfiguration();
 			List<Model> planets = conf.getPlanets();
 			List<Model> houses = conf.getHouses();
 			
@@ -50,7 +50,7 @@ public class DateCalcHandler extends Handler {
 			Date seldate = datePart.getDate();
 
 			//подсчитываем количество дней от натальной даты до транзитной с учётом високосных годов
-			int year1 = event.getBirthYear();
+			int year1 = person.getBirthYear();
 			Calendar calendar = GregorianCalendar.getInstance();
 			calendar.setTime(seldate);
 			int year2 = calendar.get(Calendar.YEAR);
@@ -69,7 +69,7 @@ public class DateCalcHandler extends Handler {
 			}
 
 			//вычитаем дни от 1 января натального года до натальной даты
-			long difdays = DateUtil.getDateDiff(event.getBirth(), DateUtil.getDate("01.01." + (year1 + 1)), TimeUnit.DAYS);
+			long difdays = DateUtil.getDateDiff(person.getBirth(), DateUtil.getDate("01.01." + (year1 + 1)), TimeUnit.DAYS);
 			int ydays = leap1 ? 366 : 365;
 			days -= (ydays - difdays);
 			//вычитаем дни от транзитной даты до 1 января года, следующего за транзитным
@@ -106,6 +106,14 @@ public class DateCalcHandler extends Handler {
 			updateStatus("Расчёт транзитов завершён", false);
 		    datePart.setData(aged);
 			updateStatus("Таблица транзитов сформирована", false);
+
+			Event event = new Event();
+			Configuration conf2 = new Configuration(seldate);
+			conf2.setPlanets(trplanets);
+			event.setConfiguration(conf2);
+			datePart.setEvent(event);
+			datePart.onCalc(0);
+			updateStatus("Космограмма транзитов сформирована", false);
 		} catch (Exception e) {
 			DialogUtil.alertError(e.getMessage());
 			updateStatus("Ошибка", true);

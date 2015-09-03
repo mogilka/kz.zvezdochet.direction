@@ -19,7 +19,7 @@ public class TransitCalcHandler extends Handler {
 		try {
 			updateStatus("Расчёт транзитов", false);
 			ICalculable transitPart = (TransitPart)activePart.getObject();
-			transitPart.onCalc(0);
+			transitPart.onCalc(1);
 			updateStatus("Карта транзитов сформирована", false);
 		} catch (Exception e) {
 			DialogUtil.alertError(e.getMessage());

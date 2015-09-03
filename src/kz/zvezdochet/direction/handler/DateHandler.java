@@ -37,7 +37,7 @@ public class DateHandler extends Handler {
 		    part.setVisible(true);
 		    partService.showPart(part, PartState.VISIBLE);
 		    DatePart transitPart = (DatePart)part.getObject();
-		    transitPart.setEvent(event);
+		    transitPart.setPerson(event);
 			updateStatus("Таблица транзитов готова к расчёту", false);
 		} catch (Exception e) {
 			DialogUtil.alertError(e.getMessage());
