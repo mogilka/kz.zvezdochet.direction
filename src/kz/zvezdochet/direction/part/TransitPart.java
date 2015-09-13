@@ -15,9 +15,11 @@ import kz.zvezdochet.bean.House;
 import kz.zvezdochet.bean.Place;
 import kz.zvezdochet.bean.Planet;
 import kz.zvezdochet.core.bean.Model;
+import kz.zvezdochet.core.handler.Handler;
 import kz.zvezdochet.core.service.DataAccessException;
 import kz.zvezdochet.core.ui.Tab;
 import kz.zvezdochet.core.ui.decoration.InfoDecoration;
+import kz.zvezdochet.core.ui.listener.ListSelectionListener;
 import kz.zvezdochet.core.ui.util.DialogUtil;
 import kz.zvezdochet.core.ui.util.GUIutil;
 import kz.zvezdochet.core.ui.view.ModelLabelProvider;
@@ -26,12 +28,15 @@ import kz.zvezdochet.core.ui.view.View;
 import kz.zvezdochet.core.util.CalcUtil;
 import kz.zvezdochet.core.util.DateUtil;
 import kz.zvezdochet.direction.bean.Transit;
+import kz.zvezdochet.direction.provider.TransitLabelProvider;
 import kz.zvezdochet.direction.service.TransitService;
 import kz.zvezdochet.part.CosmogramComposite;
 import kz.zvezdochet.part.ICalculable;
 import kz.zvezdochet.part.Messages;
 import kz.zvezdochet.provider.EventProposalProvider;
 import kz.zvezdochet.provider.EventProposalProvider.EventContentProposal;
+import kz.zvezdochet.provider.PlaceProposalProvider;
+import kz.zvezdochet.provider.PlaceProposalProvider.PlaceContentProposal;
 import kz.zvezdochet.service.AspectTypeService;
 import kz.zvezdochet.service.EventService;
 import kz.zvezdochet.util.Configuration;
@@ -43,7 +48,11 @@ import org.eclipse.jface.fieldassist.IContentProposalListener;
 import org.eclipse.jface.fieldassist.TextContentAdapter;
 import org.eclipse.jface.layout.GridDataFactory;
 import org.eclipse.jface.layout.GridLayoutFactory;
+import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.IBaseLabelProvider;
+import org.eclipse.jface.viewers.IStructuredSelection;
+import org.eclipse.jface.viewers.SelectionChangedEvent;
+import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.nebula.widgets.cdatetime.CDT;
 import org.eclipse.nebula.widgets.cdatetime.CDateTime;
 import org.eclipse.swt.SWT;
@@ -75,6 +84,8 @@ public class TransitPart extends ModelListView implements ICalculable {
 
 	private Event person;
 	private Event trevent;
+	private Object transitData;
+	private Place trplace;
 
 	private Label lbName;
 	private Text txName;
@@ -86,19 +97,21 @@ public class TransitPart extends ModelListView implements ICalculable {
 	private Label lbBirth;
 	private CDateTime dtBirth;
 	private Text txDescr;
+	private TableViewer transitViewer;
 	
 	/**
 	 * Режим расчёта транзитов.
 	 * 1 - по умолчанию отображаются планеты события в карте персоны.
-	 * 0 - режим планет персоны в карте события
+	 * 2 - режим планет персоны в карте события
 	 */
-	private int MODE_CALC = 0;
+	private int MODE_CALC = 1;
 
 	private CosmogramComposite cmpCosmogram;
 	private CTabFolder folder;
 	private Group grPlanets;
 	private Group grHouses;
 	private Group grAspectType;
+	private Group grTransits;
 
 	@PostConstruct @Override
 	public View create(Composite parent) {
@@ -131,11 +144,6 @@ public class TransitPart extends ModelListView implements ICalculable {
 		return new String[] {
 			"Имя",
 			"Дата" };
-	}
-
-	@Override
-	public boolean check(int mode) throws Exception {
-		return false;
 	}
 
 	@Override
@@ -184,9 +192,6 @@ public class TransitPart extends ModelListView implements ICalculable {
 	 * @param event персона
 	 */
 	public void setPerson(Event event) {
-//			if (event.getConfiguration() != null)
-//				event.getConfiguration().initPlanetStatistics();
-		//TODO отображать список событий
 		try {
 			person = event;
 			setData(new TransitService().findTransits(event.getId()));
@@ -200,7 +205,7 @@ public class TransitPart extends ModelListView implements ICalculable {
 	 * @return массив вкладок
 	 */
 	private Tab[] initTabs() {
-		Tab[] tabs = new Tab[4];
+		Tab[] tabs = new Tab[5];
 		//настройки расчёта
 		Tab tab = new Tab();
 		tab.name = "Настройки";
@@ -216,13 +221,13 @@ public class TransitPart extends ModelListView implements ICalculable {
 		tab.name = "Планеты";
 		tab.image = AbstractUIPlugin.imageDescriptorFromPlugin("kz.zvezdochet", "icons/planet.gif").createImage();
 		grPlanets = new Group(folder, SWT.NONE);
-		Object[] titles = { "Планета", "Координата #1", "Координата #2"	};
+		String[] titles = { "Планета", "Координата #1", "Координата #2"	};
 		Table table = new Table(grPlanets, SWT.BORDER | SWT.V_SCROLL);
 		table.setLinesVisible(true);
 		table.setHeaderVisible(true);
 		table.setSize(grPlanets.getSize());
 		GridDataFactory.fillDefaults().align(SWT.FILL, SWT.FILL).grab(true, true).applyTo(table);
-		for (Object title : titles) {
+		for (String title : titles) {
 			TableColumn column = new TableColumn(table, SWT.NONE);
 			column.setText(title.toString());
 		}	
@@ -236,15 +241,15 @@ public class TransitPart extends ModelListView implements ICalculable {
 		tab.name = "Дома";
 		tab.image = AbstractUIPlugin.imageDescriptorFromPlugin("kz.zvezdochet", "icons/home.gif").createImage();
 		grHouses = new Group(folder, SWT.NONE);
-		String[] titles2 = {"Дом", "Координата #1", "Координата #2"};
+		titles = new String[] {"Дом", "Координата #1", "Координата #2"};
 		table = new Table(grHouses, SWT.BORDER | SWT.V_SCROLL);
 		table.setLinesVisible(true);
 		table.setHeaderVisible(true);
 		table.setSize(grHouses.getSize());
 		GridDataFactory.fillDefaults().align(SWT.FILL, SWT.FILL).grab(true, true).applyTo(table);
-		for (int i = 0; i < titles2.length; i++) {
+		for (int i = 0; i < titles.length; i++) {
 			TableColumn column = new TableColumn (table, SWT.NONE);
-			column.setText(titles2[i]);
+			column.setText(titles[i]);
 		}
 		tab.control = grHouses;
 		GridLayoutFactory.swtDefaults().applyTo(grHouses);
@@ -284,7 +289,32 @@ public class TransitPart extends ModelListView implements ICalculable {
 		}
 		tab.control = grAspectType;
 		tabs[3] = tab;
+
+		//транзиты
+		tab = new Tab();
+		tab.name = "Транзиты";
+		tab.image = AbstractUIPlugin.imageDescriptorFromPlugin("kz.zvezdochet.direction", "icons/transit.gif").createImage();
+		grTransits = new Group(folder, SWT.NONE);
 		
+		transitViewer = new TableViewer(grTransits, SWT.BORDER | SWT.FULL_SELECTION | SWT.V_SCROLL);
+		table = transitViewer.getTable();
+		table.setHeaderVisible(true);
+		table.setLinesVisible(true);
+		GridDataFactory.fillDefaults().align(SWT.FILL, SWT.FILL).grab(true, true).applyTo(table);
+
+		titles = getTableColumns();
+		for (int i = 0; i < titles.length; i++) {
+			TableColumn column = new TableColumn (table, SWT.NONE);
+			column.setText(titles[i].toString());
+		}
+		transitViewer.setContentProvider(new ArrayContentProvider());
+		transitViewer.setLabelProvider(new TransitLabelProvider());
+
+		tab.control = grTransits;
+		GridLayoutFactory.swtDefaults().applyTo(grTransits);
+		GridDataFactory.fillDefaults().grab(true, true).applyTo(grTransits);
+		tabs[4] = tab;
+
 		return tabs;
 	}
 
@@ -338,6 +368,21 @@ public class TransitPart extends ModelListView implements ICalculable {
 			}
 			for (int i = 0; i < table.getColumnCount(); i++)
 				table.getColumn(i).pack();
+		}
+
+		//транзиты
+		table = transitViewer.getTable();
+		table.removeAll();
+		try {
+			showBusy(true);
+			transitViewer.setInput(transitData);
+			table = transitViewer.getTable();
+			for (int i = 0; i < table.getColumnCount(); i++)
+				table.getColumn(i).pack();
+		} catch(Exception e) {
+			e.printStackTrace();
+		} finally {
+			showBusy(false);
 		}
 	}
 	
@@ -411,7 +456,7 @@ public class TransitPart extends ModelListView implements ICalculable {
 		bt.addSelectionListener(new SelectionListener() {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
-				syncModel();
+				syncModel(Handler.MODE_SAVE);
 				addModel(trevent);
 			}
 			@Override
@@ -440,37 +485,27 @@ public class TransitPart extends ModelListView implements ICalculable {
 			grab(false, false).applyTo(bt);
 		GridDataFactory.fillDefaults().span(2, 1).align(SWT.FILL, SWT.CENTER).
 			hint(SWT.DEFAULT, 48).grab(true, false).applyTo(txDescr);
-
-		try {
-			initDefaultEvent();
-		} catch (DataAccessException e) {
-			e.printStackTrace();
-		}
 	}
 
 	@Override
 	public void onCalc(Object mode) {
 		MODE_CALC = (int)mode;
 		System.out.println("onCalc" + MODE_CALC);
-		Event event = (Event)getModel();
-		if (null == event) {
-			try {
-				initDefaultEvent();
-			} catch (DataAccessException e) {
-				e.printStackTrace();
-			}
-			event = trevent;
-		}
-		event.init();
-		Event event2 = person;
-		if (mode.equals(0)) {
-			refreshCard(event, event2);
-			refreshTabs(event, event2);
+		if (null == trevent)
+			syncModel(1);
+		trevent.init();
+		if (mode.equals(1)) {
+			refreshCard(trevent, person);
+			refreshTabs(trevent, person);
 		} else {
-			refreshCard(event2, event);
-			refreshTabs(event2, event);
+			refreshCard(person, trevent);
+			refreshTabs(person, trevent);
 		}
-		trevent = event;
+	}
+
+	public void onCalc(Event person, Event event) {
+		refreshCard(event, person);
+		refreshTabs(event, person);
 	}
 
 	@Override
@@ -494,19 +529,7 @@ public class TransitPart extends ModelListView implements ICalculable {
 	}
 
 	/**
-	 * Инициализация события по умолчанию
-	 * @throws DataAccessException 
-	 */
-	private void initDefaultEvent() throws DataAccessException {
-		trevent = new Event();
-		trevent.setZone(0);
-		Place place = new Place().getDefault();
-		trevent.setPlace(place);
-		initPlace(place);
-	}
-
-	/**
-	 * Инициализация местности события
+	 * Инициализация представления местности события
 	 * @param place местность
 	 */
 	private void initPlace(Place place) {
@@ -518,26 +541,22 @@ public class TransitPart extends ModelListView implements ICalculable {
 		txZone.setText(String.valueOf(place.getGreenwich()));
 	}
 
-	@Override
-	public Object getModel() {
-		Object selobj = super.getModel();
-		if (selobj != null)
-			return selobj;
-		return trevent;
-	}
-
 	/**
 	 * Синхронизация события с представлением
 	 */
-	private void syncModel() {
+	private void syncModel(int mode) {
 		try {
-			if (!check()) return;
-			initDefaultEvent();
-			trevent.setName(txName.getText());
-			if (null == trevent.getPlace())
-				trevent.setPlace(new Place().getDefault());
+			if (!check(mode)) return;
+			trevent = new Event();
 			trevent.setBirth(dtBirth.getSelection());
-			trevent.setText(txDescr.getText());
+			trevent.setPlace(trplace);
+			double zone = (txZone.getText() != null && txZone.getText().length() > 0) ? Double.parseDouble(txZone.getText()) : 0;
+			trevent.setZone(zone);
+
+			if (Handler.MODE_SAVE == mode) {
+				trevent.setName(txName.getText());
+				trevent.setText(txDescr.getText());
+			}
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -548,17 +567,19 @@ public class TransitPart extends ModelListView implements ICalculable {
 	 * @return true|false параметры заполнены верно|не верно
 	 * @throws Exception
 	 */
-	public boolean check() throws Exception {
+	@Override
+	public boolean check(int mode) throws Exception {
 		StringBuffer msgBody = new StringBuffer();
-		if (null == txPlace.getText()) {
+		if (null == dtBirth.getSelection())
+			msgBody.append(lbBirth.getText());
+		if (null == trplace) {
 			DialogUtil.alertError(Messages.getString("EventView.PlaceIsWrong"));
 			return false;
 		}
-		if (txName.getText().length() == 0) 
-			msgBody.append(lbName.getText());
-		if (null == dtBirth.getSelection())
-			msgBody.append(lbBirth.getText());
-
+		if (Handler.MODE_SAVE == mode) {
+			if (txName.getText().length() == 0) 
+				msgBody.append(lbName.getText());
+		}
 		if (msgBody.length() > 0) {
 			DialogUtil.alertWarning(GUIutil.SOME_FIELDS_NOT_FILLED + msgBody);
 			return false;
@@ -592,5 +613,98 @@ public class TransitPart extends ModelListView implements ICalculable {
 		txGreenwich.setText(""); //$NON-NLS-1$
 		dtBirth.setSelection(new Date());
 		txDescr.setText(""); //$NON-NLS-1$
+	}
+
+	/**
+	 * Поиск столбцов таблицы транзитов
+	 * @return массив наименований столбцов
+	 */
+	public static String[] getTableColumns() {
+		return new String[] {
+			"Возраст",
+			"Точка 1",
+			"Аспект",
+			"Точка 2",
+			"Направление",
+			"Величина аспекта" };
+	}
+
+	@Override
+	public ListSelectionListener getSelectionListener() {
+		return new ListSelectionListener() {
+			public void selectionChanged(SelectionChangedEvent event) {
+				if (!event.getSelection().isEmpty()) {
+					IStructuredSelection selection = (IStructuredSelection)event.getSelection();
+					if (selection.getFirstElement() != null)
+						trevent = (Event)selection.getFirstElement();
+				}
+			}
+		};
+	}
+
+	/**
+	 * Инициализация местностей
+	 */
+	private void setPlaces() {
+	    PlaceProposalProvider proposalProvider = new PlaceProposalProvider();
+	    ContentProposalAdapter adapter = new ContentProposalAdapter(
+	        txPlace, new TextContentAdapter(),
+	        proposalProvider, KeyStroke.getInstance(SWT.CTRL, 32), new char[] {' '});
+	    adapter.setPropagateKeys(true);
+	    adapter.setProposalAcceptanceStyle(ContentProposalAdapter.PROPOSAL_REPLACE);
+	    adapter.addContentProposalListener(new IContentProposalListener() {
+			@Override
+			public void proposalAccepted(IContentProposal proposal) {
+				Place place = (Place)((PlaceContentProposal)proposal).getObject();
+				if (place != null) {
+					trplace = place;
+					initPlace(place);
+				}
+			}
+		});
+	}
+
+	@Override
+	public Event getModel() {
+		if (null == trevent)
+			syncModel(MODE_CALC);
+		if (null == trevent.getId())
+			trevent.calc(false);
+		if (null == trevent.getConfiguration())
+			trevent.init();
+		return trevent;
+	}
+
+	/**
+	 * Инициализация транзитов планет
+	 * @param data массив данных
+	 */
+	public void setTransitData(Object data) {
+		transitData = data;
+	}
+
+	@Override
+	protected void initControls() {
+		setPlaces();
+	}
+
+	/**
+	 * Инициализация текущего момента в качестве даты транзита
+	 */
+	public void initDate() {
+		dtBirth.setSelection(new Date());
+		syncModel(MODE_CALC);
+	}
+
+	public Date getDate() {
+		return dtBirth.getSelection();
+	}
+
+	public void setModel(Event event) {
+		trevent = event;
+	}
+
+	public void resetEvent() {
+		trevent = null;
 	}
 }

@@ -9,14 +9,13 @@ import kz.zvezdochet.bean.AspectType;
 import kz.zvezdochet.bean.Event;
 import kz.zvezdochet.bean.House;
 import kz.zvezdochet.bean.Planet;
-import kz.zvezdochet.bean.SkyPointAspect;
 import kz.zvezdochet.core.bean.Model;
 import kz.zvezdochet.core.service.DataAccessException;
 import kz.zvezdochet.core.ui.provider.DictionaryLabelProvider;
 import kz.zvezdochet.core.ui.util.DialogUtil;
-import kz.zvezdochet.core.ui.view.ModelLabelProvider;
 import kz.zvezdochet.core.ui.view.ModelListView;
 import kz.zvezdochet.core.ui.view.View;
+import kz.zvezdochet.direction.provider.TransitLabelProvider;
 import kz.zvezdochet.service.AspectTypeService;
 import kz.zvezdochet.service.HouseService;
 import kz.zvezdochet.service.PlanetService;
@@ -28,11 +27,8 @@ import org.eclipse.jface.viewers.ComboViewer;
 import org.eclipse.jface.viewers.IBaseLabelProvider;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.graphics.Color;
-import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Spinner;
@@ -105,53 +101,12 @@ public class AgePart extends ModelListView {
 
 	@Override
 	protected String[] initTableColumns() {
-		String[] columns = {
-			"Возраст",
-			"Точка 1",
-			"Аспект",
-			"Точка 2",
-			"Направление",
-			"Величина аспекта" };
-		return columns;
+		return TransitPart.getTableColumns();
 	}
 
 	@Override
 	protected IBaseLabelProvider getLabelProvider() {
-		return new ModelLabelProvider() {
-			@Override
-			public String getColumnText(Object element, int columnIndex) {
-				SkyPointAspect aspect = (SkyPointAspect)element;
-				switch (columnIndex) {
-					case 0: return String.valueOf(aspect.getAge());
-					case 1: return aspect.getSkyPoint1().getName();
-					case 2: return aspect.getAspect().getName();
-					case 3: return aspect.getSkyPoint2().getName();
-					case 4: return aspect.isRetro() ? "R" : "";
-					case 5: return String.valueOf(aspect.getScore());
-				}
-				return null;
-			}
-			@Override
-			public Image getColumnImage(Object element, int columnIndex) {
-				SkyPointAspect aspect = (SkyPointAspect)element;
-				switch (columnIndex) {
-					case 1: return aspect.getSkyPoint1() instanceof Planet
-							? ((Planet)aspect.getSkyPoint1()).getImage() : null;
-					case 3: return aspect.getSkyPoint2() instanceof Planet
-							? ((Planet)aspect.getSkyPoint2()).getImage() : null;
-				}
-				return null;
-			}
-			@Override
-			public Color getForeground(Object element, int columnIndex) {
-				if (2 == columnIndex) {
-					SkyPointAspect aspect = (SkyPointAspect)element;
-					if (aspect.getAspect() != null)
-						return aspect.getAspect().getType().getColor();
-				}
-				return  Display.getDefault().getSystemColor(SWT.COLOR_BLACK);
-			}
-		};
+		return new TransitLabelProvider();
 	}
 
 	private Event event;
