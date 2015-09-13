@@ -1,8 +1,11 @@
 package kz.zvezdochet.direction.handler;
 
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
+import java.util.GregorianCalendar;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import kz.zvezdochet.bean.Aspect;
 import kz.zvezdochet.bean.Event;
@@ -15,8 +18,10 @@ import kz.zvezdochet.core.handler.Handler;
 import kz.zvezdochet.core.service.DataAccessException;
 import kz.zvezdochet.core.ui.util.DialogUtil;
 import kz.zvezdochet.core.util.CalcUtil;
-import kz.zvezdochet.direction.part.DatePart;
+import kz.zvezdochet.core.util.DateUtil;
+import kz.zvezdochet.direction.part.TransitPart;
 import kz.zvezdochet.service.AspectService;
+import kz.zvezdochet.util.Configuration;
 
 import org.eclipse.e4.core.contexts.Active;
 import org.eclipse.e4.core.di.annotations.Execute;
@@ -30,27 +35,93 @@ import org.eclipse.e4.ui.model.application.ui.basic.MPart;
  * @author Nataly Didenko
  */
 public class DateCalcHandler extends Handler {
-	protected List<SkyPointAspect> aged = new ArrayList<SkyPointAspect>();
+	protected List<SkyPointAspect> aged;
 
 	@Execute
 	public void execute(@Active MPart activePart) {
 		try {
-			DatePart datePart = (DatePart)activePart.getObject();
-			if (!datePart.check(0)) return;
-			Event person = datePart.getPerson();
+			aged = new ArrayList<SkyPointAspect>();
+			TransitPart transitPart = (TransitPart)activePart.getObject();
+			if (!transitPart.check(1)) return;
+			Event person = transitPart.getPerson();
 
+			Configuration conf = person.getConfiguration();
+			List<Model> planets = conf.getPlanets();
+			List<Model> houses = conf.getHouses();
+			
 			updateStatus("Расчёт транзитов на указанную дату", false);
-			Date seldate = datePart.getDate();
-			Event event = new Event();
-			event.setBirth(seldate);
-			event.calc(false);
+			Date seldate = transitPart.getDate();
 
-			makeTransits(person, event);
-		    datePart.setData(aged);
+			//подсчитываем количество дней от натальной даты до транзитной с учётом високосных годов
+			int year1 = person.getBirthYear();
+			Calendar calendar = GregorianCalendar.getInstance();
+			calendar.setTime(seldate);
+			int year2 = calendar.get(Calendar.YEAR);
+			boolean leap1 = false, leap2 = false;
+
+			long days = 0;
+			for (int y = year1; y <= year2; y++) {
+				if (DateUtil.isLeapYear(y)) {
+					days += 366;
+					if (y == year1)
+						leap1 = true;
+					if (y == year2)
+						leap2 = true;
+				} else
+					days += 365;
+			}
+
+			//вычитаем дни от 1 января натального года до натальной даты
+			long difdays = DateUtil.getDateDiff(person.getBirth(), DateUtil.getDate("01.01." + (year1 + 1)), TimeUnit.DAYS);
+			int ydays = leap1 ? 366 : 365;
+			days -= (ydays - difdays);
+			//вычитаем дни от транзитной даты до 1 января года, следующего за транзитным
+			difdays = DateUtil.getDateDiff(DateUtil.getDate("01.01." + year2), seldate, TimeUnit.DAYS);
+			ydays = leap2 ? 366 : 365;
+			days -= (ydays - difdays);
+			double age = days / 365.25;
+
+			//увеличиваем координаты планет и домов персоны на значение возраста
+			List<Model> trplanets = new ArrayList<Model>();
+			for (Model model: planets) {
+				Planet planet = new Planet((Planet)model);
+				double coord = CalcUtil.getAgedCoord(Math.abs(planet.getCoord()), age);
+				planet.setCoord(coord);
+				trplanets.add(planet);
+			}
+			person.getConfiguration().setPlanets(trplanets);
+
+			List<Model> trhouses = new ArrayList<Model>();
+			for (Model model: houses) {
+				House house = new House((House)model);
+				double coord = CalcUtil.getAgedCoord(Math.abs(house.getCoord()), age);
+				house.setCoord(coord);
+				trhouses.add(house);
+			}
+			person.getConfiguration().setHouses(trhouses);
+
+			//инициализируем транзитное событие из выбранной даты и места
+			transitPart.resetEvent();
+			Event event = transitPart.getModel();
+
+			//дирекции планеты к другим планетам и куспидам домов
+			for (Model model : trplanets) {
+				Planet trplanet = (Planet)model;
+				for (Model model2 : event.getConfiguration().getPlanets()) {
+					Planet planet = (Planet)model2;
+					calc(trplanet, planet);
+				}
+				for (Model model2 : event.getConfiguration().getHouses()) {
+					House house = (House)model2;
+					calc(trplanet, house);
+				}
+			}
+			updateStatus("Расчёт транзитов завершён", false);
+		    transitPart.setTransitData(aged);
 			updateStatus("Таблица транзитов сформирована", false);
 
-			datePart.setEvent(event);
-			datePart.onCalc(0);
+			transitPart.setModel(event);
+			transitPart.onCalc(event, person);
 			updateStatus("Космограмма транзитов сформирована", false);
 		} catch (Exception e) {
 			DialogUtil.alertError(e.getMessage());
