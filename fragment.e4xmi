@@ -12,7 +12,6 @@
     <elements xsi:type="commands:Command" xmi:id="_NdAOMGf6EeSSZffxnqlLeQ" elementId="kz.zvezdochet.direction.command.transitswitch" commandName="transitswitchCommand"/>
     <elements xsi:type="commands:Command" xmi:id="_8BbNQPsnEeSIu-7bgMS65Q" elementId="kz.zvezdochet.direction.command.savehouse" commandName="saveHouseCommand"/>
     <elements xsi:type="commands:Command" xmi:id="_3zDAAE1zEeWI6IF5iMt-Kg" elementId="kz.zvezdochet.direction.command.aspects" commandName="aspectsCommand"/>
-    <elements xsi:type="commands:Command" xmi:id="_qQfWYFlaEeWazeT1TAqY1Q" elementId="kz.zvezdochet.direction.command.datecalc" commandName="datecalcCommand"/>
   </fragments>
   <fragments xsi:type="fragment:StringModelFragment" xmi:id="_W-MikBHBEeSRINSX4-qBSA" featurename="handlers" parentElementId="org.eclipse.e4.ide.application">
     <elements xsi:type="commands:Handler" xmi:id="_axB7ABHBEeSRINSX4-qBSA" elementId="kz.zvezdochet.direction.handler.house" contributionURI="bundleclass://kz.zvezdochet.direction/kz.zvezdochet.direction.handler.HouseHandler" command="_OpDckBHBEeSRINSX4-qBSA"/>
@@ -24,7 +23,6 @@
     <elements xsi:type="commands:Handler" xmi:id="_Q8KcsGf6EeSSZffxnqlLeQ" elementId="kz.zvezdochet.direction.handler.transitswitch" contributionURI="bundleclass://kz.zvezdochet.direction/kz.zvezdochet.direction.handler.TransitSwitchHandler" command="_NdAOMGf6EeSSZffxnqlLeQ"/>
     <elements xsi:type="commands:Handler" xmi:id="_EywgAPsoEeSIu-7bgMS65Q" elementId="kz.zvezdochet.direction.handler.savehouse" contributionURI="bundleclass://kz.zvezdochet.direction/kz.zvezdochet.direction.handler.HouseSaveHandler" command="_8BbNQPsnEeSIu-7bgMS65Q"/>
     <elements xsi:type="commands:Handler" xmi:id="_DIKeIE10EeWI6IF5iMt-Kg" elementId="kz.zvezdochet.direction.handler.aspects" contributionURI="bundleclass://kz.zvezdochet.direction/kz.zvezdochet.direction.handler.AspectHandler" command="_3zDAAE1zEeWI6IF5iMt-Kg"/>
-    <elements xsi:type="commands:Handler" xmi:id="_w3ii4FlaEeWazeT1TAqY1Q" elementId="kz.zvezdochet.direction.handler.datecalc" contributionURI="bundleclass://kz.zvezdochet.direction/kz.zvezdochet.direction.handler.DateCalcHandler" command="_qQfWYFlaEeWazeT1TAqY1Q"/>
   </fragments>
   <fragments xsi:type="fragment:StringModelFragment" xmi:id="_5XvsABHJEeSRINSX4-qBSA" featurename="children" parentElementId="kz.zvezdochet.runner.partstack.main">
     <elements xsi:type="basic:Part" xmi:id="_VmwfcBHKEeSRINSX4-qBSA" elementId="kz.zvezdochet.direction.part.houses" visible="false" contributionURI="bundleclass://kz.zvezdochet.direction/kz.zvezdochet.direction.part.HousePart" label="&#x421;&#x432;&#x43e;&#x434;&#x43d;&#x430;&#x44f; &#x442;&#x430;&#x431;&#x43b;&#x438;&#x446;&#x430; &#x434;&#x438;&#x440;&#x435;&#x43a;&#x446;&#x438;&#x439;" iconURI="platform:/plugin/kz.zvezdochet.direction/icons/direction.gif" closeable="true">
@@ -48,7 +46,9 @@
         <children xsi:type="menu:HandledToolItem" xmi:id="_m6OHAFC7EeWcbftnz6VMDQ" elementId="kz.zvezdochet.direction.handledtoolitem.today" label="&#x422;&#x440;&#x430;&#x43d;&#x437;&#x438;&#x442;&#x44b; &#x43d;&#x430; &#x441;&#x435;&#x433;&#x43e;&#x434;&#x43d;&#x44f;" iconURI="platform:/plugin/kz.zvezdochet/icons/date.png" command="_D5aHIGfxEeSSZffxnqlLeQ">
           <parameters xmi:id="_-q5OwFk-EeWazeT1TAqY1Q" elementId="kz.zvezdochet.direction.parameter.today" name="kz.zvezdochet.direction.commandparameter.today" value="1"/>
         </children>
-        <children xsi:type="menu:HandledToolItem" xmi:id="__iJWIFlaEeWazeT1TAqY1Q" elementId="kz.zvezdochet.direction.handledtoolitem.datecalc" label="&#x422;&#x440;&#x430;&#x43d;&#x437;&#x438;&#x442;&#x44b; &#x43d;&#x430; &#x434;&#x430;&#x442;&#x443;" iconURI="platform:/plugin/kz.zvezdochet/icons/calendar_view_day.png" command="_qQfWYFlaEeWazeT1TAqY1Q"/>
+        <children xsi:type="menu:HandledToolItem" xmi:id="__iJWIFlaEeWazeT1TAqY1Q" elementId="kz.zvezdochet.direction.handledtoolitem.datecalc" label="&#x422;&#x440;&#x430;&#x43d;&#x437;&#x438;&#x442;&#x44b; &#x43d;&#x430; &#x434;&#x430;&#x442;&#x443;" iconURI="platform:/plugin/kz.zvezdochet/icons/calendar_view_day.png" command="_D5aHIGfxEeSSZffxnqlLeQ">
+          <parameters xmi:id="_gJn7cFvIEeWIicTjK8AuXg" elementId="kz.zvezdochet.direction.parameter.date" name="kz.zvezdochet.direction.commandparameter.today" value="2"/>
+        </children>
       </toolbar>
     </elements>
   </fragments>

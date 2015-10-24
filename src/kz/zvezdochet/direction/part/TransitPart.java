@@ -9,11 +9,14 @@ import java.util.Map;
 import javax.annotation.PostConstruct;
 import javax.inject.Inject;
 
+import kz.zvezdochet.bean.Aspect;
 import kz.zvezdochet.bean.AspectType;
 import kz.zvezdochet.bean.Event;
 import kz.zvezdochet.bean.House;
 import kz.zvezdochet.bean.Place;
 import kz.zvezdochet.bean.Planet;
+import kz.zvezdochet.bean.SkyPoint;
+import kz.zvezdochet.bean.SkyPointAspect;
 import kz.zvezdochet.core.bean.Model;
 import kz.zvezdochet.core.handler.Handler;
 import kz.zvezdochet.core.service.DataAccessException;
@@ -37,6 +40,7 @@ import kz.zvezdochet.provider.EventProposalProvider;
 import kz.zvezdochet.provider.EventProposalProvider.EventContentProposal;
 import kz.zvezdochet.provider.PlaceProposalProvider;
 import kz.zvezdochet.provider.PlaceProposalProvider.PlaceContentProposal;
+import kz.zvezdochet.service.AspectService;
 import kz.zvezdochet.service.AspectTypeService;
 import kz.zvezdochet.service.EventService;
 import kz.zvezdochet.util.Configuration;
@@ -425,6 +429,18 @@ public class TransitPart extends ModelListView implements ICalculable {
 		dtBirth.setNullText(""); //$NON-NLS-1$
 		dtBirth.setSelection(new Date());
 
+		Button bt = new Button(secEvent, SWT.NONE);
+		bt.setText("Расчёт");
+		bt.addSelectionListener(new SelectionListener() {
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+				trevent = null;
+				onCalc(2);
+			}
+			@Override
+			public void widgetDefaultSelected(SelectionEvent e) {}
+		});
+		
 		Group secPlace = new Group(secEvent, SWT.NONE);
 		secPlace.setText(Messages.getString("PersonView.Place")); //$NON-NLS-1$
 		txPlace = new Text(secPlace, SWT.BORDER);
@@ -451,7 +467,7 @@ public class TransitPart extends ModelListView implements ICalculable {
 
 		txDescr = new Text(secEvent, SWT.MULTI | SWT.BORDER | SWT.WRAP | SWT.V_SCROLL);
 
-		Button bt = new Button(secEvent, SWT.NONE);
+		bt = new Button(secEvent, SWT.NONE);
 		bt.setText("Добавить");
 		bt.addSelectionListener(new SelectionListener() {
 			@Override
@@ -466,8 +482,8 @@ public class TransitPart extends ModelListView implements ICalculable {
 		GridLayoutFactory.swtDefaults().numColumns(4).applyTo(secPlace);
 		GridDataFactory.fillDefaults().span(4, 1).grab(true, false).applyTo(secPlace);
 		secEvent.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
-		GridLayoutFactory.swtDefaults().numColumns(2).applyTo(secEvent);
-		GridDataFactory.fillDefaults().align(SWT.FILL, SWT.CENTER).
+		GridLayoutFactory.swtDefaults().numColumns(3).applyTo(secEvent);
+		GridDataFactory.fillDefaults().span(2, 1).align(SWT.FILL, SWT.CENTER).
 			grab(true, false).applyTo(txName);
 		GridDataFactory.fillDefaults().align(SWT.FILL, SWT.CENTER).
 			grab(true, false).applyTo(dtBirth);
@@ -483,7 +499,7 @@ public class TransitPart extends ModelListView implements ICalculable {
 			grab(true, false).applyTo(txGreenwich);
 		GridDataFactory.fillDefaults().align(SWT.FILL, SWT.CENTER).
 			grab(false, false).applyTo(bt);
-		GridDataFactory.fillDefaults().span(2, 1).align(SWT.FILL, SWT.CENTER).
+		GridDataFactory.fillDefaults().span(3, 1).align(SWT.FILL, SWT.CENTER).
 			hint(SWT.DEFAULT, 48).grab(true, false).applyTo(txDescr);
 	}
 
@@ -492,8 +508,11 @@ public class TransitPart extends ModelListView implements ICalculable {
 		MODE_CALC = (int)mode;
 		System.out.println("onCalc" + MODE_CALC);
 		if (null == trevent)
-			syncModel(1);
+			syncModel(MODE_CALC);
 		trevent.init();
+		aged = new ArrayList<SkyPointAspect>();
+		makeTransits();
+		setTransitData(aged);
 		if (mode.equals(1)) {
 			refreshCard(trevent, person);
 			refreshTabs(trevent, person);
@@ -504,8 +523,8 @@ public class TransitPart extends ModelListView implements ICalculable {
 	}
 
 	public void onCalc(Event person, Event event) {
-		refreshCard(event, person);
-		refreshTabs(event, person);
+		refreshCard(person, event);
+		refreshTabs(person, event);
 	}
 
 	@Override
@@ -706,5 +725,65 @@ public class TransitPart extends ModelListView implements ICalculable {
 
 	public void resetEvent() {
 		trevent = null;
+	}
+
+	private List<SkyPointAspect> aged;
+
+	/**
+	 * Определение аспектной дирекции между небесными точками
+	 * @param point1 первая небесная точка
+	 * @param point2 вторая небесная точка
+	 */
+	private void calc(SkyPoint point1, SkyPoint point2) {
+		try {
+			//находим угол между точками космограммы с учетом возраста
+			double res = CalcUtil.getDifference(point1.getCoord(), point2.getCoord());
+	
+			//определяем, является ли аспект стандартным
+			List<Model> aspects = null;
+			try {
+				aspects = new AspectService().getList();
+			} catch (DataAccessException e) {
+				e.printStackTrace();
+			}
+			for (Model realasp : aspects) {
+				Aspect a = (Aspect)realasp;
+				if (a.isExactTruncAspect(res)) {
+					SkyPointAspect aspect = new SkyPointAspect();
+					aspect.setSkyPoint1(point1);
+					aspect.setSkyPoint2(point2);
+					aspect.setScore(res);
+					aspect.setAspect(a);
+					aged.add(aspect);
+				}
+			}
+		} catch (Exception e) {
+			DialogUtil.alertError(point1.getNumber() + ", " + point2.getNumber());
+			e.printStackTrace();
+		}
+	}
+
+	/**
+	 * Расчёт транзитов
+	 */
+	private void makeTransits() {
+		//дирекции планеты к другим планетам
+		List<Model> trplanets = trevent.getConfiguration().getPlanets();
+		for (Model model : trplanets) {
+			Planet trplanet = (Planet)model;
+			for (Model model2 : person.getConfiguration().getPlanets()) {
+				Planet planet = (Planet)model2;
+				calc(trplanet, planet);
+			}
+		}
+
+		//дирекции планеты к куспидам домов
+		for (Model model : trplanets) {
+			Planet trplanet = (Planet)model;
+			for (Model model2 : person.getConfiguration().getHouses()) {
+				House house = (House)model2;
+				calc(trplanet, house);
+			}
+		}
 	}
 }
