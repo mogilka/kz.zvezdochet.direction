@@ -33,6 +33,7 @@ public class AgeCalcHandler extends Handler {
 	private List<SkyPointAspect> aged = null;
 	private String aspectype;
 	private boolean retro = false;
+	List<Model> aspects = null;
 
 	@Execute
 	public void execute(@Active MPart activePart) {
@@ -79,6 +80,13 @@ public class AgeCalcHandler extends Handler {
 			int finage = agePart.getFinalAge() + 1;
 			agedp = new boolean[finage][16][16];
 			agedh = new boolean[finage][16][36];
+			//инициализируем аспекты
+			try {
+				aspects = new AspectService().getList();
+			} catch (DataAccessException e) {
+				e.printStackTrace();
+			}
+
 			for (int age = initage; age < finage; age++) {
 				//дирекции планеты к другим планетам
 				if (null == selhouse) {
@@ -153,12 +161,6 @@ public class AgeCalcHandler extends Handler {
 			double res = CalcUtil.getDifference(one, two);
 	
 			//определяем, является ли аспект стандартным
-			List<Model> aspects = null;
-			try {
-				aspects = new AspectService().getList();
-			} catch (DataAccessException e) {
-				e.printStackTrace();
-			}
 			for (Model realasp : aspects) {
 				Aspect a = (Aspect)realasp;
 				if (aspectype != null && !aspectype.equals(a.getType().getCode()))
