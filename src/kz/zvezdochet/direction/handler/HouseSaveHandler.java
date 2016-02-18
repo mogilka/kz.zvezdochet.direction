@@ -31,7 +31,8 @@ import org.eclipse.e4.core.di.annotations.Execute;
 import org.eclipse.e4.ui.model.application.ui.basic.MPart;
 
 /**
- * Сохранение в файл положительных дирекций планет по домам (только соединения)
+ * Сохранение в файл положительных дирекций планет по домам (только соединения).
+ * Производится для составления вопросов в рамках ректификации
  * @author Nataly Didenko
  */
 public class HouseSaveHandler extends Handler {
