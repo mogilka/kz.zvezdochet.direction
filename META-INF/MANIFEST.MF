@@ -15,7 +15,8 @@ Require-Bundle: org.eclipse.ui,
  org.eclipse.e4.ui.workbench,
  javax.inject,
  javax.annotation,
- kz.zvezdochet.analytics;bundle-version="1.0.0"
+ kz.zvezdochet.analytics;bundle-version="1.0.0",
+ kz.zvezdochet.export;bundle-version="1.0.0"
 Bundle-RequiredExecutionEnvironment: JavaSE-1.7
 Import-Package: kz.zvezdochet.core.bean,
  org.eclipse.nebula.widgets.cdatetime

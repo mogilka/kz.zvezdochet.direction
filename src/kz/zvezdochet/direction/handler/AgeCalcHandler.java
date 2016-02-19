@@ -77,7 +77,9 @@ public class AgeCalcHandler extends Handler {
 			retro = agePart.getRetro();
 
 			int initage = agePart.getInitialAge();
-			int finage = agePart.getFinalAge() + 1;
+			int finage = agePart.getFinalAge();
+			if (initage == finage)
+				++finage;
 			agedp = new boolean[finage][16][16];
 			agedh = new boolean[finage][16][36];
 			//инициализируем аспекты
