@@ -5,9 +5,12 @@ import html.Tag;
 import java.io.BufferedWriter;
 import java.io.FileOutputStream;
 import java.io.OutputStreamWriter;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
-import kz.zvezdochet.bean.Aspect;
+import kz.zvezdochet.analytics.bean.PlanetAspectText;
 import kz.zvezdochet.bean.AspectType;
 import kz.zvezdochet.bean.Event;
 import kz.zvezdochet.bean.House;
@@ -19,8 +22,9 @@ import kz.zvezdochet.core.util.CoreUtil;
 import kz.zvezdochet.core.util.PlatformUtil;
 import kz.zvezdochet.direction.Activator;
 import kz.zvezdochet.direction.bean.DirectionText;
+import kz.zvezdochet.direction.service.DirectionAspectService;
 import kz.zvezdochet.direction.service.DirectionService;
-import kz.zvezdochet.export.util.HTMLUtil;
+import kz.zvezdochet.service.AspectTypeService;
 
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.widgets.Display;
@@ -32,11 +36,6 @@ import org.eclipse.swt.widgets.Display;
  */
 @SuppressWarnings("unchecked")
 public class HTMLExporter {
-	private HTMLUtil util;
-
-	public HTMLExporter() {
-		util = new HTMLUtil();
-	}
 
 	/**
 	 * Генерация событий периода
@@ -60,85 +59,39 @@ public class HTMLExporter {
 			body.add(printCopyright());
 			html.add(body);
 	
-			//заголовок
-			Tag row = new Tag("tr");
-			Tag cell = new Tag("td");
-			Tag h1 = new Tag("h3");
-			h1.add("Прогноз событий");
-			cell.add(h1);
-			row.add(cell);
-			table.add(row);
-			
-			//содержание
-			Tag ul = new Tag("ol");
-			DirectionService service = new DirectionService();
-			boolean child = false;
-			int age = 0;
-			int i = 0;
+			//события
+			Map<Integer, Map<String, List<SkyPointAspect>>> map = new HashMap<Integer, Map<String, List<SkyPointAspect>>>();
 			for (SkyPointAspect spa : spas) {
-				++i;
-				int sage = (int)spa.getAge();
-				if (age != sage) {
-					age = sage;
-					child = age < event.MAX_TEEN_AGE;
-					if (i > 1) {
-						cell.add(ul);
-						row.add(cell);
-						table.add(row);
-					}
-					Tag tr = new Tag("tr");
-					Tag td = new Tag("td", "class=header id=age" + age);
-					td.add(CoreUtil.getAgeString(age));
-					tr.add(td);
-					table.add(tr);
-					row = new Tag("tr");
-					cell = new Tag("td");
-					ul = new Tag("ul");
+				int age = (int)spa.getAge();
+				Map<String, List<SkyPointAspect>> agemap = map.get(age);
+				if (null == agemap) {
+					agemap = new HashMap<String, List<SkyPointAspect>>();
+					agemap.put("main", new ArrayList<SkyPointAspect>());
+					agemap.put("strong", new ArrayList<SkyPointAspect>());
+					agemap.put("inner", new ArrayList<SkyPointAspect>());
 				}
-				Aspect aspect = spa.getAspect();
-				if (aspect.isMain()) {
-					AspectType type = aspect.getType();
-					Tag li = new Tag("li", "style=color:" + type.getFontColor());
-					Planet planet = (Planet)spa.getSkyPoint1();
-					SkyPoint skyPoint = spa.getSkyPoint2();
-					if (skyPoint instanceof House) {
-						House house = (House)skyPoint;
-						Tag p = new Tag("p");
-						Tag b = new Tag("b");
-						b.add(house.getShortName());
-						p.add(b);
-						li.add(p);
-
-						DirectionText dirText = (DirectionText)service.find(planet, house, type);
-						if (dirText != null) {
-							li.add(dirText.getText());
-							List<TextGender> genders = dirText.getGenderTexts(event.isFemale(), child);
-							for (TextGender gender : genders)
-								li.add(gender.getText());
+				String code = spa.getAspect().getType().getCode();
+				if (code.equals("NEUTRAL") || code.equals("NEGATIVE") || code.equals("POSITIVE")) {
+					if (spa.getSkyPoint2() instanceof Planet) {
+							List<SkyPointAspect> list = agemap.get("inner");
+							list.add(spa);
+					} else {
+						if (code.equals("NEUTRAL")) {
+							List<SkyPointAspect> list = agemap.get("main");
+							list.add(spa);
+						} else {
+							List<SkyPointAspect> list = agemap.get("strong");
+							list.add(spa);
 						}
-					} else if (skyPoint instanceof Planet) {
-						Planet planet2 = (Planet)skyPoint;
-						Tag p = new Tag("p");
-						Tag b = new Tag("b");
-						b.add(planet.getName() + " " + type.getSymbol() + " " + planet2.getName());
-						p.add(b);
-						li.add(p);
-
-//						DirectionText dirText = (DirectionText)service.find(planet, house, type);
-//						if (dirText != null) {
-//							li.add(dirText.getText());
-//							List<TextGender> genders = dirText.getGenderTexts(event.isFemale(), child);
-//							for (TextGender gender : genders)
-//								li.add(gender.getText());
-//						}
 					}
-					ul.add(li);
 				}
-				if (i == spas.size()) {
-					cell.add(ul);
-					row.add(cell);
-					table.add(row);
-				}
+				map.put(age, agemap);
+			}
+			for (Map.Entry<Integer, Map<String, List<SkyPointAspect>>> entry : map.entrySet()) {
+			    int age = entry.getKey();
+			    Map<String, List<SkyPointAspect>> agemap = entry.getValue();
+				for (Map.Entry<String, List<SkyPointAspect>> subentry : agemap.entrySet())
+					generateEvents(event, table, age, subentry.getKey(), subentry.getValue());
 			}
 			
 			if (html != null) {
@@ -188,5 +141,78 @@ public class HTMLExporter {
 		cell.add(a);
 		cell.add(" &mdash; Взгляни на себя в прошлом, настоящем и будущем");
 		return cell;
+	}
+
+	/**
+	 * Генерация событий по категориям
+	 */
+	private void generateEvents(Event event, Tag table, int age, String code, List<SkyPointAspect> spas) {
+		try {
+			Tag row = new Tag("tr");
+			Tag cell = new Tag("td", "class=header");
+			String header = "";
+			if (code.equals("main"))
+				header = "Главные события";
+			else if (code.equals("strong"))
+				header = "Менее значимые события";
+			else if (code.equals("inner"))
+				header = "Проявления личности";
+			cell.add(CoreUtil.getAgeString(age) + ": " + header);
+			row.add(cell);
+			table.add(row);
+
+			row = new Tag("tr");
+			cell = new Tag("td");
+			DirectionService service = new DirectionService();
+			DirectionAspectService servicea = new DirectionAspectService();
+			boolean child = age < event.MAX_TEEN_AGE;
+			for (SkyPointAspect spa : spas) {
+				AspectType type = spa.getAspect().getType();
+				String tcode = type.getCode();
+				if (tcode.contains("HIDDEN")) {
+					if (tcode.contains("NEGATIVE"))
+						type = (AspectType)new AspectTypeService().find("NEGATIVE");
+					else if (tcode.contains("POSITIVE"))
+						type = (AspectType)new AspectTypeService().find("POSITIVE");
+				}
+				Tag h5 = new Tag("h5");
+
+				Planet planet = (Planet)spa.getSkyPoint1();
+				SkyPoint skyPoint = spa.getSkyPoint2();
+				if (skyPoint instanceof House) {
+					House house = (House)skyPoint;
+					h5.add(planet.getShortName() + " " + type.getSymbol() + " " + house.getShortName());
+					cell.add(h5);
+
+					DirectionText dirText = (DirectionText)service.find(planet, house, type);
+					if (dirText != null) {
+						Tag li = new Tag("div", "style=color:" + type.getFontColor());
+						li.add(dirText.getText());
+						List<TextGender> genders = dirText.getGenderTexts(event.isFemale(), child);
+						for (TextGender gender : genders)
+							li.add(gender.getText());
+						cell.add(li);
+					}
+				} else if (skyPoint instanceof Planet) {
+					Planet planet2 = (Planet)skyPoint;
+					h5.add(planet.getShortName() + " " + type.getSymbol() + " " + planet2.getShortName());
+					cell.add(h5);
+
+					PlanetAspectText dirText = (PlanetAspectText)servicea.find(planet, planet2, type);
+					if (dirText != null) {
+						Tag li = new Tag("div", "style=color:" + type.getFontColor());
+						li.add(dirText.getText());
+						List<TextGender> genders = dirText.getGenderTexts(event.isFemale(), child);
+						for (TextGender gender : genders)
+							li.add(gender.getText());
+						cell.add(li);
+					}
+				}
+			}
+			row.add(cell);
+			table.add(row);
+		} catch (Exception e) {
+			// TODO: handle exception
+		}
 	}
 }

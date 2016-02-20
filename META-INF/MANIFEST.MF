@@ -21,3 +21,4 @@ Bundle-RequiredExecutionEnvironment: JavaSE-1.7
 Import-Package: kz.zvezdochet.core.bean,
  org.eclipse.nebula.widgets.cdatetime
 Bundle-ActivationPolicy: lazy
+Export-Package: kz.zvezdochet.direction.service
