@@ -1,5 +1,6 @@
 package kz.zvezdochet.direction.provider;
 
+import kz.zvezdochet.bean.Aspect;
 import kz.zvezdochet.bean.Planet;
 import kz.zvezdochet.bean.SkyPointAspect;
 import kz.zvezdochet.core.ui.ArrayLabelProvider;
@@ -19,10 +20,11 @@ public class TransitLabelProvider extends ArrayLabelProvider implements ITableLa
 	@Override
 	public String getColumnText(Object element, int columnIndex) {
 		SkyPointAspect aspect = (SkyPointAspect)element;
+		Aspect realasp = aspect.getAspect();
 		switch (columnIndex) {
 			case 0: return String.valueOf(aspect.getAge());
 			case 1: return aspect.getSkyPoint1().getName();
-			case 2: return aspect.getAspect().getName();
+			case 2: return (null == realasp) ? "" : realasp.getName();
 			case 3: return aspect.getSkyPoint2().getName();
 			case 4: return aspect.isRetro() ? "R" : "";
 			case 5: return String.valueOf(aspect.getScore());

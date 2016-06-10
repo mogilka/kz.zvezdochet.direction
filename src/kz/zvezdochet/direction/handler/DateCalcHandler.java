@@ -36,6 +36,7 @@ import org.eclipse.e4.ui.model.application.ui.basic.MPart;
  */
 public class DateCalcHandler extends Handler {
 	protected List<SkyPointAspect> aged;
+	private List<Model> aspects = null;
 
 	@Execute
 	public void execute(@Active MPart activePart) {
@@ -104,6 +105,13 @@ public class DateCalcHandler extends Handler {
 			transitPart.resetEvent();
 			Event event = transitPart.getModel();
 
+			//инициализируем список аспектов
+			try {
+				aspects = new AspectService().getList();
+			} catch (DataAccessException e) {
+				e.printStackTrace();
+			}
+
 			//дирекции планеты к другим планетам и куспидам домов
 			for (Model model : trplanets) {
 				Planet trplanet = (Planet)model;
@@ -137,16 +145,10 @@ public class DateCalcHandler extends Handler {
 	 */
 	private void calc(SkyPoint point1, SkyPoint point2) {
 		try {
-			//находим угол между точками космограммы с учетом возраста
+			//находим угол между точками космограммы
 			double res = CalcUtil.getDifference(point1.getCoord(), point2.getCoord());
 	
 			//определяем, является ли аспект стандартным
-			List<Model> aspects = null;
-			try {
-				aspects = new AspectService().getList();
-			} catch (DataAccessException e) {
-				e.printStackTrace();
-			}
 			for (Model realasp : aspects) {
 				Aspect a = (Aspect)realasp;
 				if (a.isExactTruncAspect(res)) {
@@ -156,6 +158,7 @@ public class DateCalcHandler extends Handler {
 					aspect.setScore(res);
 					aspect.setAspect(a);
 					aged.add(aspect);
+					break;
 				}
 			}
 		} catch (Exception e) {
