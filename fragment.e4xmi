@@ -1,5 +1,9 @@
 <?xml version="1.0" encoding="ASCII"?>
-<fragment:ModelFragments xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:basic="http://www.eclipse.org/ui/2010/UIModel/application/ui/basic" xmlns:commands="http://www.eclipse.org/ui/2010/UIModel/application/commands" xmlns:fragment="http://www.eclipse.org/ui/2010/UIModel/fragment" xmlns:menu="http://www.eclipse.org/ui/2010/UIModel/application/ui/menu" xmi:id="_-xgVEBHAEeSRINSX4-qBSA">
+<fragment:ModelFragments xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:advanced="http://www.eclipse.org/ui/2010/UIModel/application/ui/advanced" xmlns:basic="http://www.eclipse.org/ui/2010/UIModel/application/ui/basic" xmlns:commands="http://www.eclipse.org/ui/2010/UIModel/application/commands" xmlns:fragment="http://www.eclipse.org/ui/2010/UIModel/fragment" xmlns:menu="http://www.eclipse.org/ui/2010/UIModel/application/ui/menu" xmi:id="_-xgVEBHAEeSRINSX4-qBSA">
+  <imports xsi:type="commands:Command" xmi:id="_aNCnwDPeEeamVt0DJCGKag" elementId="kz.zvezdochet.core.command.openmodel"/>
+  <imports xsi:type="commands:Command" xmi:id="_XiQW4DRqEeabx9tcaBjnJA" elementId="kz.zvezdochet.core.command.addmodel"/>
+  <imports xsi:type="commands:Command" xmi:id="__sAgMDR5Eeabx9tcaBjnJA" elementId="kz.zvezdochet.core.command.savemodel"/>
+  <imports xsi:type="commands:Command" xmi:id="_6FtbsDSdEeabx9tcaBjnJA" elementId="kz.zvezdochet.core.command.delmodel"/>
   <fragments xsi:type="fragment:StringModelFragment" xmi:id="_AFsg0BHBEeSRINSX4-qBSA" featurename="commands" parentElementId="org.eclipse.e4.ide.application">
     <elements xsi:type="commands:Command" xmi:id="_OpDckBHBEeSRINSX4-qBSA" elementId="kz.zvezdochet.direction.command.house" commandName="houseCommand"/>
     <elements xsi:type="commands:Command" xmi:id="_3xQbEDGhEeSgQvy0ehax-Q" elementId="kz.zvezdochet.direction.command.age" commandName="ageCommand"/>
@@ -13,6 +17,8 @@
     <elements xsi:type="commands:Command" xmi:id="_8BbNQPsnEeSIu-7bgMS65Q" elementId="kz.zvezdochet.direction.command.savehouse" commandName="saveHouseCommand"/>
     <elements xsi:type="commands:Command" xmi:id="_3zDAAE1zEeWI6IF5iMt-Kg" elementId="kz.zvezdochet.direction.command.aspects" commandName="aspectsCommand"/>
     <elements xsi:type="commands:Command" xmi:id="_pTjQ8C5ZEea7ILmh2NGLvQ" elementId="kz.zvezdochet.direction.command.timeline" commandName="timelineCommand"/>
+    <elements xsi:type="commands:Command" xmi:id="_zg7WgDIgEeaojrkXKYxgpQ" elementId="kz.zvezdochet.direction.command.prediction" commandName="predictionCommand"/>
+    <elements xsi:type="commands:Command" xmi:id="_W7TOMDOyEeamVt0DJCGKag" elementId="kz.zvezdochet.direction.command.calcollation" commandName="calcCollationCommand"/>
   </fragments>
   <fragments xsi:type="fragment:StringModelFragment" xmi:id="_W-MikBHBEeSRINSX4-qBSA" featurename="handlers" parentElementId="org.eclipse.e4.ide.application">
     <elements xsi:type="commands:Handler" xmi:id="_axB7ABHBEeSRINSX4-qBSA" elementId="kz.zvezdochet.direction.handler.house" contributionURI="bundleclass://kz.zvezdochet.direction/kz.zvezdochet.direction.handler.HouseHandler" command="_OpDckBHBEeSRINSX4-qBSA"/>
@@ -25,6 +31,8 @@
     <elements xsi:type="commands:Handler" xmi:id="_EywgAPsoEeSIu-7bgMS65Q" elementId="kz.zvezdochet.direction.handler.savehouse" contributionURI="bundleclass://kz.zvezdochet.direction/kz.zvezdochet.direction.handler.HouseSaveHandler" command="_8BbNQPsnEeSIu-7bgMS65Q"/>
     <elements xsi:type="commands:Handler" xmi:id="_DIKeIE10EeWI6IF5iMt-Kg" elementId="kz.zvezdochet.direction.handler.aspects" contributionURI="bundleclass://kz.zvezdochet.direction/kz.zvezdochet.direction.handler.AspectHandler" command="_3zDAAE1zEeWI6IF5iMt-Kg"/>
     <elements xsi:type="commands:Handler" xmi:id="_uTNo4C5ZEea7ILmh2NGLvQ" elementId="kz.zvezdochet.direction.handler.timeline" contributionURI="bundleclass://kz.zvezdochet.direction/kz.zvezdochet.direction.handler.TimelineHandler" command="_pTjQ8C5ZEea7ILmh2NGLvQ"/>
+    <elements xsi:type="commands:Handler" xmi:id="_5-M78DIgEeaojrkXKYxgpQ" elementId="kz.zvezdochet.direction.handler.prediction" contributionURI="bundleclass://kz.zvezdochet.direction/kz.zvezdochet.direction.handler.PredictionsHandler" command="_zg7WgDIgEeaojrkXKYxgpQ"/>
+    <elements xsi:type="commands:Handler" xmi:id="_fOOGoDOyEeamVt0DJCGKag" elementId="kz.zvezdochet.direction.handler.calcollation" contributionURI="bundleclass://kz.zvezdochet.direction/kz.zvezdochet.direction.handler.CalcCollationHandler" command="_W7TOMDOyEeamVt0DJCGKag"/>
   </fragments>
   <fragments xsi:type="fragment:StringModelFragment" xmi:id="_5XvsABHJEeSRINSX4-qBSA" featurename="children" parentElementId="kz.zvezdochet.runner.partstack.main">
     <elements xsi:type="basic:Part" xmi:id="_VmwfcBHKEeSRINSX4-qBSA" elementId="kz.zvezdochet.direction.part.houses" visible="false" contributionURI="bundleclass://kz.zvezdochet.direction/kz.zvezdochet.direction.part.HousePart" label="&#x421;&#x432;&#x43e;&#x434;&#x43d;&#x430;&#x44f; &#x442;&#x430;&#x431;&#x43b;&#x438;&#x446;&#x430; &#x434;&#x438;&#x440;&#x435;&#x43a;&#x446;&#x438;&#x439;" iconURI="platform:/plugin/kz.zvezdochet.direction/icons/direction.gif" closeable="true">
@@ -60,5 +68,37 @@
     <elements xsi:type="menu:HandledToolItem" xmi:id="_W5ZjoEYuEeS3t7EppPCkGw" elementId="kz.zvezdochet.direction.handledtoolitem.house" label="&#x421;&#x432;&#x43e;&#x434;&#x43d;&#x430;&#x44f; &#x442;&#x430;&#x431;&#x43b;&#x438;&#x446;&#x430; &#x434;&#x438;&#x440;&#x435;&#x43a;&#x446;&#x438;&#x439;" iconURI="platform:/plugin/kz.zvezdochet.direction/icons/direction.gif" command="_OpDckBHBEeSRINSX4-qBSA"/>
     <elements xsi:type="menu:HandledToolItem" xmi:id="_jXYHQEYuEeS3t7EppPCkGw" elementId="kz.zvezdochet.direction.handledtoolitem.age" label="&#x422;&#x440;&#x430;&#x43d;&#x437;&#x438;&#x442;&#x44b; &#x432;&#x43e;&#x437;&#x440;&#x430;&#x441;&#x442;&#x430;" iconURI="platform:/plugin/kz.zvezdochet/icons/calendar_view_week.png" command="_3xQbEDGhEeSgQvy0ehax-Q"/>
     <elements xsi:type="menu:HandledToolItem" xmi:id="_2knV8F9NEeStt41griRQxQ" elementId="kz.zvezdochet.direction.handledtoolitem.transit" label="&#x422;&#x440;&#x430;&#x43d;&#x437;&#x438;&#x442;&#x44b;" iconURI="platform:/plugin/kz.zvezdochet.direction/icons/transit.gif" command="_tNsp4F9NEeStt41griRQxQ"/>
+  </fragments>
+  <fragments xsi:type="fragment:StringModelFragment" xmi:id="_FaPSwDFjEeavjuhVUd4MzQ" featurename="children" parentElementId="kz.zvezdochet.runner.perspectivestack.main">
+    <elements xsi:type="advanced:Perspective" xmi:id="_KqY9wDFjEeavjuhVUd4MzQ" elementId="kz.zvezdochet.direction.perspective.prediction" label="&#x41f;&#x440;&#x43e;&#x433;&#x43d;&#x43e;&#x437;&#x44b;" iconURI="platform:/plugin/kz.zvezdochet.direction/icons/chart_line.png">
+      <children xsi:type="basic:PartSashContainer" xmi:id="_NRP10DFkEeavjuhVUd4MzQ" elementId="kz.zvezdochet.direction.partsashcontainer.collation" horizontal="true">
+        <children xsi:type="basic:PartStack" xmi:id="_UpAtkDFkEeavjuhVUd4MzQ" elementId="kz.zvezdochet.direction.partstack.collations">
+          <children xsi:type="basic:Part" xmi:id="_cU40IDFkEeavjuhVUd4MzQ" elementId="kz.zvezdochet.direction.part.collations" contributionURI="bundleclass://kz.zvezdochet.direction/kz.zvezdochet.direction.part.SearchPart" label="&#x41f;&#x440;&#x43e;&#x433;&#x43d;&#x43e;&#x437;&#x44b;" iconURI="platform:/plugin/kz.zvezdochet.direction/icons/chart_line.png">
+            <toolbar xmi:id="_ArgIADOuEeamVt0DJCGKag" elementId="kz.zvezdochet.direction.toolbar.3">
+              <children xsi:type="menu:HandledToolItem" xmi:id="_ElqQcDOuEeamVt0DJCGKag" elementId="kz.zvezdochet.direction.handledtoolitem.addcollation" label="&#x414;&#x43e;&#x431;&#x430;&#x432;&#x438;&#x442;&#x44c;" iconURI="platform:/plugin/kz.zvezdochet.core/icons/addElement.gif" command="_XiQW4DRqEeabx9tcaBjnJA">
+                <parameters xmi:id="_7mBlsDPeEeamVt0DJCGKag" elementId="kz.zvezdochet.direction.parameter.addmodel" name="kz.zvezdochet.core.commandparameter.addmodel" value="kz.zvezdochet.direction.part.collation"/>
+              </children>
+              <children xsi:type="menu:HandledToolItem" xmi:id="_JdVKADOuEeamVt0DJCGKag" elementId="kz.zvezdochet.direction.handledtoolitem.editprediction" label="&#x418;&#x437;&#x43c;&#x435;&#x43d;&#x438;&#x442;&#x44c;" iconURI="platform:/plugin/kz.zvezdochet.core/icons/editElement.png" command="_aNCnwDPeEeamVt0DJCGKag">
+                <parameters xmi:id="_q660sDRqEeabx9tcaBjnJA" elementId="kz.zvezdochet.direction.parameter.openmodel" name="kz.zvezdochet.core.commandparameter.openmodel" value="kz.zvezdochet.direction.part.collation"/>
+              </children>
+              <children xsi:type="menu:HandledToolItem" xmi:id="_KeBK8DOuEeamVt0DJCGKag" elementId="kz.zvezdochet.direction.handledtoolitem.delprediction" label="&#x423;&#x434;&#x430;&#x43b;&#x438;&#x442;&#x44c;" iconURI="platform:/plugin/kz.zvezdochet.core/icons/trash.png" command="_6FtbsDSdEeabx9tcaBjnJA"/>
+            </toolbar>
+          </children>
+        </children>
+        <children xsi:type="basic:PartStack" xmi:id="_tzW2IDFkEeavjuhVUd4MzQ" elementId="kz.zvezdochet.direction.partstack.collation">
+          <children xsi:type="basic:Part" xmi:id="_xgGNoDFkEeavjuhVUd4MzQ" elementId="kz.zvezdochet.direction.part.collation" contributionURI="bundleclass://kz.zvezdochet.direction/kz.zvezdochet.direction.part.CollationPart" label="&#x41f;&#x440;&#x43e;&#x433;&#x43d;&#x43e;&#x437;" iconURI="platform:/plugin/kz.zvezdochet.direction/icons/chart_line.png">
+            <toolbar xmi:id="__G6IwDOtEeamVt0DJCGKag" elementId="kz.zvezdochet.direction.toolbar.2">
+              <children xsi:type="menu:HandledToolItem" xmi:id="_s1WqsDOyEeamVt0DJCGKag" elementId="kz.zvezdochet.direction.handledtoolitem.savecollation" label="&#x421;&#x43e;&#x445;&#x440;&#x430;&#x43d;&#x438;&#x442;&#x44c;" iconURI="platform:/plugin/kz.zvezdochet.core/icons/applyElement.gif" command="__sAgMDR5Eeabx9tcaBjnJA"/>
+              <children xsi:type="menu:HandledToolItem" xmi:id="_608LADOyEeamVt0DJCGKag" elementId="kz.zvezdochet.direction.handledtoolitem.calcollation" label="&#x420;&#x430;&#x441;&#x447;&#x451;&#x442;" iconURI="platform:/plugin/kz.zvezdochet/icons/calc.png" command="_W7TOMDOyEeamVt0DJCGKag"/>
+            </toolbar>
+          </children>
+        </children>
+      </children>
+    </elements>
+  </fragments>
+  <fragments xsi:type="fragment:StringModelFragment" xmi:id="_iMW3YDIgEeaojrkXKYxgpQ" featurename="children" parentElementId="org.eclipse.ui.main.menu">
+    <elements xsi:type="menu:Menu" xmi:id="_ls_skDIgEeaojrkXKYxgpQ" elementId="kz.zvezdochet.direction.menu.prediction" label="&#x41f;&#x440;&#x43e;&#x433;&#x43d;&#x43e;&#x437;&#x44b;" iconURI="">
+      <children xsi:type="menu:HandledMenuItem" xmi:id="_tMVL8DIgEeaojrkXKYxgpQ" elementId="kz.zvezdochet.direction.handledmenuitem.prediction" label="&#x41f;&#x440;&#x43e;&#x433;&#x43d;&#x43e;&#x437;&#x44b;" iconURI="platform:/plugin/kz.zvezdochet.direction/icons/chart_line.png" command="_zg7WgDIgEeaojrkXKYxgpQ"/>
+    </elements>
   </fragments>
 </fragment:ModelFragments>

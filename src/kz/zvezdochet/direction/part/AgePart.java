@@ -240,4 +240,9 @@ public class AgePart extends ModelListView {
 	public boolean getRetro() {
 		return btRetro.getSelection();
 	}
+
+	@Override
+	public Model createModel() {
+		return null;
+	}
 }

@@ -3,6 +3,7 @@ package kz.zvezdochet.direction.part;
 import javax.annotation.PostConstruct;
 import javax.inject.Inject;
 
+import kz.zvezdochet.core.bean.Model;
 import kz.zvezdochet.core.ui.view.ModelListView;
 import kz.zvezdochet.core.ui.view.View;
 import kz.zvezdochet.direction.provider.TransitLabelProvider;
@@ -38,6 +39,11 @@ public class TimelinePart extends ModelListView {
 	@Override
 	public boolean check(int mode) throws Exception {
 		return false;
+	}
+
+	@Override
+	public Model createModel() {
+		return null;
 	}
 
 }
