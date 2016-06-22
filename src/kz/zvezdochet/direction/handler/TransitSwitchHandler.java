@@ -21,7 +21,7 @@ public class TransitSwitchHandler extends Handler {
 			updateStatus("Переключение карты транзитов", false);
 			TransitPart transitPart = (TransitPart)activePart.getObject();
 			int mode = transitPart.getModeCalc();
-			mode = (0 == mode) ? 1 : 0;
+			mode = (mode != 1) ? 1 : 2;
 			System.out.println("mode" + mode);
 			transitPart.onCalc(mode);
 			updateStatus("Карта транзитов переключена", false);

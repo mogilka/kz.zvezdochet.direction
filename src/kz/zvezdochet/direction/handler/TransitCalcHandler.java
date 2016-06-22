@@ -35,5 +35,4 @@ public class TransitCalcHandler extends Handler {
 			e.printStackTrace();
 		}
 	}
-
 }

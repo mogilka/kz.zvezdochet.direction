@@ -105,10 +105,10 @@ public class TransitPart extends ModelListView implements ICalculable {
 	
 	/**
 	 * Режим расчёта транзитов.
-	 * 1 - по умолчанию отображаются планеты события в карте персоны.
-	 * 2 - режим планет персоны в карте события
+	 * 1 - режим планет события в карте персоны
+	 * 2 - по умолчанию отображаются планеты персоны в карте события
 	 */
-	private int MODE_CALC = 1;
+	private int MODE_CALC = 2;
 
 	private CosmogramComposite cmpCosmogram;
 	private CTabFolder folder;
@@ -506,22 +506,29 @@ public class TransitPart extends ModelListView implements ICalculable {
 	@Override
 	public void onCalc(Object mode) {
 		MODE_CALC = (int)mode;
-		System.out.println("onCalc" + MODE_CALC);
+//		System.out.println("onCalc" + MODE_CALC);
 		if (null == trevent)
 			syncModel(MODE_CALC);
 		trevent.init();
 		aged = new ArrayList<SkyPointAspect>();
-		makeTransits();
-		setTransitData(aged);
+
+		Event first = person;
+		Event second = trevent;
 		if (mode.equals(1)) {
-			refreshCard(trevent, person);
-			refreshTabs(trevent, person);
-		} else {
-			refreshCard(person, trevent);
-			refreshTabs(person, trevent);
+			first = trevent;
+			second = person;
 		}
+		makeTransits(first, second);
+		setTransitData(aged);
+		refreshCard(second, first);
+		refreshTabs(second, first);
 	}
 
+	/**
+	 * Расчёт и отображения транзитов события
+	 * @param person персона
+	 * @param event событие
+	 */
 	public void onCalc(Event person, Event event) {
 		refreshCard(person, event);
 		refreshTabs(person, event);
@@ -562,6 +569,7 @@ public class TransitPart extends ModelListView implements ICalculable {
 
 	/**
 	 * Синхронизация события с представлением
+	 * @param mode режим отображения транзитов
 	 */
 	private void syncModel(int mode) {
 		try {
@@ -736,16 +744,11 @@ public class TransitPart extends ModelListView implements ICalculable {
 	 */
 	private void calc(SkyPoint point1, SkyPoint point2) {
 		try {
-			//находим угол между точками космограммы с учетом возраста
+			//находим угол между точками космограммы
 			double res = CalcUtil.getDifference(point1.getCoord(), point2.getCoord());
 	
 			//определяем, является ли аспект стандартным
-			List<Model> aspects = null;
-			try {
-				aspects = new AspectService().getList();
-			} catch (DataAccessException e) {
-				e.printStackTrace();
-			}
+			List<Model> aspects = new AspectService().getList();
 			for (Model realasp : aspects) {
 				Aspect a = (Aspect)realasp;
 				if (a.isExactTruncAspect(res)) {
@@ -757,6 +760,8 @@ public class TransitPart extends ModelListView implements ICalculable {
 					aged.add(aspect);
 				}
 			}
+		} catch (DataAccessException e) {
+			e.printStackTrace();
 		} catch (Exception e) {
 			DialogUtil.alertError(point1.getNumber() + ", " + point2.getNumber());
 			e.printStackTrace();
@@ -766,21 +771,17 @@ public class TransitPart extends ModelListView implements ICalculable {
 	/**
 	 * Расчёт транзитов
 	 */
-	private void makeTransits() {
-		//дирекции планеты к другим планетам
-		List<Model> trplanets = trevent.getConfiguration().getPlanets();
+	private void makeTransits(Event first, Event second) {
+		List<Model> trplanets = first.getConfiguration().getPlanets();
 		for (Model model : trplanets) {
 			Planet trplanet = (Planet)model;
-			for (Model model2 : person.getConfiguration().getPlanets()) {
+			//дирекции планеты к планетам партнёра
+			for (Model model2 : second.getConfiguration().getPlanets()) {
 				Planet planet = (Planet)model2;
 				calc(trplanet, planet);
 			}
-		}
-
-		//дирекции планеты к куспидам домов
-		for (Model model : trplanets) {
-			Planet trplanet = (Planet)model;
-			for (Model model2 : person.getConfiguration().getHouses()) {
+			//дирекции планеты к куспидам домов
+			for (Model model2 : second.getConfiguration().getHouses()) {
 				House house = (House)model2;
 				calc(trplanet, house);
 			}
