@@ -1,5 +1,6 @@
 package kz.zvezdochet.direction.handler;
 
+import java.util.Arrays;
 import java.util.List;
 
 import kz.zvezdochet.bean.Aspect;
@@ -111,16 +112,25 @@ public class CalcCollationHandler extends Handler {
 	 * Расчёт транзитов
 	 */
 	private void makeTransits(Event event, Event person) {
+		Long[] pfilter = Planet.getSportSet();
+		Long[] hfilter = House.getSportSet();
+
 		List<Model> planets = person.getConfiguration().getPlanets();
+		List<Model> planets2 = event.getConfiguration().getPlanets();
+		List<Model> houses = event.getConfiguration().getHouses();
 		for (Model model : planets) {
+			if (!Arrays.asList(pfilter).contains(model.getId()))
+				continue;
 			Planet planet = (Planet)model;
 			//дирекции планеты участника к планетам события
-			for (Model model2 : event.getConfiguration().getPlanets()) {
+			for (Model model2 : planets2) {
 				Planet eplanet = (Planet)model2;
 				calc(planet, eplanet);
 			}
 			//дирекции планеты участника к куспидам домов события
-			for (Model model2 : event.getConfiguration().getHouses()) {
+			for (Model model2 : houses) {
+				if (!Arrays.asList(hfilter).contains(model2.getId()))
+					continue;
 				House house = (House)model2;
 				calc(planet, house);
 			}

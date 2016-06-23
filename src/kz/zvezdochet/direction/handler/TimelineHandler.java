@@ -66,7 +66,7 @@ public class TimelineHandler extends Handler {
 
 			//инициализируем список аспектов
 			try {
-				aspects = new AspectService().getList();
+				aspects = new AspectService().getMajorList();
 			} catch (DataAccessException e) {
 				e.printStackTrace();
 			}
