@@ -56,6 +56,8 @@ public class CollationPart extends ModelPart implements ICalculable {
 	public CollationPart() {}
 
 	private Text txEvent;
+	private Text txDescription;
+	private Text txText;
 	private TableViewer tvParticipants;
 	private Table tbParticipants;
 	private TableViewer tvMembers;
@@ -70,6 +72,17 @@ public class CollationPart extends ModelPart implements ICalculable {
 		new InfoDecoration(txEvent, SWT.TOP | SWT.LEFT);
 		txEvent.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false));
 		txEvent.setFocus();
+
+		lb = new Label(parent, SWT.NONE);
+		lb.setText("Прогноз");
+		txText = new Text(parent, SWT.MULTI | SWT.BORDER | SWT.WRAP | SWT.V_SCROLL);
+		txText.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
+		txText.setSize(SWT.DEFAULT, 48);
+
+		lb = new Label(parent, SWT.NONE);
+		lb.setText("Фактический итог");
+		txDescription = new Text(parent, SWT.BORDER);
+		txDescription.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false));
 
 		EventProposalProvider proposalProvider = new EventProposalProvider(new Object[] {0});
 	    ContentProposalAdapter adapter = new ContentProposalAdapter(
@@ -285,11 +298,10 @@ public class CollationPart extends ModelPart implements ICalculable {
 	}
 	
 	@Override
-	public void onCalc(Object mode) {
-		System.out.println("onCalc" + mode);
+	public void onCalc(Object obj) {
+//		System.out.println(obj);
 		try {
-			Event event = (Event)getModel((int)mode, true);
-			//TODO расчёт
+			txText.setText(obj.toString());
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -303,6 +315,8 @@ public class CollationPart extends ModelPart implements ICalculable {
 			txEvent.setText("");
 		else
 			txEvent.setText(collation.getEvent().getName());
+		txDescription.setText(collation.getDescription());
+		txText.setText(collation.getText());
 		initParticipantTable(collation.getParticipants());
 		initMemberTable(null);
 	}

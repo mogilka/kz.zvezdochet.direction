@@ -35,21 +35,23 @@ public class CollationService extends ModelService {
 		try {
 			String sql;
 			if (null == model.getId()) 
-				sql = "insert into " + tableName + " values(0,?,?,?,?)";
+				sql = "insert into " + tableName + " values(0,?,?,?,?,?)";
 			else
 				sql = "update " + tableName + " set " +
 					"calculated = ?, " +
 					"eventid = ?, " +
 					"description = ?, " +
-					"created_at = ? " +
+					"created_at = ?, " +
+					"text = ? " +
 					"where id = ?";
 			ps = Connector.getInstance().getConnection().prepareStatement(sql);
 			ps.setInt(1, collation.isCalculated() ? 1 : 0);
 			ps.setLong(2, collation.getEventid());
 			ps.setString(3, collation.getDescription());
 			ps.setString(4, DateUtil.formatCustomDateTime(new Date(), "yyyy-MM-dd HH:mm:ss"));
+			ps.setString(5, collation.getText());
 			if (model.getId() != null) 
-				ps.setLong(5, model.getId());
+				ps.setLong(6, model.getId());
 
 			result = ps.executeUpdate();
 			if (1 == result) {
@@ -123,6 +125,8 @@ public class CollationService extends ModelService {
 		model.setId(Long.parseLong(rs.getString("ID")));
 		if (rs.getString("description") != null)
 			model.setDescription(rs.getString("description"));
+		if (rs.getString("text") != null)
+			model.setText(rs.getString("text"));
 		model.setCreated_at(DateUtil.getDatabaseDateTime(rs.getString("created_at")));
 		String s = rs.getString("calculated");
 		model.setCalculated(s.equals("1") ? true : false);

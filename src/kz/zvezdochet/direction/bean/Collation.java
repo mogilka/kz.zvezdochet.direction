@@ -33,9 +33,13 @@ public class Collation extends Model {
 	 */
 	private List<Event> participants;
 	/**
-	 * Описание
+	 * Описание (фактический результат события)
 	 */
 	private String description = "";
+	/**
+	 * Прогнозируемый результат события
+	 */
+	private String text = "";
 	/**
 	 * Признак успешного расчёта
 	 */
@@ -97,5 +101,13 @@ public class Collation extends Model {
 	public void setEvent(Event event) {
 		this.event = event;
 		this.eventid = event.getId();
+	}
+
+	public String getText() {
+		return text;
+	}
+
+	public void setText(String text) {
+		this.text = text;
 	}
 }
