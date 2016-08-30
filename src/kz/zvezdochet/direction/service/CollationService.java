@@ -67,7 +67,8 @@ public class CollationService extends ModelService {
 						rsid.close();
 				}
 			}
-			saveParticipants(collation);
+			if (collation.isNeedSaveRel())
+				saveParticipants(collation);
 		} catch (Exception e) {
 			e.printStackTrace();
 		} finally {

@@ -110,4 +110,16 @@ public class Collation extends Model {
 	public void setText(String text) {
 		this.text = text;
 	}
+
+	/**
+	 * Признак необходимости сохранить данные об участниках в БД
+	 */
+	private boolean needSaveRel = false;
+
+	public boolean isNeedSaveRel() {
+		return needSaveRel;
+	}
+	public void setNeedSaveRel(boolean needSaveRel) {
+		this.needSaveRel = needSaveRel;
+	}
 }

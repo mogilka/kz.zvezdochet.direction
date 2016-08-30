@@ -210,7 +210,7 @@ public class CollationPart extends ModelPart implements ICalculable {
 	 * Добавление фигуранта события
 	 * @param event фигурант
 	 */
-	protected void addMember(Event event) {
+	private void addMember(Event event) {
 		try {
 			IStructuredSelection sel = (IStructuredSelection)tvParticipants.getSelection();
 			if (null == sel.getFirstElement()) {
@@ -227,6 +227,7 @@ public class CollationPart extends ModelPart implements ICalculable {
 				participant.setMembers(members);
 				tvMembers.add(event);
 				tvMembers.setSelection(new StructuredSelection(event));
+				((Collation)model).setNeedSaveRel(true);
 			}				
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -237,7 +238,7 @@ public class CollationPart extends ModelPart implements ICalculable {
 	 * Добавление участника события
 	 * @param event участник
 	 */
-	protected void addParticipant(Event event) {
+	private void addParticipant(Event event) {
 		try {
 			Collation collation = (Collation)getModel(0, false);
 			if (null == collation)
@@ -255,6 +256,7 @@ public class CollationPart extends ModelPart implements ICalculable {
 					collation.setParticipants(participants);
 					tvParticipants.add(event);
 					tvParticipants.setSelection(new StructuredSelection(event));
+					collation.setNeedSaveRel(true);
 				}
 			}
 		} catch (DataAccessException e) {
@@ -324,7 +326,6 @@ public class CollationPart extends ModelPart implements ICalculable {
 	@Override
 	public void syncModel(int mode) throws Exception {
 		// TODO Auto-generated method stub
-		
 	}
 
 	/**

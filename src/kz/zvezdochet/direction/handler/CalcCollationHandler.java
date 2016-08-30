@@ -239,6 +239,8 @@ public class CalcCollationHandler extends Handler {
 		Long[] pfilter = Planet.getSportSet();
 		Long[] hfilter = House.getSportSet();
 
+		if (null == person.getConfiguration())
+			person.calc(false);
 		List<Model> planets = person.getConfiguration().getPlanets();
 		List<Model> planets2 = event.getConfiguration().getPlanets();
 		List<Model> houses = event.getConfiguration().getHouses();
@@ -249,6 +251,8 @@ public class CalcCollationHandler extends Handler {
 			Planet planet = (Planet)model;
 			//дирекции планеты участника к планетам события
 			for (Model model2 : planets2) {
+				if (!Arrays.asList(pfilter).contains(model2.getId()))
+					continue;
 				Planet eplanet = (Planet)model2;
 				Aspect aspect = calc(planet, eplanet);
 				if (aspect != null) {
