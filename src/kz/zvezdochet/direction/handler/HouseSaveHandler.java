@@ -96,10 +96,10 @@ public class HouseSaveHandler extends Handler {
 					if (null == dirText)
 						row += "\n\n";
 					else {
-						row += dirText.getText() + "\n\n";
+						row += dirText.getText().replaceAll("\\<.*?>", "") + "\n\n";
 						List<TextGender> genders = dirText.getGenderTexts(event.isFemale(), child);
 						for (TextGender gender : genders)
-							row += gender.getText() + "\n\n";
+							row += gender.getText().replaceAll("\\<.*?>", "") + "\n\n";
 					}
 					data.append(row);
 				}
@@ -109,7 +109,7 @@ public class HouseSaveHandler extends Handler {
 			String datafile = PlatformUtil.getPath(Activator.PLUGIN_ID, "/out/questions.txt").getPath(); //$NON-NLS-1$
 			BufferedWriter writer = new BufferedWriter(new OutputStreamWriter( 
 				new FileOutputStream(datafile), "UTF-8"));
-			String text = "Здравствуйте!\n\n"
+			String text = "Добрый день!\n\n"
 				+ "Предварительный расчёт сделан, нужно его уточнить."
 				+ " Для этого по каждому пункту, приведённому ниже, ответьте, происходили ли в вашей жизни описанные события.\n\n"
 				+ "Если происходили, укажите правильный возраст или дату.\n"
