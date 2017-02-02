@@ -25,7 +25,7 @@ public class AgeSaveHandler extends Handler {
 	@Execute
 	public void execute(@Active MPart activePart) {
 		try {
-			AgePart agePart = (AgePart)activePart.getObject();
+			final AgePart agePart = (AgePart)activePart.getObject();
 			@SuppressWarnings("unchecked")
 			final List<SkyPointAspect> spas = (List<SkyPointAspect>)agePart.getData();
 			if (null == spas) return;
@@ -36,7 +36,7 @@ public class AgeSaveHandler extends Handler {
     		BusyIndicator.showWhile(display, new Runnable() {
     			@Override
     			public void run() {
-    				new HTMLExporter().generate(event, spas);
+    				new HTMLExporter().generate(event, spas, agePart.getInitialAge(), agePart.getFinalAge());
     			}
     		});
 			//TODO показывать диалог, что документ сформирован

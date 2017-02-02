@@ -1,7 +1,5 @@
 package kz.zvezdochet.direction.exporter;
 
-import html.Tag;
-
 import java.io.BufferedWriter;
 import java.io.FileOutputStream;
 import java.io.OutputStreamWriter;
@@ -10,24 +8,27 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.eclipse.jface.dialogs.MessageDialog;
+import org.eclipse.swt.widgets.Display;
+
+import html.Tag;
 import kz.zvezdochet.analytics.bean.PlanetAspectText;
 import kz.zvezdochet.bean.AspectType;
 import kz.zvezdochet.bean.Event;
 import kz.zvezdochet.bean.House;
+import kz.zvezdochet.bean.Place;
 import kz.zvezdochet.bean.Planet;
 import kz.zvezdochet.bean.SkyPoint;
 import kz.zvezdochet.bean.SkyPointAspect;
 import kz.zvezdochet.core.bean.TextGender;
 import kz.zvezdochet.core.util.CoreUtil;
+import kz.zvezdochet.core.util.DateUtil;
 import kz.zvezdochet.core.util.PlatformUtil;
 import kz.zvezdochet.direction.Activator;
 import kz.zvezdochet.direction.bean.DirectionText;
 import kz.zvezdochet.direction.service.DirectionAspectService;
 import kz.zvezdochet.direction.service.DirectionService;
 import kz.zvezdochet.service.AspectTypeService;
-
-import org.eclipse.jface.dialogs.MessageDialog;
-import org.eclipse.swt.widgets.Display;
 
 /**
  * Генератор HTML-файлов для экспорта данных
@@ -41,7 +42,7 @@ public class HTMLExporter {
 	 * Генерация событий периода
 	 * @param event событие
 	 */
-	public void generate(Event event, List<SkyPointAspect> spas) {
+	public void generate(Event event, List<SkyPointAspect> spas, int initage, int finalage) {
 		try {
 			Tag html = new Tag("html");
 			Tag head = new Tag("head");
@@ -58,7 +59,29 @@ public class HTMLExporter {
 			body.add(table);
 			body.add(printCopyright());
 			html.add(body);
-	
+
+			//дата события
+			Tag row = new Tag("tr");
+			Tag cell = new Tag("td", "class=mainheader");
+			Place place = event.getPlace();
+			if (null == place)
+				place = new Place().getDefault();
+			cell.add(DateUtil.fulldtf.format(event.getBirth()) +
+				"&ensp;" + (event.getZone() >= 0 ? "UTC+" : "") + event.getZone() +
+				"&ensp;" + (event.getDst() >= 0 ? "DST+" : "") + event.getDst() + 
+				"&emsp;" + place.getName() +
+				"&ensp;" + place.getLatitude() + "&#176;" +
+				", " + place.getLongitude() + "&#176;");
+			row.add(cell);
+			table.add(row);
+			
+			//содержание
+			row = new Tag("tr");
+			cell = new Tag("td");
+			generateContents(spas, cell, initage, finalage);
+			row.add(cell);
+			table.add(row);
+
 			//события
 			Map<Integer, Map<String, List<SkyPointAspect>>> map = new HashMap<Integer, Map<String, List<SkyPointAspect>>>();
 			for (SkyPointAspect spa : spas) {
@@ -73,8 +96,8 @@ public class HTMLExporter {
 				String code = spa.getAspect().getType().getCode();
 				if (code.equals("NEUTRAL") || code.equals("NEGATIVE") || code.equals("POSITIVE")) {
 					if (spa.getSkyPoint2() instanceof Planet) {
-							List<SkyPointAspect> list = agemap.get("inner");
-							list.add(spa);
+						List<SkyPointAspect> list = agemap.get("inner");
+						list.add(spa);
 					} else {
 						if (code.equals("NEUTRAL")) {
 							List<SkyPointAspect> list = agemap.get("main");
@@ -149,7 +172,11 @@ public class HTMLExporter {
 	private void generateEvents(Event event, Tag table, int age, String code, List<SkyPointAspect> spas) {
 		try {
 			Tag row = new Tag("tr");
-			Tag cell = new Tag("td", "class=header");
+			String options = "class=header";
+			if (code.equals("strong"))
+				options += " id=" + age;
+			Tag cell = new Tag("td", options);
+
 			String header = "";
 			if (code.equals("main"))
 				header = "Главные события";
@@ -195,6 +222,8 @@ public class HTMLExporter {
 					}
 				} else if (skyPoint instanceof Planet) {
 					Planet planet2 = (Planet)skyPoint;
+					if (planet.getNumber() > planet2.getNumber())
+						continue;
 					h5.add(planet.getShortName() + " " + type.getSymbol() + " " + planet2.getShortName());
 					cell.add(h5);
 
@@ -213,6 +242,33 @@ public class HTMLExporter {
 			table.add(row);
 		} catch (Exception e) {
 			// TODO: handle exception
+		}
+	}
+
+	/**
+	 * Генерация содержания
+	 * @param spas списоксобытие
+	 * @param cell ячейка-контейнер таблицы разметки
+	 */
+	private void generateContents(List<SkyPointAspect> spas, Tag cell, int initage, int finalage) {
+		try {
+			Tag p = new Tag("p");
+			p.add("Прогноз содержит как позитивные, так и негативные события. Негатив - признак того, что вам необходим отдых и переосмысление. Не зацикливайтесь на негативе, развивайте свои сильные стороны, используя благоприятные события. ");
+			p.add("Если из возраста в возраст события повторяются, значит они создают большой резонанс. Максимальная погрешность прогноза события ±1 год.");
+			cell.add(p);
+
+			Tag b = new Tag("h5");
+			b.add("Возраст:");
+			cell.add(b);
+
+			for (int i = initage; i <= finalage; i++) {
+				Tag a = new Tag("a", "href=#" + i);
+				a.add(CoreUtil.getAgeString(i));
+				cell.add("&emsp;");
+				cell.add(a);
+			}
+		} catch(Exception e) {
+			e.printStackTrace();
 		}
 	}
 }
