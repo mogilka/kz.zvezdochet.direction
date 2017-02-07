@@ -3,15 +3,15 @@ package kz.zvezdochet.direction.part;
 import javax.annotation.PostConstruct;
 import javax.inject.Inject;
 
+import org.eclipse.swt.SWT;
+import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.TableColumn;
+
 import kz.zvezdochet.bean.Planet;
 import kz.zvezdochet.core.ui.view.ListView;
 import kz.zvezdochet.core.ui.view.View;
 import kz.zvezdochet.core.util.CalcUtil;
 import kz.zvezdochet.util.Configuration;
-
-import org.eclipse.swt.SWT;
-import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.TableColumn;
 
 /**
  * Дирекции планет по домам

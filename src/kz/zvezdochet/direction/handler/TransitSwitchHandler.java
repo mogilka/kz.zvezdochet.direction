@@ -1,12 +1,12 @@
 package kz.zvezdochet.direction.handler;
 
-import kz.zvezdochet.core.handler.Handler;
-import kz.zvezdochet.core.ui.util.DialogUtil;
-import kz.zvezdochet.direction.part.TransitPart;
-
 import org.eclipse.e4.core.contexts.Active;
 import org.eclipse.e4.core.di.annotations.Execute;
 import org.eclipse.e4.ui.model.application.ui.basic.MPart;
+
+import kz.zvezdochet.core.handler.Handler;
+import kz.zvezdochet.core.ui.util.DialogUtil;
+import kz.zvezdochet.direction.part.TransitPart;
 
 /**
  * Обработчик переключения карты транзитов.

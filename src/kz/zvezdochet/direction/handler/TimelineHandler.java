@@ -5,6 +5,12 @@ import java.util.List;
 
 import javax.inject.Inject;
 
+import org.eclipse.e4.core.contexts.Active;
+import org.eclipse.e4.core.di.annotations.Execute;
+import org.eclipse.e4.ui.model.application.ui.basic.MPart;
+import org.eclipse.e4.ui.workbench.modeling.EPartService;
+import org.eclipse.e4.ui.workbench.modeling.EPartService.PartState;
+
 import kz.zvezdochet.bean.Aspect;
 import kz.zvezdochet.bean.Event;
 import kz.zvezdochet.bean.House;
@@ -21,12 +27,6 @@ import kz.zvezdochet.direction.part.TimelinePart;
 import kz.zvezdochet.direction.part.TransitPart;
 import kz.zvezdochet.service.AspectService;
 import kz.zvezdochet.util.Configuration;
-
-import org.eclipse.e4.core.contexts.Active;
-import org.eclipse.e4.core.di.annotations.Execute;
-import org.eclipse.e4.ui.model.application.ui.basic.MPart;
-import org.eclipse.e4.ui.workbench.modeling.EPartService;
-import org.eclipse.e4.ui.workbench.modeling.EPartService.PartState;
 
 /**
  * Расчёт таймлайна события

@@ -3,13 +3,13 @@ package kz.zvezdochet.direction.part;
 import javax.annotation.PostConstruct;
 import javax.inject.Inject;
 
+import org.eclipse.jface.viewers.IBaseLabelProvider;
+import org.eclipse.swt.widgets.Composite;
+
 import kz.zvezdochet.core.bean.Model;
 import kz.zvezdochet.core.ui.view.ModelListView;
 import kz.zvezdochet.core.ui.view.View;
 import kz.zvezdochet.direction.provider.TransitLabelProvider;
-
-import org.eclipse.jface.viewers.IBaseLabelProvider;
-import org.eclipse.swt.widgets.Composite;
 
 /**
  * Таймлайн события

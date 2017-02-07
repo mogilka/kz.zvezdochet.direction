@@ -1,15 +1,15 @@
 package kz.zvezdochet.direction.provider;
 
-import kz.zvezdochet.bean.Aspect;
-import kz.zvezdochet.bean.Planet;
-import kz.zvezdochet.bean.SkyPointAspect;
-import kz.zvezdochet.core.ui.ArrayLabelProvider;
-
 import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.widgets.Display;
+
+import kz.zvezdochet.bean.Aspect;
+import kz.zvezdochet.bean.Planet;
+import kz.zvezdochet.bean.SkyPointAspect;
+import kz.zvezdochet.core.ui.ArrayLabelProvider;
 
 /**
  * Формат таблицы аспектов

@@ -3,16 +3,6 @@ package kz.zvezdochet.direction.part;
 import javax.annotation.PostConstruct;
 import javax.inject.Inject;
 
-import kz.zvezdochet.core.bean.Model;
-import kz.zvezdochet.core.service.DataAccessException;
-import kz.zvezdochet.core.ui.Tab;
-import kz.zvezdochet.core.ui.view.ModelLabelProvider;
-import kz.zvezdochet.core.ui.view.ModelListView;
-import kz.zvezdochet.core.ui.view.View;
-import kz.zvezdochet.core.util.DateUtil;
-import kz.zvezdochet.direction.bean.Collation;
-import kz.zvezdochet.direction.service.CollationService;
-
 import org.eclipse.jface.layout.GridDataFactory;
 import org.eclipse.jface.layout.GridLayoutFactory;
 import org.eclipse.jface.viewers.IBaseLabelProvider;
@@ -33,6 +23,16 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
+
+import kz.zvezdochet.core.bean.Model;
+import kz.zvezdochet.core.service.DataAccessException;
+import kz.zvezdochet.core.ui.Tab;
+import kz.zvezdochet.core.ui.view.ModelLabelProvider;
+import kz.zvezdochet.core.ui.view.ModelListView;
+import kz.zvezdochet.core.ui.view.View;
+import kz.zvezdochet.core.util.DateUtil;
+import kz.zvezdochet.direction.bean.Collation;
+import kz.zvezdochet.direction.service.CollationService;
 
 /**
  * Поиск событий с участниками

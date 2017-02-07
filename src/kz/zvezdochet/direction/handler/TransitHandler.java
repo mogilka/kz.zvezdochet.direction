@@ -2,18 +2,18 @@ package kz.zvezdochet.direction.handler;
 
 import javax.inject.Inject;
 
+import org.eclipse.e4.core.contexts.Active;
+import org.eclipse.e4.core.di.annotations.Execute;
+import org.eclipse.e4.ui.model.application.ui.basic.MPart;
+import org.eclipse.e4.ui.workbench.modeling.EPartService;
+import org.eclipse.e4.ui.workbench.modeling.EPartService.PartState;
+
 import kz.zvezdochet.bean.Event;
 import kz.zvezdochet.core.handler.Handler;
 import kz.zvezdochet.core.ui.util.DialogUtil;
 import kz.zvezdochet.direction.part.TransitPart;
 import kz.zvezdochet.part.EventPart;
 import kz.zvezdochet.util.Configuration;
-
-import org.eclipse.e4.core.contexts.Active;
-import org.eclipse.e4.core.di.annotations.Execute;
-import org.eclipse.e4.ui.model.application.ui.basic.MPart;
-import org.eclipse.e4.ui.workbench.modeling.EPartService;
-import org.eclipse.e4.ui.workbench.modeling.EPartService.PartState;
 
 /**
  * Обработчик открытия транзитов персоны

@@ -10,6 +10,10 @@ import java.util.Map;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
+import org.eclipse.e4.core.contexts.Active;
+import org.eclipse.e4.core.di.annotations.Execute;
+import org.eclipse.e4.ui.model.application.ui.basic.MPart;
+
 import kz.zvezdochet.bean.Event;
 import kz.zvezdochet.bean.House;
 import kz.zvezdochet.bean.Planet;
@@ -26,10 +30,6 @@ import kz.zvezdochet.direction.bean.PrintDirection;
 import kz.zvezdochet.direction.part.HousePart;
 import kz.zvezdochet.direction.service.DirectionService;
 import kz.zvezdochet.util.Configuration;
-
-import org.eclipse.e4.core.contexts.Active;
-import org.eclipse.e4.core.di.annotations.Execute;
-import org.eclipse.e4.ui.model.application.ui.basic.MPart;
 
 /**
  * Сохранение в файл положительных дирекций планет по домам (только соединения).

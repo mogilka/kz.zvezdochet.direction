@@ -4,6 +4,12 @@ import java.util.List;
 
 import javax.inject.Inject;
 
+import org.eclipse.e4.core.contexts.Active;
+import org.eclipse.e4.core.di.annotations.Execute;
+import org.eclipse.e4.ui.model.application.ui.basic.MPart;
+import org.eclipse.e4.ui.workbench.modeling.EPartService;
+import org.eclipse.e4.ui.workbench.modeling.EPartService.PartState;
+
 import kz.zvezdochet.bean.Event;
 import kz.zvezdochet.bean.House;
 import kz.zvezdochet.bean.Planet;
@@ -14,12 +20,6 @@ import kz.zvezdochet.core.util.CalcUtil;
 import kz.zvezdochet.direction.part.HousePart;
 import kz.zvezdochet.part.EventPart;
 import kz.zvezdochet.util.Configuration;
-
-import org.eclipse.e4.core.contexts.Active;
-import org.eclipse.e4.core.di.annotations.Execute;
-import org.eclipse.e4.ui.model.application.ui.basic.MPart;
-import org.eclipse.e4.ui.workbench.modeling.EPartService;
-import org.eclipse.e4.ui.workbench.modeling.EPartService.PartState;
 
 /**
  * Расчёт дирекций планет по домам

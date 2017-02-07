@@ -2,18 +2,18 @@ package kz.zvezdochet.direction.handler;
 
 import java.util.List;
 
+import org.eclipse.e4.core.contexts.Active;
+import org.eclipse.e4.core.di.annotations.Execute;
+import org.eclipse.e4.ui.model.application.ui.basic.MPart;
+import org.eclipse.swt.custom.BusyIndicator;
+import org.eclipse.swt.widgets.Display;
+
 import kz.zvezdochet.bean.Event;
 import kz.zvezdochet.bean.SkyPointAspect;
 import kz.zvezdochet.core.handler.Handler;
 import kz.zvezdochet.core.ui.util.DialogUtil;
 import kz.zvezdochet.direction.exporter.HTMLExporter;
 import kz.zvezdochet.direction.part.AgePart;
-
-import org.eclipse.e4.core.contexts.Active;
-import org.eclipse.e4.core.di.annotations.Execute;
-import org.eclipse.e4.ui.model.application.ui.basic.MPart;
-import org.eclipse.swt.custom.BusyIndicator;
-import org.eclipse.swt.widgets.Display;
 
 /**
  * Сохранение событий периода в файл

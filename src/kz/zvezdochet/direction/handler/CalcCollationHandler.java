@@ -6,6 +6,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.eclipse.e4.core.contexts.Active;
+import org.eclipse.e4.core.di.annotations.Execute;
+import org.eclipse.e4.ui.model.application.ui.basic.MPart;
+
 import kz.zvezdochet.bean.Aspect;
 import kz.zvezdochet.bean.Event;
 import kz.zvezdochet.bean.House;
@@ -19,10 +23,6 @@ import kz.zvezdochet.direction.bean.Collation;
 import kz.zvezdochet.direction.part.CollationPart;
 import kz.zvezdochet.direction.service.CollationService;
 import kz.zvezdochet.service.AspectService;
-
-import org.eclipse.e4.core.contexts.Active;
-import org.eclipse.e4.core.di.annotations.Execute;
-import org.eclipse.e4.ui.model.application.ui.basic.MPart;
 
 /**
  * Расчёт группового прогноза

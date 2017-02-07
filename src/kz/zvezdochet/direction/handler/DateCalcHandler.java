@@ -7,6 +7,10 @@ import java.util.GregorianCalendar;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+import org.eclipse.e4.core.contexts.Active;
+import org.eclipse.e4.core.di.annotations.Execute;
+import org.eclipse.e4.ui.model.application.ui.basic.MPart;
+
 import kz.zvezdochet.bean.Aspect;
 import kz.zvezdochet.bean.Event;
 import kz.zvezdochet.bean.House;
@@ -22,10 +26,6 @@ import kz.zvezdochet.core.util.DateUtil;
 import kz.zvezdochet.direction.part.TransitPart;
 import kz.zvezdochet.service.AspectService;
 import kz.zvezdochet.util.Configuration;
-
-import org.eclipse.e4.core.contexts.Active;
-import org.eclipse.e4.core.di.annotations.Execute;
-import org.eclipse.e4.ui.model.application.ui.basic.MPart;
 
 /**
  * Обработчик расчёта транзитов на указанную дату.

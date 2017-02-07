@@ -3,6 +3,10 @@ package kz.zvezdochet.direction.handler;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.eclipse.e4.core.contexts.Active;
+import org.eclipse.e4.core.di.annotations.Execute;
+import org.eclipse.e4.ui.model.application.ui.basic.MPart;
+
 import kz.zvezdochet.bean.Aspect;
 import kz.zvezdochet.bean.AspectType;
 import kz.zvezdochet.bean.Event;
@@ -18,10 +22,6 @@ import kz.zvezdochet.core.util.CalcUtil;
 import kz.zvezdochet.direction.part.AgePart;
 import kz.zvezdochet.service.AspectService;
 import kz.zvezdochet.util.Configuration;
-
-import org.eclipse.e4.core.contexts.Active;
-import org.eclipse.e4.core.di.annotations.Execute;
-import org.eclipse.e4.ui.model.application.ui.basic.MPart;
 
 /**
  * Обработчик расчёта транзитов на указанный возраст

@@ -6,22 +6,6 @@ import java.util.List;
 import javax.annotation.PostConstruct;
 import javax.inject.Inject;
 
-import kz.zvezdochet.bean.Event;
-import kz.zvezdochet.core.handler.Handler;
-import kz.zvezdochet.core.service.DataAccessException;
-import kz.zvezdochet.core.ui.comparator.TableSortListenerFactory;
-import kz.zvezdochet.core.ui.decoration.InfoDecoration;
-import kz.zvezdochet.core.ui.listener.ListSelectionListener;
-import kz.zvezdochet.core.ui.util.DialogUtil;
-import kz.zvezdochet.core.ui.view.ModelLabelProvider;
-import kz.zvezdochet.core.ui.view.ModelPart;
-import kz.zvezdochet.core.ui.view.View;
-import kz.zvezdochet.core.util.DateUtil;
-import kz.zvezdochet.direction.bean.Collation;
-import kz.zvezdochet.part.ICalculable;
-import kz.zvezdochet.provider.EventProposalProvider;
-import kz.zvezdochet.provider.EventProposalProvider.EventContentProposal;
-
 import org.eclipse.jface.bindings.keys.KeyStroke;
 import org.eclipse.jface.fieldassist.ContentProposalAdapter;
 import org.eclipse.jface.fieldassist.IContentProposal;
@@ -45,6 +29,22 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.Text;
+
+import kz.zvezdochet.bean.Event;
+import kz.zvezdochet.core.handler.Handler;
+import kz.zvezdochet.core.service.DataAccessException;
+import kz.zvezdochet.core.ui.comparator.TableSortListenerFactory;
+import kz.zvezdochet.core.ui.decoration.InfoDecoration;
+import kz.zvezdochet.core.ui.listener.ListSelectionListener;
+import kz.zvezdochet.core.ui.util.DialogUtil;
+import kz.zvezdochet.core.ui.view.ModelLabelProvider;
+import kz.zvezdochet.core.ui.view.ModelPart;
+import kz.zvezdochet.core.ui.view.View;
+import kz.zvezdochet.core.util.DateUtil;
+import kz.zvezdochet.direction.bean.Collation;
+import kz.zvezdochet.part.ICalculable;
+import kz.zvezdochet.provider.EventProposalProvider;
+import kz.zvezdochet.provider.EventProposalProvider.EventContentProposal;
 
 /**
  * Представление синастрии
