@@ -66,7 +66,7 @@ public class PDFExporter {
 	public void generate(Event event, List<SkyPointAspect> spas, int initage, int finalage) {
 		try {
 			Document doc = new Document();
-			String filename = PlatformUtil.getPath(Activator.PLUGIN_ID, "/out/horoscope.pdf").getPath();
+			String filename = PlatformUtil.getPath(Activator.PLUGIN_ID, "/out/events.pdf").getPath();
 			PdfWriter writer = PdfWriter.getInstance(doc, new FileOutputStream(filename));
 	        writer.setPageEvent(new PageEventHandler(doc));
 	        doc.open();
