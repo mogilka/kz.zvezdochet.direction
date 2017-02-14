@@ -227,7 +227,7 @@ public class HTMLExporter {
 					h5.add(planet.getShortName() + " " + type.getSymbol() + " " + planet2.getShortName());
 					cell.add(h5);
 
-					PlanetAspectText dirText = (PlanetAspectText)servicea.find(planet, planet2, type);
+					PlanetAspectText dirText = (PlanetAspectText)servicea.find(planet, planet2, spa.getAspect());
 					if (dirText != null) {
 						Tag li = new Tag("div", "style=color:" + type.getFontColor());
 						li.add(dirText.getText());

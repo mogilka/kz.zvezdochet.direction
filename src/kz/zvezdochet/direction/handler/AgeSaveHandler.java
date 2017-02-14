@@ -12,7 +12,7 @@ import kz.zvezdochet.bean.Event;
 import kz.zvezdochet.bean.SkyPointAspect;
 import kz.zvezdochet.core.handler.Handler;
 import kz.zvezdochet.core.ui.util.DialogUtil;
-import kz.zvezdochet.direction.exporter.HTMLExporter;
+import kz.zvezdochet.direction.exporter.PDFExporter;
 import kz.zvezdochet.direction.part.AgePart;
 
 /**
@@ -36,7 +36,7 @@ public class AgeSaveHandler extends Handler {
     		BusyIndicator.showWhile(display, new Runnable() {
     			@Override
     			public void run() {
-    				new HTMLExporter().generate(event, spas, agePart.getInitialAge(), agePart.getFinalAge());
+    				new PDFExporter().generate(event, spas, agePart.getInitialAge(), agePart.getFinalAge());
     			}
     		});
 			//TODO показывать диалог, что документ сформирован

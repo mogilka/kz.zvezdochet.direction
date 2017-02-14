@@ -52,11 +52,11 @@ public class DirectionService extends PlanetHouseService {
 		}
 		if (aspectType.getCode().equals("NEUTRAL")) {
 			if (pcode.equals("Lilith") || pcode.equals("Kethu"))
-				aspectType = (AspectType)service.find("NEGATIVE");			
+				aspectType = (AspectType)service.find("NEGATIVE");
 			else if (pcode.equals("Selena") || pcode.equals("Sun")
 					|| pcode.equals("Moon") || pcode.equals("Rakhu")
 					|| pcode.equals("Mercury") || pcode.equals("Venus")
-					|| pcode.equals("Jupiter"))
+					|| pcode.equals("Jupiter") || pcode.equals("Proserpina"))
 				aspectType = (AspectType)service.find("POSITIVE");
 		}		
 		try {
