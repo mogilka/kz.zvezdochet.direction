@@ -8,9 +8,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
-import org.jfree.data.xy.XYSeries;
-import org.jfree.data.xy.XYSeriesCollection;
-
 import com.itextpdf.text.BaseColor;
 import com.itextpdf.text.Chapter;
 import com.itextpdf.text.ChapterAutoNumber;
@@ -25,6 +22,8 @@ import com.itextpdf.text.pdf.BaseFont;
 import com.itextpdf.text.pdf.PdfWriter;
 
 import kz.zvezdochet.analytics.bean.PlanetAspectText;
+import kz.zvezdochet.analytics.bean.Rule;
+import kz.zvezdochet.analytics.exporter.EventRules;
 import kz.zvezdochet.bean.AspectType;
 import kz.zvezdochet.bean.Event;
 import kz.zvezdochet.bean.House;
@@ -32,7 +31,6 @@ import kz.zvezdochet.bean.Place;
 import kz.zvezdochet.bean.Planet;
 import kz.zvezdochet.bean.SkyPoint;
 import kz.zvezdochet.bean.SkyPointAspect;
-import kz.zvezdochet.core.bean.TextGender;
 import kz.zvezdochet.core.util.CoreUtil;
 import kz.zvezdochet.core.util.DateUtil;
 import kz.zvezdochet.core.util.PlatformUtil;
@@ -41,6 +39,7 @@ import kz.zvezdochet.direction.Activator;
 import kz.zvezdochet.direction.bean.DirectionText;
 import kz.zvezdochet.direction.service.DirectionAspectService;
 import kz.zvezdochet.direction.service.DirectionService;
+import kz.zvezdochet.export.bean.Bar;
 import kz.zvezdochet.export.handler.PageEventHandler;
 import kz.zvezdochet.export.util.PDFUtil;
 
@@ -56,8 +55,8 @@ public class PDFExporter {
 	public PDFExporter() {
 		try {
 			baseFont = PDFUtil.getBaseFont();
-			font = PDFUtil.getRegularFont(baseFont);
-			fonth5 = PDFUtil.getHeaderFont(baseFont);
+			font = PDFUtil.getRegularFont();
+			fonth5 = PDFUtil.getHeaderFont();
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -84,7 +83,7 @@ public class PDFExporter {
 
 			//шапка
 			Paragraph p = new Paragraph();
-			PDFUtil.printHeader(p, "Прогноз событий", baseFont);
+			PDFUtil.printHeader(p, "Прогноз событий");
 			chapter.add(p);
 
 			String text = DateUtil.fulldtf.format(event.getBirth());
@@ -120,28 +119,20 @@ public class PDFExporter {
 	        chapter.add(p);
 
 			chapter.add(new Paragraph("Прогноз содержит как позитивные, так и негативные события. "
-				+ "Негатив - признак того, что вам необходим отдых и переосмысление. "
+				+ "Негатив - признак того, что вам необходим отдых, переосмысление и мобилизация ресурсов для решения проблемы. "
 				+ "Не зацикливайтесь на негативе, развивайте свои сильные стороны, используя благоприятные события.", font));
 			chapter.add(new Paragraph("Если из возраста в возраст событие повторяется, значит оно создаст большой резонанс.", font));
 			chapter.add(new Paragraph("Максимальная погрешность прогноза события ±1 год.", font));
 
 			//данные для графика
-			Map<Integer,Integer[]> positive = new HashMap<Integer,Integer[]>();
-			Map<Integer,Integer[]> negative = new HashMap<Integer,Integer[]>();
+			Map<Integer,Integer> positive = new HashMap<Integer,Integer>();
+			Map<Integer,Integer> negative = new HashMap<Integer,Integer>();
 
 			int ages = finalage - initage + 1;
 			for (int i = 0; i < ages; i++) {
 				int nextage = initage + i;
-
-				Integer[] iarr = new Integer[3];
-				for (int j = 0; j < 3; j++)
-					iarr[j] = 0;
-				positive.put(nextage, iarr);
-
-				iarr = new Integer[3];
-				for (int j = 0; j < 3; j++)
-					iarr[j] = 0;
-				negative.put(nextage, iarr);
+				positive.put(nextage, 0);
+				negative.put(nextage, 0);
 			}
 
 			//события
@@ -172,41 +163,26 @@ public class PDFExporter {
 					if (code.equals("NEUTRAL")) {
 						Planet planet = (Planet)spa.getSkyPoint1();
 						String pcode = planet.getCode();
-						if (pcode.equals("Lilith") || pcode.equals("Kethu")) {
-							Integer[] arr = negative.get(age);
-							arr[2] = arr[2] + 1;
-							negative.put(age, arr);
-						} else {
-							Integer[] arr = positive.get(age);
-							arr[0] = arr[0] + 1;
-							positive.put(age, arr);
-						}
-					} else if (code.equals("POSITIVE")) {
-						Integer[] arr = positive.get(age);
-						arr[1] = arr[1] + 1;
-						positive.put(age, arr);
-					} else if (code.equals("NEGATIVE")) {
-						Integer[] arr = negative.get(age);
-						arr[2] = arr[2] + 1;
-						negative.put(age, arr);
-					}
+						if (pcode.equals("Lilith") || pcode.equals("Kethu"))
+							negative.put(age, negative.get(age) + 1);
+						else
+							positive.put(age, positive.get(age) + 1);
+					} else if (code.equals("POSITIVE"))
+						positive.put(age, positive.get(age) + 1);
+					else if (code.equals("NEGATIVE"))
+						negative.put(age, negative.get(age) + 1);
 				}
 				map.put(age, agemap);
 			}
 
-			XYSeries seriesPositive = new XYSeries("Позитив");
-			XYSeries seriesNegative = new XYSeries("Негатив");
-
-			for (int i = 0; i < ages; i++)
-				for (int j = 0; j < 3; j++) {
-					int nextage = initage + i;
-					seriesPositive.add(nextage, positive.get(nextage)[j]);
-					seriesNegative.add(nextage, negative.get(nextage)[j]);
-				}
-			XYSeriesCollection dataset = new XYSeriesCollection();
-			dataset.addSeries(seriesPositive);
-			dataset.addSeries(seriesNegative);
-			Image image = PDFUtil.printGraphics(writer, "Соотношение категорий событий", "Возраст", "Количество", dataset, 500, 0, true);
+			Bar[] bars = new Bar[ages * 2];
+			for (int i = 0; i < ages; i++) {
+				int nextage = initage + i;
+				String strage = CoreUtil.getAgeString(nextage);
+				bars[i] = new Bar(strage, positive.get(nextage), null, "Позитивные события");
+				bars[i + ages] = new Bar(strage, negative.get(nextage) * (-1), null, "Негативные события");
+			}
+			Image image = PDFUtil.printStackChart(writer, "Соотношение категорий событий", "Возраст", "Количество", bars, 500, 400, true);
 			chapter.add(image);
 			doc.add(chapter);
 
@@ -218,7 +194,7 @@ public class PDFExporter {
 				chapter.setNumberDepth(0);
 
 				p = new Paragraph();
-				PDFUtil.printHeader(p, agestr, baseFont);
+				PDFUtil.printHeader(p, agestr);
 				chapter.add(p);
 
 			    Map<String, List<SkyPointAspect>> agemap = entry.getValue();
@@ -227,7 +203,7 @@ public class PDFExporter {
 				doc.add(chapter);
 			}
 			doc.add(Chunk.NEWLINE);
-	        doc.add(PDFUtil.printCopyright(baseFont));
+	        doc.add(PDFUtil.printCopyright());
 		} catch(Exception e) {
 			e.printStackTrace();
 		} finally {
@@ -247,7 +223,8 @@ public class PDFExporter {
 				header += "Менее значимые события";
 			else if (code.equals("inner"))
 				header += "Проявления личности";
-			Section section = PDFUtil.printSection(chapter, header, baseFont);
+			Section section = PDFUtil.printSection(chapter, header);
+			boolean female = event.isFemale();
 
 			DirectionService service = new DirectionService();
 			DirectionAspectService servicea = new DirectionAspectService();
@@ -271,15 +248,12 @@ public class PDFExporter {
 						String typeColor = type.getFontColor();
 						BaseColor color = PDFUtil.htmlColor2Base(typeColor);
 						section.add(new Paragraph(StringUtil.removeTags(dirText.getText()), new Font(baseFont, 12, Font.NORMAL, color)));
-
-						List<TextGender> genders = dirText.getGenderTexts(event.isFemale(), child);
-						for (TextGender gender : genders) {
-							Paragraph p = new Paragraph(PDFUtil.getGenderHeader(gender.getType()), fonth5);
-							p.setSpacingBefore(10);
-							section.add(p);
-							section.add(new Paragraph(StringUtil.removeTags(gender.getText()), new Font(baseFont, 12, Font.NORMAL, color)));
-						}
+						PDFUtil.printGender(section, dirText, female, child);
 					}
+					Rule rule = EventRules.ruleHouseDirection(spa, female);
+					if (rule != null)
+						section.add(new Paragraph(StringUtil.removeTags(rule.getText()), font));
+
 				} else if (skyPoint instanceof Planet) {
 					Planet planet2 = (Planet)skyPoint;
 					if (planet.getNumber() > planet2.getNumber())
@@ -291,14 +265,7 @@ public class PDFExporter {
 						String typeColor = type.getFontColor();
 						BaseColor color = PDFUtil.htmlColor2Base(typeColor);
 						section.add(new Paragraph(StringUtil.removeTags(dirText.getText()), new Font(baseFont, 12, Font.NORMAL, color)));
-
-						List<TextGender> genders = dirText.getGenderTexts(event.isFemale(), child);
-						for (TextGender gender : genders) {
-							Paragraph p = new Paragraph(PDFUtil.getGenderHeader(gender.getType()), fonth5);
-							p.setSpacingBefore(10);
-							section.add(p);
-							section.add(new Paragraph(StringUtil.removeTags(gender.getText()), new Font(baseFont, 12, Font.NORMAL, color)));
-						};
+						PDFUtil.printGender(section, dirText, female, child);
 					}
 				}
 			}
