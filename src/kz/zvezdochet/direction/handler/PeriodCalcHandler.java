@@ -1,5 +1,6 @@
 package kz.zvezdochet.direction.handler;
 
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
@@ -19,6 +20,7 @@ import kz.zvezdochet.core.bean.Model;
 import kz.zvezdochet.core.handler.Handler;
 import kz.zvezdochet.core.service.DataAccessException;
 import kz.zvezdochet.core.util.CalcUtil;
+import kz.zvezdochet.core.util.DateUtil;
 import kz.zvezdochet.direction.part.PeriodPart;
 import kz.zvezdochet.service.AspectService;
 import kz.zvezdochet.util.Configuration;
@@ -52,31 +54,50 @@ public class PeriodCalcHandler extends Handler {
 			end.setTime(finalDate);
 
 			for (Date date = start.getTime(); start.before(end); start.add(Calendar.DATE, 1), date = start.getTime()) {
-				System.out.println();
 				System.out.println(date);
-				Event event = new Event();
-				event.setBirth(date);
-				event.setPlace(place);
-				event.setZone(zone);
-				event.calc(false);
+				for (int i = 1; i < 5; i++) {
+					int h = i * 6;
+					String shour = (h < 10) ? "0" + h : String.valueOf(h);
+					String sdate = DateUtil.formatCustomDateTime(date, "yyyy-MM-dd") + " " + shour + ":00:00";
+					System.out.println(shour);
 
-				List<Model> eplanets = event.getConfiguration().getPlanets();
-				Planet moon = null;
-				for (Model model : eplanets) {
-					Planet planet = (Planet)model;
-					if (planet.getCode().equals("Moon")) {
-						moon = planet;
-						break;
+					Event event = new Event();
+					Date edate = DateUtil.getDatabaseDateTime(sdate);
+					event.setBirth(edate);
+					event.setPlace(place);
+					event.setZone(zone);
+					event.calc(true);
+
+					Event prev = new Event();
+					Calendar cal = Calendar.getInstance();
+					cal.setTime(edate);
+					cal.add(Calendar.DATE, -1);
+					prev.setBirth(cal.getTime());
+					prev.setPlace(place);
+					prev.setZone(zone);
+					prev.calc(false);
+
+					List<Planet> iplanets = new ArrayList<Planet>();
+					List<Model> eplanets = event.getConfiguration().getPlanets();
+					for (Model model : eplanets) {
+						Planet planet = (Planet)model;
+						List<Object> ingresses = planet.isIngressed(prev, event);
+						if (ingresses != null && ingresses.size() > 0)
+							iplanets.add(planet);
+					}
+
+					for (Planet eplanet : iplanets) {
+						for (Model model : planets) {
+							Planet planet = (Planet)model;
+							calc(eplanet, planet);
+						}
+						for (Model model : houses) {
+							House house = (House)model;
+							calc(eplanet, house);
+						}
 					}
 				}
-				for (Model model : planets) {
-					Planet planet = (Planet)model;
-					calc(moon, planet);
-				}
-				for (Model model : houses) {
-					House house = (House)model;
-					calc(moon, house);
-				}
+				System.out.println();
 			}	
 		} catch (Exception e) {
 			e.printStackTrace();

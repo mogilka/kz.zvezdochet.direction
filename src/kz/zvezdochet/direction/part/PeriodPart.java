@@ -65,7 +65,10 @@ public class PeriodPart extends ModelListView {
 
 	@Override
 	public boolean check(int mode) throws Exception {
-		if (!DateUtil.isDateRangeValid(dt.getSelection(), dt2.getSelection())) {
+		if (null == dt.getSelection() || null == dt2.getSelection()) {
+			DialogUtil.alertError("Укажите правильный период");
+			return false;
+		} else if (!DateUtil.isDateRangeValid(dt.getSelection(), dt2.getSelection())) {
 			DialogUtil.alertError("Укажите правильный период");
 			return false;
 		} else if (null == trplace) {
@@ -100,12 +103,12 @@ public class PeriodPart extends ModelListView {
 
 		Label lb = new Label(grFilter, SWT.NONE);
 		lb.setText("Начало");
-		dt = new CDateTime(grFilter, CDT.BORDER | CDT.COMPACT | CDT.DROP_DOWN | CDT.DATE_LONG | CDT.TIME_MEDIUM);
+		dt = new CDateTime(grFilter, CDT.BORDER | CDT.COMPACT | CDT.DROP_DOWN | CDT.DATE_LONG | CDT.DATE_MEDIUM);
 		dt.setNullText(""); //$NON-NLS-1$
 
 		lb = new Label(grFilter, SWT.NONE);
 		lb.setText("Конец");
-		dt2 = new CDateTime(grFilter, CDT.BORDER | CDT.COMPACT | CDT.DROP_DOWN | CDT.DATE_LONG | CDT.TIME_MEDIUM);
+		dt2 = new CDateTime(grFilter, CDT.BORDER | CDT.COMPACT | CDT.DROP_DOWN | CDT.DATE_LONG | CDT.DATE_MEDIUM);
 		dt2.setNullText(""); //$NON-NLS-1$
 
 		Group secPlace = new Group(grFilter, SWT.NONE);
