@@ -5,7 +5,9 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.eclipse.e4.core.contexts.Active;
 import org.eclipse.e4.core.di.annotations.Execute;
@@ -30,7 +32,6 @@ import kz.zvezdochet.bean.House;
 import kz.zvezdochet.bean.Place;
 import kz.zvezdochet.bean.Planet;
 import kz.zvezdochet.bean.SkyPoint;
-import kz.zvezdochet.bean.SkyPointAspect;
 import kz.zvezdochet.core.bean.Model;
 import kz.zvezdochet.core.handler.Handler;
 import kz.zvezdochet.core.service.DataAccessException;
@@ -42,6 +43,7 @@ import kz.zvezdochet.direction.part.PeriodPart;
 import kz.zvezdochet.export.handler.PageEventHandler;
 import kz.zvezdochet.export.util.PDFUtil;
 import kz.zvezdochet.service.AspectService;
+import kz.zvezdochet.service.AspectTypeService;
 import kz.zvezdochet.util.Configuration;
 
 /**
@@ -104,7 +106,7 @@ public class PeriodCalcHandler extends Handler {
 
 			SimpleDateFormat sdf = new SimpleDateFormat("EEEE, d MMMM yyyy");
 			String text = sdf.format(initDate);
-			if (!finalDate.equals(initDate))
+			if (initDate.getTime() == finalDate.getTime())
 				text += " — " + sdf.format(finalDate);
 			p = new Paragraph(text, font);
 	        p.setAlignment(Element.ALIGN_CENTER);
@@ -135,10 +137,10 @@ public class PeriodCalcHandler extends Handler {
 	        p.add(chunk);
 	        chapter.add(p);
 
-			chapter.add(new Paragraph("Прогноз содержит как позитивные, так и негативные события. "
-				+ "Негатив - признак того, что вам необходим отдых, переосмысление и мобилизация ресурсов для решения проблемы. "
+			chapter.add(new Paragraph("Прогноз указывает как на позитивные, так и на негативные сферы жизни. "
+				+ "Негатив - признак того, что имеет место напряжение, и вам необходима осторожность и мобилизация ресурсов для решения проблемы. "
 				+ "Не зацикливайтесь на негативе, развивайте свои сильные стороны, используя благоприятные события.", font));
-			chapter.add(new Paragraph("Если событие повторяется в течение дня, значит оно будет длительным.", font));
+			chapter.add(new Paragraph("Если сфера жизни повторно упоминается в течение дня, значит она будет насыщена событиями и мыслями.", font));
 			doc.add(chapter);
 
 			for (Date date = start.getTime(); start.before(end); start.add(Calendar.DATE, 1), date = start.getTime()) {
@@ -165,8 +167,6 @@ public class PeriodCalcHandler extends Handler {
 						default: header = "Утро"; break;
 					}
 					Section section = PDFUtil.printSection(chapter, header);
-					boolean female = person.isFemale();
-					boolean child = person.getAge() < person.MAX_TEEN_AGE;
 
 					Event event = new Event();
 					Date edate = DateUtil.getDatabaseDateTime(sdate);
@@ -192,15 +192,45 @@ public class PeriodCalcHandler extends Handler {
 						if (ingresses != null && ingresses.size() > 0)
 							iplanets.add(planet);
 					}
+
+					Map<Long, List<PeriodItem>> items = new HashMap<Long, List<PeriodItem>>();
 					for (Planet eplanet : iplanets) {
 						for (Model model : planets) {
 							Planet planet = (Planet)model;
-							calc(eplanet, planet, section, female, child);
+							PeriodItem item = calc(eplanet, planet);
+							if (null == item)
+								continue;
+							long id = item.aspectType.getId();
+							List<PeriodItem> list = items.get(id);
+							if (null == list)
+								list = new ArrayList<>();
+							list.add(item);
+							items.put(id, list);
 						}
 						for (Model model : houses) {
 							House house = (House)model;
-							calc(eplanet, house, section, female, child);
+							PeriodItem item = calc(eplanet, house);
+							if (null == item)
+								continue;
+							long id = item.aspectType.getId();
+							List<PeriodItem> list = items.get(id);
+							if (null == list)
+								list = new ArrayList<>();
+							list.add(item);
+							items.put(id, list);
 						}
+					}
+					AspectTypeService service = new AspectTypeService();
+					Font fonth5 = PDFUtil.getHeaderFont(); 
+					for (Map.Entry<Long, List<PeriodItem>> entry : items.entrySet()) {
+						AspectType type = (AspectType)service.find(entry.getKey());
+						section.add(new Paragraph(type.getDescription(), fonth5));
+
+						String typeColor = type.getFontColor();
+						BaseColor color = PDFUtil.htmlColor2Base(typeColor);
+						List<PeriodItem> list = entry.getValue();
+						for (PeriodItem item : list)
+							section.add(new Paragraph(item.house.getDescription(), new Font(baseFont, 12, Font.NORMAL, color)));
 					}
 				}
 				doc.add(chapter);
@@ -220,7 +250,7 @@ public class PeriodCalcHandler extends Handler {
 	 * @param point1 первая небесная точка
 	 * @param point2 вторая небесная точка
 	 */
-	private void calc(SkyPoint point1, SkyPoint point2, Section section, boolean female, boolean child) {
+	private PeriodItem calc(SkyPoint point1, SkyPoint point2) {
 		try {
 			//находим угол между точками космограммы
 			double res = CalcUtil.getDifference(point1.getCoord(), point2.getCoord());
@@ -231,29 +261,28 @@ public class PeriodCalcHandler extends Handler {
 			for (Model realasp : aspects) {
 				Aspect a = (Aspect)realasp;
 				if (a.isMain() && a.isExactTruncAspect(res)) {
-					SkyPointAspect spa = new SkyPointAspect();
-					spa.setSkyPoint1(point1);
-					spa.setSkyPoint2(point2);
-					spa.setScore(res);
-					spa.setAspect(a);
-
-					AspectType type = a.getType();
-					String typeColor = type.getFontColor();
-					BaseColor color = PDFUtil.htmlColor2Base(typeColor);
-
-					if (point2 instanceof House) {
-						System.out.println(spa);
+					if (point2 instanceof House)
 						house = (House)point2;
-					} else if (point2 instanceof Planet) {
+					else if (point2 instanceof Planet) {
 						Planet planet2 = (Planet)point2;
 						house = planet2.getHouse();
-						System.out.println(spa + " " + house);
 					}
-					section.add(new Paragraph(type.getDescription() + ": " + house.getDescription(), new Font(baseFont, 12, Font.NORMAL, color)));
+					AspectType type = a.getType();
+					PeriodItem item = new PeriodItem();
+					item.aspectType = type;
+					item.house = house;
+					System.out.println(point1.getName() + " " + type.getSymbol() + " " + point2.getName());
+					return item;
 				}
 			}
 		} catch (DataAccessException e) {
 			e.printStackTrace();
 		}
+		return null;
+	}
+
+	private class PeriodItem {
+		public AspectType aspectType;
+		public House house;
 	}
 }
