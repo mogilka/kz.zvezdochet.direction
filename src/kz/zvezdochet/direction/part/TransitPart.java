@@ -79,7 +79,7 @@ import kz.zvezdochet.util.Configuration;
 
 /**
  * Представление транзитов
- * @author nataly
+ * @author Nataly Didenko
  *
  */
 public class TransitPart extends ModelListView implements ICalculable {
@@ -440,7 +440,7 @@ public class TransitPart extends ModelListView implements ICalculable {
 			@Override
 			public void widgetDefaultSelected(SelectionEvent e) {}
 		});
-		
+
 		Group secPlace = new Group(secEvent, SWT.NONE);
 		secPlace.setText(Messages.getString("PersonView.Place")); //$NON-NLS-1$
 		txPlace = new Text(secPlace, SWT.BORDER);
@@ -512,11 +512,11 @@ public class TransitPart extends ModelListView implements ICalculable {
 		trevent.init();
 		aged = new ArrayList<SkyPointAspect>();
 
-		Event first = person;
-		Event second = trevent;
+		Event first = trevent;
+		Event second = person;
 		if (mode.equals(1)) {
-			first = trevent;
-			second = person;
+			first = person;
+			second = trevent;
 		}
 		makeTransits(first, second);
 		setTransitData(aged);
