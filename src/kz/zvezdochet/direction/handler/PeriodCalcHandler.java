@@ -111,7 +111,13 @@ public class PeriodCalcHandler extends Handler {
 
 			SimpleDateFormat sdf = new SimpleDateFormat("EEEE, d MMMM yyyy");
 			String text = sdf.format(initDate);
-			if (finalDate.getTime() > initDate.getTime())
+			boolean days = (DateUtil.getDateFromDate(initDate) != DateUtil.getDateFromDate(finalDate)
+					|| DateUtil.getMonthFromDate(initDate) != DateUtil.getMonthFromDate(finalDate)
+					|| DateUtil.getYearFromDate(initDate) != DateUtil.getYearFromDate(finalDate));
+			System.out.println(DateUtil.getDateFromDate(initDate) + "-" + DateUtil.getDateFromDate(finalDate) + "\t" + 
+					DateUtil.getMonthFromDate(initDate) + "-" + DateUtil.getMonthFromDate(finalDate) + "\t" +
+					DateUtil.getYearFromDate(initDate) + "-" + DateUtil.getYearFromDate(finalDate));
+			if (days)
 				text += " — " + sdf.format(finalDate);
 			p = new Paragraph(text, font);
 	        p.setAlignment(Element.ALIGN_CENTER);
@@ -164,20 +170,14 @@ public class PeriodCalcHandler extends Handler {
 			chapter.add(alist);
 
 			chapter.add(new Paragraph("Если сфера жизни повторно упоминается в течение дня, значит она будет насыщена событиями и мыслями.", font));
+			chapter.add(new Paragraph("Если прогноз на день отсутствует, значит нет однозначного толкования.", font));
 			doc.add(chapter);
-
 
 			for (Date date = start.getTime(); start.before(end); start.add(Calendar.DATE, 1), date = start.getTime()) {
 				System.out.println(date);
-				String sdfdate = sdf.format(date);
-				chapter = new ChapterAutoNumber(sdfdate);
-				chapter.setNumberDepth(0);
-
-				p = new Paragraph();
-				PDFUtil.printHeader(p, sdfdate);
-				chapter.add(p);
 
 				Map<Long, Double> map = new HashMap<Long, Double>();
+				Map<Integer, Map<Long, List<PeriodItem>>> times = new HashMap<Integer, Map<Long, List<PeriodItem>>>();
 
 				for (int i = 1; i < 5; i++) {
 					int h = i * 6;
@@ -244,38 +244,55 @@ public class PeriodCalcHandler extends Handler {
 						}
 					}
 
-					if (items != null && items.size() > 0) {
-						String header = "";
-						switch (i) {
-							case 2: header = "День"; break;
-							case 3: header = "Вечер"; break;
-							case 4: header = "Ночь"; break;
-							default: header = "Утро"; break;
-						}
-						Section section = PDFUtil.printSection(chapter, header);
+					if (items != null && items.size() > 0)
+						times.put(i, items);
+				}
+				if (times.size() > 0) {
+					String sdfdate = sdf.format(date);
+					chapter = new ChapterAutoNumber(sdfdate);
+					chapter.setNumberDepth(0);
 	
-						Font fonth5 = PDFUtil.getHeaderFont();
-						for (Map.Entry<Long, List<PeriodItem>> entry : items.entrySet()) {
-							List<PeriodItem> list = entry.getValue();
-							if (null == list || 0 == list.size()) {
-								section.add(new Paragraph("Нет данных", font));
-								continue;
+					p = new Paragraph();
+					PDFUtil.printHeader(p, sdfdate);
+					chapter.add(p);
+
+					for (Map.Entry<Integer, Map<Long, List<PeriodItem>>> entry : times.entrySet()) {
+						Map <Long, List<PeriodItem>> items = entry.getValue();
+						if (items != null && items.size() > 0) {
+							int i = entry.getKey();
+							String header = "";
+							switch (i) {
+								case 2: header = "День"; break;
+								case 3: header = "Вечер"; break;
+								case 4: header = "Ночь"; break;
+								default: header = "Утро"; break;
 							}
-							AspectType type = (AspectType)service.find(entry.getKey());
-							section.add(new Paragraph(type.getDescription(), fonth5));
-	
-							String typeColor = type.getFontColor();
-							BaseColor color = PDFUtil.htmlColor2Base(typeColor);
-							alist = new com.itextpdf.text.List(false, false, 10);
-							for (PeriodItem item : list) {
-								ListItem li = new ListItem();
-						        chunk = new Chunk(item.house.getDescription(), new Font(baseFont, 12, Font.NORMAL, color));
-						        li.add(chunk);
-						        alist.add(li);
+							Section section = PDFUtil.printSection(chapter, header);
+		
+							Font fonth5 = PDFUtil.getHeaderFont();
+							for (Map.Entry<Long, List<PeriodItem>> entry2 : items.entrySet()) {
+								List<PeriodItem> list = entry2.getValue();
+								if (null == list || 0 == list.size()) {
+									section.add(new Paragraph("Нет данных", font));
+									continue;
+								}
+								AspectType type = (AspectType)service.find(entry2.getKey());
+								section.add(new Paragraph(type.getDescription(), fonth5));
+		
+								String typeColor = type.getFontColor();
+								BaseColor color = PDFUtil.htmlColor2Base(typeColor);
+								alist = new com.itextpdf.text.List(false, false, 10);
+								for (PeriodItem item : list) {
+									ListItem li = new ListItem();
+							        chunk = new Chunk(item.house.getDescription(), new Font(baseFont, 12, Font.NORMAL, color));
+							        li.add(chunk);
+							        alist.add(li);
+								}
+								section.add(alist);
 							}
-							section.add(alist);
 						}
 					}
+					doc.add(chapter);
 				}
 				for (Map.Entry<Long, Double> entry : map.entrySet()) {
 					List<TimeSeriesDataItem> sitems = series.containsKey(entry.getKey()) ? series.get(entry.getKey()) : new ArrayList<TimeSeriesDataItem>();
@@ -284,28 +301,33 @@ public class PeriodCalcHandler extends Handler {
 						sitems.add(tsdi);
 					series.put(entry.getKey(), sitems);
 				}
-				doc.add(chapter);
 				System.out.println();
 			}
 
-			TimeSeriesCollection dataset = new TimeSeriesCollection();
-			for (Map.Entry<Long, List<TimeSeriesDataItem>> entry : series.entrySet()) {
-				List<TimeSeriesDataItem> sitems = entry.getValue();
-				if (null == sitems || 0 == sitems.size())
-					continue;
-				AspectType asptype = (AspectType)service.find(entry.getKey());
-				if (null == asptype.getDescription())
-					continue;
-				TimeSeries timeSeries = new TimeSeries(asptype.getDescription());
-				for (TimeSeriesDataItem tsdi : entry.getValue())
-					timeSeries.add(tsdi);
-				dataset.addSeries(timeSeries);
-			}
-			
-			doc.add(Chunk.NEWLINE);
-		    com.itextpdf.text.Image image = PDFUtil.printTimeChart(writer, "Прогноз периода", "Даты", "Баллы", dataset, 500, 0, true);
-			doc.add(image);
+			if (days) {
+				TimeSeriesCollection dataset = new TimeSeriesCollection();
+				for (Map.Entry<Long, List<TimeSeriesDataItem>> entry : series.entrySet()) {
+					List<TimeSeriesDataItem> sitems = entry.getValue();
+					if (null == sitems || 0 == sitems.size())
+						continue;
+					AspectType asptype = (AspectType)service.find(entry.getKey());
+					if (null == asptype.getDescription())
+						continue;
+					TimeSeries timeSeries = new TimeSeries(asptype.getDescription());
+					for (TimeSeriesDataItem tsdi : entry.getValue())
+						timeSeries.add(tsdi);
+					dataset.addSeries(timeSeries);
+				}
+				chapter = new ChapterAutoNumber("Диаграмма");
+				chapter.setNumberDepth(0);
+				p = new Paragraph();
+				PDFUtil.printHeader(p, "Диаграмма");
+				chapter.add(p);
 
+			    com.itextpdf.text.Image image = PDFUtil.printTimeChart(writer, "Прогноз периода", "Даты", "Баллы", dataset, 500, 0, true);
+				chapter.add(image);
+				doc.add(chapter);
+			}			
 			doc.add(Chunk.NEWLINE);
 	        doc.add(PDFUtil.printCopyright());
 		} catch(Exception e) {
