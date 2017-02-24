@@ -52,6 +52,7 @@ import kz.zvezdochet.export.handler.PageEventHandler;
 import kz.zvezdochet.export.util.PDFUtil;
 import kz.zvezdochet.service.AspectService;
 import kz.zvezdochet.service.AspectTypeService;
+import kz.zvezdochet.service.HouseService;
 import kz.zvezdochet.util.Configuration;
 
 import org.jfree.data.time.Day;
@@ -159,6 +160,7 @@ public class PeriodCalcHandler extends Handler {
 	        chapter.add(p);
 
 			Map<Long, List<TimeSeriesDataItem>> series = new HashMap<Long, List<TimeSeriesDataItem>>();
+			Map<Long, Map<Long, List<TimeSeriesDataItem>>> seriesh = new HashMap<Long, Map<Long, List<TimeSeriesDataItem>>>();
 
 			chapter.add(new Paragraph("Прогноз классифицирует события по 5 признакам:", font));
 
@@ -189,6 +191,7 @@ public class PeriodCalcHandler extends Handler {
 				System.out.println(date);
 
 				Map<Long, Double> map = new HashMap<Long, Double>();
+				Map<Long, Map<Long, Double>> map2 = new HashMap<Long, Map<Long, Double>>();
 				Map<Integer, Map<Long, Set<PeriodItem>>> times = new HashMap<Integer, Map<Long, Set<PeriodItem>>>();
 
 				for (int i = 1; i < 5; i++) {
@@ -238,6 +241,12 @@ public class PeriodCalcHandler extends Handler {
 
 							double val = map.containsKey(id) ? map.get(id) : 0;
 							map.put(id, val + 1);
+
+							long houseid = item.house.getId();
+							Map<Long, Double> submap = map2.containsKey(houseid) ? map2.get(houseid) : new HashMap<Long, Double>();
+							val = submap.containsKey(id) ? map.get(id) : 0;
+							submap.put(id, val + 1);
+							map2.put(houseid, submap);
 						}
 						for (Model model : houses) {
 							House house = (House)model;
@@ -253,6 +262,12 @@ public class PeriodCalcHandler extends Handler {
 
 							double val = map.containsKey(id) ? map.get(id) : 0;
 							map.put(id, val + 1);
+
+							long houseid = item.house.getId();
+							Map<Long, Double> submap = map2.containsKey(houseid) ? map2.get(houseid) : new HashMap<Long, Double>();
+							val = submap.containsKey(id) ? map.get(id) : 0;
+							submap.put(id, val + 1);
+							map2.put(houseid, submap);
 						}
 					}
 
@@ -333,10 +348,29 @@ public class PeriodCalcHandler extends Handler {
 						sitems.add(tsdi);
 					series.put(entry.getKey(), sitems);
 				}
+				for (Map.Entry<Long, Map<Long, Double>> entry : map2.entrySet()) {
+					Map<Long, List<TimeSeriesDataItem>> submap = seriesh.containsKey(entry.getKey()) ? seriesh.get(entry.getKey()) : new HashMap<Long, List<TimeSeriesDataItem>>();
+					Map<Long, Double> factors = entry.getValue();
+					for (Map.Entry<Long, Double> entry2 : factors.entrySet()) {
+						List<TimeSeriesDataItem> sitems = submap.containsKey(entry2.getKey()) ? submap.get(entry2.getKey()) : new ArrayList<TimeSeriesDataItem>();
+						TimeSeriesDataItem tsdi = new TimeSeriesDataItem(new Day(date), entry2.getValue());
+						if (!sitems.contains(tsdi))
+							sitems.add(tsdi);
+						submap.put(entry2.getKey(), sitems);
+					}
+					seriesh.put(entry.getKey(), submap);
+				}
 				System.out.println();
 			}
 
 			if (days) {
+				chapter = new ChapterAutoNumber("Диаграммы");
+				chapter.setNumberDepth(0);
+				p = new Paragraph();
+				PDFUtil.printHeader(p, "Диаграммы");
+				chapter.add(p);
+
+				//общая диаграмма
 				TimeSeriesCollection dataset = new TimeSeriesCollection();
 				for (Map.Entry<Long, List<TimeSeriesDataItem>> entry : series.entrySet()) {
 					List<TimeSeriesDataItem> sitems = entry.getValue();
@@ -346,18 +380,38 @@ public class PeriodCalcHandler extends Handler {
 					if (null == asptype.getDescription())
 						continue;
 					TimeSeries timeSeries = new TimeSeries(asptype.getDescription());
-					for (TimeSeriesDataItem tsdi : entry.getValue())
+					for (TimeSeriesDataItem tsdi : sitems)
 						timeSeries.add(tsdi);
 					dataset.addSeries(timeSeries);
 				}
-				chapter = new ChapterAutoNumber("Диаграмма");
-				chapter.setNumberDepth(0);
-				p = new Paragraph();
-				PDFUtil.printHeader(p, "Диаграмма");
-				chapter.add(p);
-
 			    com.itextpdf.text.Image image = PDFUtil.printTimeChart(writer, "Прогноз периода", "Даты", "Баллы", dataset, 500, 0, true);
 				chapter.add(image);
+
+				//диаграмма сфер жизни
+				HouseService serviceh = new HouseService();
+				for (Map.Entry<Long, Map<Long, List<TimeSeriesDataItem>>> entry : seriesh.entrySet()) {
+					dataset = new TimeSeriesCollection();
+					Map<Long, List<TimeSeriesDataItem>> factors = entry.getValue();
+					if (null == factors || 0 == factors.size())
+						continue;
+
+					for (Map.Entry<Long, List<TimeSeriesDataItem>> entry2 : factors.entrySet()) {
+						List<TimeSeriesDataItem> sitems = entry2.getValue();
+						if (null == sitems || 1 == sitems.size())
+							continue;
+
+						AspectType asptype = (AspectType)service.find(entry2.getKey());
+						if (null == asptype.getDescription())
+							continue;
+						TimeSeries timeSeries = new TimeSeries(asptype.getDescription());
+						for (TimeSeriesDataItem tsdi : sitems)
+							timeSeries.add(tsdi);
+						dataset.addSeries(timeSeries);
+					}
+					House house = (House)serviceh.find(entry.getKey());
+				    image = PDFUtil.printTimeChart(writer, house.getShortName(), "Даты", "Баллы", dataset, 500, 0, true);
+					chapter.add(image);
+				}
 				doc.add(chapter);
 			}			
 			doc.add(Chunk.NEWLINE);
