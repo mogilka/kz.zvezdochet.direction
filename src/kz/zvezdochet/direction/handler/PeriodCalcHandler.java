@@ -6,8 +6,11 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.eclipse.e4.core.contexts.Active;
 import org.eclipse.e4.core.di.annotations.Execute;
@@ -26,6 +29,7 @@ import com.itextpdf.text.Section;
 import com.itextpdf.text.pdf.BaseFont;
 import com.itextpdf.text.pdf.PdfWriter;
 
+import kz.zvezdochet.analytics.bean.PlanetAspectText;
 import kz.zvezdochet.bean.Aspect;
 import kz.zvezdochet.bean.AspectType;
 import kz.zvezdochet.bean.Event;
@@ -34,13 +38,16 @@ import kz.zvezdochet.bean.Place;
 import kz.zvezdochet.bean.Planet;
 import kz.zvezdochet.bean.SkyPoint;
 import kz.zvezdochet.core.bean.Model;
+import kz.zvezdochet.core.bean.TextGender;
 import kz.zvezdochet.core.handler.Handler;
 import kz.zvezdochet.core.service.DataAccessException;
 import kz.zvezdochet.core.util.CalcUtil;
 import kz.zvezdochet.core.util.DateUtil;
 import kz.zvezdochet.core.util.PlatformUtil;
+import kz.zvezdochet.core.util.StringUtil;
 import kz.zvezdochet.direction.Activator;
 import kz.zvezdochet.direction.part.PeriodPart;
+import kz.zvezdochet.direction.service.DirectionAspectService;
 import kz.zvezdochet.export.handler.PageEventHandler;
 import kz.zvezdochet.export.util.PDFUtil;
 import kz.zvezdochet.service.AspectService;
@@ -74,6 +81,9 @@ public class PeriodCalcHandler extends Handler {
 			PeriodPart periodPart = (PeriodPart)activePart.getObject();
 				if (!periodPart.check(0)) return;
 			Event person = periodPart.getPerson();
+			boolean female = person.isFemale();
+			boolean child = person.getAge() < person.MAX_TEEN_AGE;
+
 			Place place = periodPart.getPlace();
 			double zone = periodPart.getZone();
 	
@@ -173,11 +183,13 @@ public class PeriodCalcHandler extends Handler {
 			chapter.add(new Paragraph("Если прогноз на день отсутствует, значит нет однозначного толкования.", font));
 			doc.add(chapter);
 
+			DirectionAspectService servicea = new DirectionAspectService();
+
 			for (Date date = start.getTime(); start.before(end); start.add(Calendar.DATE, 1), date = start.getTime()) {
 				System.out.println(date);
 
 				Map<Long, Double> map = new HashMap<Long, Double>();
-				Map<Integer, Map<Long, List<PeriodItem>>> times = new HashMap<Integer, Map<Long, List<PeriodItem>>>();
+				Map<Integer, Map<Long, Set<PeriodItem>>> times = new HashMap<Integer, Map<Long, Set<PeriodItem>>>();
 
 				for (int i = 1; i < 5; i++) {
 					int h = i * 6;
@@ -210,17 +222,17 @@ public class PeriodCalcHandler extends Handler {
 							iplanets.add(planet);
 					}
 
-					Map<Long, List<PeriodItem>> items = new HashMap<Long, List<PeriodItem>>();
+					Map<Long, Set<PeriodItem>> items = new HashMap<Long, Set<PeriodItem>>();
 					for (Planet eplanet : iplanets) {
 						for (Model model : planets) {
 							Planet planet = (Planet)model;
 							PeriodItem item = calc(eplanet, planet);
 							if (null == item)
 								continue;
-							long id = item.aspectType.getId();
-							List<PeriodItem> list = items.get(id);
+							long id = item.aspect.getTypeid();
+							Set<PeriodItem> list = items.get(id);
 							if (null == list)
-								list = new ArrayList<>();
+								list = new HashSet<PeriodItem>();
 							list.add(item);
 							items.put(id, list);
 
@@ -232,10 +244,10 @@ public class PeriodCalcHandler extends Handler {
 							PeriodItem item = calc(eplanet, house);
 							if (null == item)
 								continue;
-							long id = item.aspectType.getId();
-							List<PeriodItem> list = items.get(id);
+							long id = item.aspect.getTypeid();
+							Set<PeriodItem> list = items.get(id);
 							if (null == list)
-								list = new ArrayList<>();
+								list = new HashSet<PeriodItem>();
 							list.add(item);
 							items.put(id, list);
 
@@ -256,8 +268,8 @@ public class PeriodCalcHandler extends Handler {
 					PDFUtil.printHeader(p, sdfdate);
 					chapter.add(p);
 
-					for (Map.Entry<Integer, Map<Long, List<PeriodItem>>> entry : times.entrySet()) {
-						Map <Long, List<PeriodItem>> items = entry.getValue();
+					for (Map.Entry<Integer, Map<Long, Set<PeriodItem>>> entry : times.entrySet()) {
+						Map <Long, Set<PeriodItem>> items = entry.getValue();
 						if (items != null && items.size() > 0) {
 							int i = entry.getKey();
 							String header = "";
@@ -270,12 +282,13 @@ public class PeriodCalcHandler extends Handler {
 							Section section = PDFUtil.printSection(chapter, header);
 		
 							Font fonth5 = PDFUtil.getHeaderFont();
-							for (Map.Entry<Long, List<PeriodItem>> entry2 : items.entrySet()) {
-								List<PeriodItem> list = entry2.getValue();
+							for (Map.Entry<Long, Set<PeriodItem>> entry2 : items.entrySet()) {
+								Set<PeriodItem> list = entry2.getValue();
 								if (null == list || 0 == list.size()) {
 									section.add(new Paragraph("Нет данных", font));
 									continue;
 								}
+								list = new LinkedHashSet<PeriodItem>(list);
 								AspectType type = (AspectType)service.find(entry2.getKey());
 								section.add(new Paragraph(type.getDescription(), fonth5));
 		
@@ -287,6 +300,25 @@ public class PeriodCalcHandler extends Handler {
 							        chunk = new Chunk(item.house.getDescription(), new Font(baseFont, 12, Font.NORMAL, color));
 							        li.add(chunk);
 							        alist.add(li);
+
+									if (item.planet2 != null) {
+										PlanetAspectText dirText = (PlanetAspectText)servicea.find(item.planet, item.planet2, item.aspect);
+										if (dirText != null) {
+											li = new ListItem();
+									        chunk = new Chunk(item.planet.getShortName() + " " + type.getSymbol() + " " + item.planet2.getShortName() + ": ", bfont);
+									        li.add(chunk);
+											li.add(new Chunk(StringUtil.removeTags(dirText.getText()), font));
+									        alist.add(li);
+											
+											List<TextGender> genders = dirText.getGenderTexts(female, child);
+											for (TextGender gender : genders) {
+												li = new ListItem();
+										        li.add(new Chunk(PDFUtil.getGenderHeader(gender.getType()) + ": ", bfont));
+												li.add(new Chunk(StringUtil.removeTags(gender.getText()), font));
+										        alist.add(li);
+											};
+										}
+									}
 								}
 								section.add(alist);
 							}
@@ -346,7 +378,6 @@ public class PeriodCalcHandler extends Handler {
 		try {
 			//находим угол между точками космограммы
 			double res = CalcUtil.getDifference(point1.getCoord(), point2.getCoord());
-			House house = null;
 
 			//определяем, является ли аспект стандартным
 			List<Model> aspects = new AspectService().getList();
@@ -356,16 +387,18 @@ public class PeriodCalcHandler extends Handler {
 					if (a.getPlanetid() > 0)
 						continue;
 
-					if (point2 instanceof House)
-						house = (House)point2;
-					else if (point2 instanceof Planet) {
-						Planet planet2 = (Planet)point2;
-						house = planet2.getHouse();
-					}
 					AspectType type = a.getType();
 					PeriodItem item = new PeriodItem();
-					item.aspectType = type;
-					item.house = house;
+					item.aspect = a;
+
+					if (point2 instanceof House)
+						item.house = (House)point2;
+					else if (point2 instanceof Planet) {
+						item.planet = (Planet)point1;
+						Planet planet2 = (Planet)point2;
+						item.planet2 = planet2;
+						item.house = planet2.getHouse();
+					}
 					System.out.println(point1.getName() + " " + type.getSymbol() + " " + point2.getName());
 					return item;
 				}
@@ -377,19 +410,22 @@ public class PeriodCalcHandler extends Handler {
 	}
 
 	private class PeriodItem {
-		public AspectType aspectType;
+		public Aspect aspect;
 		public House house;
+		public Planet planet;
+		public Planet planet2;
 
-		 @Override
-		 public boolean equals(Object obj) {
-			 PeriodItem other = (PeriodItem)obj;
-			 return this.house.getId() == other.house.getId() && this.aspectType.getId() == other.aspectType.getId();
-		 }
+		@Override
+		public boolean equals(Object obj) {
+			PeriodItem other = (PeriodItem)obj;
+			return this.house.getId() == other.house.getId()
+					&& this.aspect.getId() == other.aspect.getId();
+		}
 
-		 @Override
-		 public int hashCode() {
-			 Integer i = new Integer(house.getId().toString() + aspectType.getId().toString());
-			 return i.hashCode();
-		 }
+		@Override
+		public int hashCode() {
+			Integer i = new Integer(house.getId().toString() + aspect.getId().toString());
+			return i.hashCode();
+		}
 	}
 }
