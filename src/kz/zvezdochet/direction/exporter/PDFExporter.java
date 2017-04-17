@@ -16,6 +16,7 @@ import com.itextpdf.text.Document;
 import com.itextpdf.text.Element;
 import com.itextpdf.text.Font;
 import com.itextpdf.text.Image;
+import com.itextpdf.text.ListItem;
 import com.itextpdf.text.Paragraph;
 import com.itextpdf.text.Section;
 import com.itextpdf.text.pdf.BaseFont;
@@ -29,8 +30,13 @@ import kz.zvezdochet.bean.Event;
 import kz.zvezdochet.bean.House;
 import kz.zvezdochet.bean.Place;
 import kz.zvezdochet.bean.Planet;
+import kz.zvezdochet.bean.PositionType;
+import kz.zvezdochet.bean.Sign;
 import kz.zvezdochet.bean.SkyPoint;
 import kz.zvezdochet.bean.SkyPointAspect;
+import kz.zvezdochet.core.bean.Model;
+import kz.zvezdochet.core.service.DataAccessException;
+import kz.zvezdochet.core.util.CalcUtil;
 import kz.zvezdochet.core.util.CoreUtil;
 import kz.zvezdochet.core.util.DateUtil;
 import kz.zvezdochet.core.util.PlatformUtil;
@@ -42,6 +48,9 @@ import kz.zvezdochet.direction.service.DirectionService;
 import kz.zvezdochet.export.bean.Bar;
 import kz.zvezdochet.export.handler.PageEventHandler;
 import kz.zvezdochet.export.util.PDFUtil;
+import kz.zvezdochet.service.HouseService;
+import kz.zvezdochet.service.PlanetService;
+import kz.zvezdochet.service.PositionTypeService;
 
 /**
  * Генератор PDF-файла для экспорта событий
@@ -49,8 +58,18 @@ import kz.zvezdochet.export.util.PDFUtil;
  *
  */
 public class PDFExporter {
+	/**
+	 * Базовый шрифт
+	 */
 	private BaseFont baseFont;
+	/**
+	 * Вариации шрифтов
+	 */
 	private Font font, fonth5;
+	/**
+	 * Признак использования астрологических терминов
+	 */
+	private boolean term = false;
 
 	public PDFExporter() {
 		try {
@@ -135,6 +154,11 @@ public class PDFExporter {
 				negative.put(nextage, 0);
 			}
 
+			//инициализация статистики планет
+			initPlanetStatistics(event, spas);
+
+			Map<Long, Map<Integer, Double>> seriesh = new HashMap<Long, Map<Integer, Double>>();
+
 			//события
 			Map<Integer, Map<String, List<SkyPointAspect>>> map = new HashMap<Integer, Map<String, List<SkyPointAspect>>>();
 			for (SkyPointAspect spa : spas) {
@@ -146,6 +170,7 @@ public class PDFExporter {
 					agemap.put("strong", new ArrayList<SkyPointAspect>());
 					agemap.put("inner", new ArrayList<SkyPointAspect>());
 				}
+
 				String code = spa.getAspect().getType().getCode();
 				if (code.equals("NEUTRAL") || code.equals("NEGATIVE") || code.equals("POSITIVE")) {
 					if (spa.getSkyPoint2() instanceof Planet) {
@@ -160,17 +185,33 @@ public class PDFExporter {
 							list.add(spa);
 						}
 					}
+					double point = 0;
 					if (code.equals("NEUTRAL")) {
 						Planet planet = (Planet)spa.getSkyPoint1();
 						String pcode = planet.getCode();
-						if (pcode.equals("Lilith") || pcode.equals("Kethu"))
+						if (pcode.equals("Lilith") || pcode.equals("Kethu")) {
 							negative.put(age, negative.get(age) + 1);
-						else
+							point -= 2;
+						} else {
 							positive.put(age, positive.get(age) + 1);
-					} else if (code.equals("POSITIVE"))
+							point += 2;
+						}
+					} else if (code.equals("POSITIVE")) {
 						positive.put(age, positive.get(age) + 1);
-					else if (code.equals("NEGATIVE"))
+						++point;
+					} else if (code.equals("NEGATIVE")) {
 						negative.put(age, negative.get(age) + 1);
+						--point;
+					}
+
+					//данные для диаграммы сфер жизни
+					if (spa.getSkyPoint2() instanceof House) {
+						long houseid = spa.getSkyPoint2().getId();
+						Map<Integer, Double> submap = seriesh.containsKey(houseid) ? seriesh.get(houseid) : new HashMap<Integer, Double>();
+						double val = submap.containsKey(age) ? submap.get(age) : 0;
+						submap.put(age, val + point);
+						seriesh.put(houseid, submap);
+					}
 				}
 				map.put(age, agemap);
 			}
@@ -202,6 +243,80 @@ public class PDFExporter {
 					printEvents(event, chapter, age, subentry.getKey(), subentry.getValue());
 				doc.add(chapter);
 			}
+			
+			if (term) {
+				chapter = new ChapterAutoNumber("Сокращения");
+				chapter.setNumberDepth(0);
+				p = new Paragraph();
+				PDFUtil.printHeader(p, "Сокращения");
+				chapter.add(p);
+
+				chapter.add(new Paragraph("Раздел событий:", font));
+				com.itextpdf.text.List list = new com.itextpdf.text.List(false, false, 10);
+				ListItem li = new ListItem();
+		        li.add(new Chunk("\u2191 — сильная планета, адекватно проявляющая себя в астрологическом доме", font));
+		        list.add(li);
+
+				li = new ListItem();
+		        li.add(new Chunk("\u2193 — ослабленная планета, источник неуверенности, стресса и препятствий", font));
+		        list.add(li);
+
+				li = new ListItem();
+		        li.add(new Chunk("обт — указанный астрологический дом является обителью планеты и облегчает ей естественное и свободное проявление", font));
+		        list.add(li);
+
+				li = new ListItem();
+		        li.add(new Chunk("экз — указанный астрологический дом является местом экзальтации планеты, усиливая её проявления и уравновешивая слабые качества", font));
+		        list.add(li);
+
+				li = new ListItem();
+		        li.add(new Chunk("пдн — указанный астрологический дом является местом падения планеты, где она чувствует себя «не в своей тарелке»", font));
+		        list.add(li);
+
+				li = new ListItem();
+		        li.add(new Chunk("изг — указанный астрологический дом является местом изгнания планеты, ослабляя её проявления и усиливает негатив", font));
+		        list.add(li);
+		        chapter.add(list);
+
+		        chapter.add(Chunk.NEWLINE);
+				chapter.add(new Paragraph("Раздел личности:", font));
+				list = new com.itextpdf.text.List(false, false, 10);
+				li = new ListItem();
+		        li.add(new Chunk("\u2191 — усиленный аспект, проявляющийся ярче других аспектов указанных планет (хорошо для позитивных сочетаний, плохо для негативных)", font));
+		        list.add(li);
+
+				li = new ListItem();
+		        li.add(new Chunk("\u2193 — ослабленный аспект, проявляющийся менее ярко по сравнению с другими аспектами указанных планет (плохо для позитивных сочетаний, хорошо для негативных)", font));
+		        list.add(li);
+		        chapter.add(list);
+			}
+			doc.add(chapter);
+
+			chapter = new ChapterAutoNumber("Диаграммы");
+			chapter.setNumberDepth(0);
+			p = new Paragraph();
+			PDFUtil.printHeader(p, "Диаграммы");
+			chapter.add(p);
+
+			HouseService serviceh = new HouseService();
+			for (Map.Entry<Long, Map<Integer, Double>> entry : seriesh.entrySet()) {
+				House house = (House)serviceh.find(entry.getKey());
+				Map<Integer, Double> map3 = entry.getValue();
+				Bar[] items = new Bar[map3.size()];
+				int i = -1;
+				for (Map.Entry<Integer, Double> entry2 : map3.entrySet()) {
+					Bar bar = new Bar();
+			    	bar.setName(entry2.getKey().toString());
+			    	bar.setValue(entry2.getValue());
+					bar.setColor(house.getColor());
+					bar.setCategory("Аспекты");
+					items[++i] = bar;
+				}
+			    image = PDFUtil.printBars(writer, house.getShortName(), "Аспекты", "Баллы", items, 500, 300, false, true);
+				chapter.add(image);
+			}
+			doc.add(chapter);
+
 			doc.add(Chunk.NEWLINE);
 	        doc.add(PDFUtil.printCopyright());
 		} catch(Exception e) {
@@ -241,7 +356,27 @@ public class PDFExporter {
 				SkyPoint skyPoint = spa.getSkyPoint2();
 				if (skyPoint instanceof House) {
 					House house = (House)skyPoint;
-					section.add(new Paragraph(planet.getShortName() + " " + type.getSymbol() + " " + house.getShortName(), fonth5));
+					if (term) {
+	    				section.add(new Chunk(planet.getMark("house"), fonth5));
+	    				section.add(new Chunk(planet.getSymbol(), PDFUtil.getHeaderAstroFont()));
+	    				section.add(new Chunk(" " + planet.getName() + " (", fonth5));
+
+	    				if (planet.getSign().getCode().equals("Ophiuchus"))
+	    					section.add(new Chunk("\u221E", fonth5));
+	    				else
+	    					section.add(new Chunk(planet.getSign().getSymbol(), PDFUtil.getHeaderAstroFont()));
+
+	    				section.add(new Chunk(", " + planet.getHouse().getDesignation() + ") ", fonth5));
+	    				
+	    				if (spa.getAspect().getCode().equals("CONJUNCTION") || spa.getAspect().getCode().equals("OPPOSITION"))
+	    					section.add(new Chunk(spa.getAspect().getSymbol(), PDFUtil.getHeaderAstroFont()));
+	    				else
+	    					section.add(new Chunk(type.getSymbol(), fonth5));
+
+	    				section.add(new Chunk(" " + house.getDesignation() + " дом", fonth5));
+	    				section.add(Chunk.NEWLINE);
+					} else
+						section.add(new Paragraph(planet.getShortName() + planet.getSymbol() + " " + type.getSymbol() + " " + house.getShortName(), fonth5));
 
 					DirectionText dirText = (DirectionText)service.find(planet, house, type);
 					if (dirText != null) {
@@ -258,11 +393,44 @@ public class PDFExporter {
 					Planet planet2 = (Planet)skyPoint;
 					if (planet.getNumber() > planet2.getNumber())
 						continue;
-					section.add(new Paragraph(planet.getShortName() + " " + type.getSymbol() + " " + planet2.getShortName(), fonth5));
 
 					PlanetAspectText dirText = (PlanetAspectText)servicea.find(planet, planet2, spa.getAspect());
-					if (dirText != null) {
-						String typeColor = type.getFontColor();
+					if (null == dirText)
+	    				section.add(new Paragraph(planet.getShortName() + " " + type.getSymbol() + " " + planet2.getShortName(), fonth5));
+					else {
+		    			if (term) {
+		    				List<Model> planets = event.getConfiguration().getPlanets();
+		    				int pindex = planets.indexOf(planet2);
+		    				Planet aspl2 = (Planet)planets.get(pindex);
+
+		    				section.add(new Chunk(dirText.getMark(planet, aspl2), fonth5));
+		    				section.add(new Chunk(planet.getSymbol(), PDFUtil.getHeaderAstroFont()));
+		    				section.add(new Chunk(" " + planet.getName() + " (", fonth5));
+
+		    				if (planet.getSign().getCode().equals("Ophiuchus"))
+		    					section.add(new Chunk("\u221E", fonth5));
+		    				else
+		    					section.add(new Chunk(planet.getSign().getSymbol(), PDFUtil.getHeaderAstroFont()));
+
+		    				section.add(new Chunk(", " + planet.getHouse().getDesignation() + ") ", PDFUtil.getHeaderAstroFont()));
+		    				
+		    				if (spa.getAspect().getCode().equals("CONJUNCTION") || spa.getAspect().getCode().equals("OPPOSITION"))
+		    					section.add(new Chunk(spa.getAspect().getSymbol(), PDFUtil.getHeaderAstroFont()));
+		    				else
+		    					section.add(new Chunk(type.getSymbol(), fonth5));
+
+		    				section.add(new Chunk(" " + planet2.getSymbol(), PDFUtil.getHeaderAstroFont()));
+		    				section.add(new Chunk(" " + planet2.getName() + " (", fonth5));
+		    				if (planet2.getSign().getCode().equals("Ophiuchus"))
+		    					section.add(new Chunk("\u221E", fonth5));
+		    				else
+		    					section.add(new Chunk(planet2.getSign().getSymbol(), PDFUtil.getHeaderAstroFont()));
+		    				section.add(new Chunk(", " + planet2.getHouse().getDesignation() + ")", PDFUtil.getHeaderAstroFont()));
+		    				section.add(Chunk.NEWLINE);
+		    			} else
+		    				section.add(new Paragraph(planet.getShortName() + " " + type.getSymbol() + " " + planet2.getShortName(), fonth5));
+
+		    			String typeColor = type.getFontColor();
 						BaseColor color = PDFUtil.htmlColor2Base(typeColor);
 						section.add(new Paragraph(StringUtil.removeTags(dirText.getText()), new Font(baseFont, 12, Font.NORMAL, color)));
 						PDFUtil.printGender(section, dirText, female, child);
@@ -274,5 +442,65 @@ public class PDFExporter {
 			e.printStackTrace();
 		}
 		return null;
+	}
+
+	/**
+	 * Поиск поражённых и непоражённых планет
+	 * @throws DataAccessException 
+	 */
+	private void initPlanetStatistics(Event event, List<SkyPointAspect> spas) throws DataAccessException {
+		PlanetService service = new PlanetService();
+		List<Model> positions = new PositionTypeService().getList();
+		for (SkyPointAspect spa : spas) {
+			Planet planet = (Planet)spa.getSkyPoint1();
+			if (!planet.isDone()) {
+				//афетика
+				for (Model type : positions) {
+					PositionType pType = (PositionType)type;
+					String pCode = pType.getCode();
+					boolean daily = true;
+					if (!planet.getCode().equals("Sun") &&
+							(pCode.equals("HOME") || pCode.equals("EXILE")))
+						daily = DateUtil.isDaily(event.getBirth());
+
+					Sign sign = service.getSignPosition(planet, pCode, daily);
+					if (sign != null && sign.getId() == planet.getSign().getId()) {
+						switch (pCode) {
+							case "HOME": planet.setSignHome(true); break;
+							case "EXALTATION": planet.setSignExaltated(true); break;
+							case "EXILE": planet.setSignExile(true); break;
+							case "DECLINE": planet.setSignDeclined(true); break;
+						}
+					}
+
+					if (null == planet.getHouse()) continue;
+					House house = service.getHousePosition(planet, pCode, daily);
+					int hnumber = CalcUtil.trunc((planet.getHouse().getNumber() + 2) / 3);
+					if (house != null && CalcUtil.trunc((house.getNumber() + 2) / 3) == hnumber) {
+						switch (pCode) {
+							case "HOME": planet.setHouseHome(true); break;
+							case "EXALTATION": planet.setHouseExaltated(true); break;
+							case "EXILE": planet.setHouseExile(true); break;
+							case "DECLINE": planet.setHouseDeclined(true); break;
+						}
+					}
+				}
+
+				//аспекты, влияющие на статус планеты
+				if (spa.getSkyPoint2() instanceof Planet) {
+					if (spa.getAspect().getCode().equals("CONJUNCTION")) {
+						String code2 = spa.getSkyPoint2().getCode();
+						if (code2.equals("Lilith")) {
+							planet.setLilithed(true);
+							planet.setPerfect(false);
+						} else if (code2.equals("Kethu")) {
+							planet.setBroken(true);
+							planet.setPerfect(false);
+						}
+					}
+				}
+				planet.setDone(true);
+			}
+		}
 	}
 }
