@@ -299,22 +299,21 @@ public class PDFExporter {
 			chapter.add(p);
 
 			HouseService serviceh = new HouseService();
+			List<Bar> items = new ArrayList<Bar>();
 			for (Map.Entry<Long, Map<Integer, Double>> entry : seriesh.entrySet()) {
 				House house = (House)serviceh.find(entry.getKey());
 				Map<Integer, Double> map3 = entry.getValue();
-				Bar[] items = new Bar[map3.size()];
-				int i = -1;
 				for (Map.Entry<Integer, Double> entry2 : map3.entrySet()) {
 					Bar bar = new Bar();
 			    	bar.setName(entry2.getKey().toString());
 			    	bar.setValue(entry2.getValue());
 					bar.setColor(house.getColor());
-					bar.setCategory("Аспекты");
-					items[++i] = bar;
+					bar.setCategory(house.getShortName());
+					items.add(bar);
 				}
-			    image = PDFUtil.printBars(writer, house.getShortName(), "Аспекты", "Баллы", items, 500, 300, false, true);
-				chapter.add(image);
 			}
+			image = PDFUtil.printBars(writer, "аыалдыао", "Аспекты", "Баллы", items.toArray(new Bar[0]), 500, 300, true, true);
+			chapter.add(image);
 			doc.add(chapter);
 
 			doc.add(Chunk.NEWLINE);
