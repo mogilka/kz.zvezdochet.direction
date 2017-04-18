@@ -8,6 +8,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
+import org.jfree.data.xy.XYSeries;
+import org.jfree.data.xy.XYSeriesCollection;
+
 import com.itextpdf.text.BaseColor;
 import com.itextpdf.text.Chapter;
 import com.itextpdf.text.ChapterAutoNumber;
@@ -299,20 +302,27 @@ public class PDFExporter {
 			chapter.add(p);
 
 			HouseService serviceh = new HouseService();
-			List<Bar> items = new ArrayList<Bar>();
+			XYSeriesCollection items = new XYSeriesCollection();
+			int i = 0;
 			for (Map.Entry<Long, Map<Integer, Double>> entry : seriesh.entrySet()) {
+				++i;
+				if (i > 3) {
+					image = PDFUtil.printGraphics(writer, "", "Сферы жизни", "Баллы", items, 500, 300, true);
+					chapter.add(image);
+					items = new XYSeriesCollection();
+					i = 0;
+				}
 				House house = (House)serviceh.find(entry.getKey());
+		        XYSeries series = new XYSeries(house.getShortName());
 				Map<Integer, Double> map3 = entry.getValue();
 				for (Map.Entry<Integer, Double> entry2 : map3.entrySet()) {
-					Bar bar = new Bar();
-			    	bar.setName(entry2.getKey().toString());
-			    	bar.setValue(entry2.getValue());
-					bar.setColor(house.getColor());
-					bar.setCategory(house.getShortName());
-					items.add(bar);
+					Double val = entry2.getValue();
+					if (val != 0)
+						series.add(entry2.getKey(), val);
 				}
+		        items.addSeries(series);
 			}
-			image = PDFUtil.printBars(writer, "аыалдыао", "Аспекты", "Баллы", items.toArray(new Bar[0]), 500, 300, true, true);
+			image = PDFUtil.printGraphics(writer, "", "Сферы жизни", "Баллы", items, 500, 300, true);
 			chapter.add(image);
 			doc.add(chapter);
 
