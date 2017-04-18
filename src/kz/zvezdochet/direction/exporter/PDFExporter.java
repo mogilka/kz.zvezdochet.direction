@@ -6,7 +6,9 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.SortedSet;
 import java.util.TreeMap;
+import java.util.TreeSet;
 
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
@@ -142,7 +144,8 @@ public class PDFExporter {
 
 			chapter.add(new Paragraph("Прогноз содержит как позитивные, так и негативные события. "
 				+ "Негатив - признак того, что вам необходим отдых, переосмысление и мобилизация ресурсов для решения проблемы. "
-				+ "Не зацикливайтесь на негативе, развивайте свои сильные стороны, используя благоприятные события.", font));
+				+ "А также это возможность смягчить напряжение, ведь вы будете знать о нём заранее. "
+				+ "Не зацикливайтесь на негативе, используйте свои сильные стороны и благоприятные события.", font));
 			chapter.add(new Paragraph("Если из возраста в возраст событие повторяется, значит оно создаст большой резонанс.", font));
 			chapter.add(new Paragraph("Максимальная погрешность прогноза события ±1 год.", font));
 
@@ -295,38 +298,63 @@ public class PDFExporter {
 			}
 			doc.add(chapter);
 
+
 			chapter = new ChapterAutoNumber("Диаграммы");
 			chapter.setNumberDepth(0);
 			p = new Paragraph();
 			PDFUtil.printHeader(p, "Диаграммы");
 			chapter.add(p);
 
-			HouseService serviceh = new HouseService();
-			XYSeriesCollection items = new XYSeriesCollection();
-			int i = 0;
-			for (Map.Entry<Long, Map<Integer, Double>> entry : seriesh.entrySet()) {
-				++i;
-				if (i > 3) {
-					image = PDFUtil.printGraphics(writer, "", "Сферы жизни", "Баллы", items, 500, 300, true);
-					chapter.add(image);
-					items = new XYSeriesCollection();
-					i = 0;
-				}
-				House house = (House)serviceh.find(entry.getKey());
-		        XYSeries series = new XYSeries(house.getShortName());
-				Map<Integer, Double> map3 = entry.getValue();
-				for (Map.Entry<Integer, Double> entry2 : map3.entrySet()) {
-					Double val = entry2.getValue();
-					if (val != 0)
-						series.add(entry2.getKey(), val);
-				}
-		        items.addSeries(series);
-			}
-			image = PDFUtil.printGraphics(writer, "", "Сферы жизни", "Баллы", items, 500, 300, true);
-			chapter.add(image);
-			doc.add(chapter);
+			text = "Диаграммы обобщают приведённую выше информацию и наглядно отображают сферы жизни, которые будут занимать вас в каждом конкретном возрасте.";
+			chapter.add(new Paragraph(text, font));
 
-			doc.add(Chunk.NEWLINE);
+			com.itextpdf.text.List list = new com.itextpdf.text.List(false, false, 10);
+			ListItem li = new ListItem();
+	        li.add(new Chunk("Показатели выше нуля указывают на успех и лёгкость.", font));
+	        list.add(li);
+
+			li = new ListItem();
+	        li.add(new Chunk("Показатели на нуле указывают на сбалансированность ситуации.", font));
+	        list.add(li);
+
+			li = new ListItem();
+	        li.add(new Chunk("Показатели ниже нуля указывают на трудности и напряжение.", font));
+	        list.add(li);
+	        chapter.add(list);
+	        chapter.add(Chunk.NEWLINE);
+
+			HouseService serviceh = new HouseService();
+	        HouseMap[] houseMap = getHouseMap();
+	        for (HouseMap hmap : houseMap) {
+	        	Section section = PDFUtil.printSection(chapter, hmap.name);
+				XYSeriesCollection items = new XYSeriesCollection();
+				List<String> descrs = new ArrayList<String>();
+	        	for (int i = 0; i < 3; i++) {
+	        		long houseid = hmap.houseids[i];
+	        		Map<Integer, Double> hdata = seriesh.get(houseid);
+	        		if (null == hdata || 0 == hdata.size())
+	        			continue;
+					House house = (House)serviceh.find(houseid);
+					descrs.add(house.getShortName() + ": " + house.getDescription());
+			        XYSeries series = new XYSeries(house.getShortName());
+	        		SortedSet<Integer> keys = new TreeSet<Integer>(hdata.keySet());
+	        		for (Integer key : keys)
+						series.add(key, hdata.get(key));
+			        items.addSeries(series);
+	        	}	        	
+				image = PDFUtil.printGraphics(writer, "", "Возраст", "Баллы", items, 500, 300, true);
+				section.add(image);
+
+				list = new com.itextpdf.text.List(false, false, 10);
+				for (String descr : descrs) {
+					li = new ListItem();
+					li.add(new Chunk(descr, font));
+					list.add(li);
+				}
+				section.add(list);
+				chapter.add(Chunk.NEXTPAGE);
+	        }
+			doc.add(chapter);
 	        doc.add(PDFUtil.printCopyright());
 		} catch(Exception e) {
 			e.printStackTrace();
@@ -511,5 +539,32 @@ public class PDFExporter {
 				planet.setDone(true);
 			}
 		}
+	}
+
+	private class HouseMap {
+		protected String name;
+		protected Long[] houseids;
+		protected HouseMap(String name, Long[] houseids) {
+			super();
+			this.name = name;
+			this.houseids = houseids;
+		}
+	}
+
+	private HouseMap[] getHouseMap() {
+		HouseMap[] map = new HouseMap[12];
+		map[0] = new HouseMap("Личность", new Long[] {142L,143L,144L});
+		map[1] = new HouseMap("Материальное положение", new Long[] {145L,146L,147L});
+		map[2] = new HouseMap("Привычное окружение", new Long[] {148L,149L,150L});
+		map[3] = new HouseMap("Семья", new Long[] {151L,152L,153L});
+		map[4] = new HouseMap("Развлечения", new Long[] {154L,155L,156L});
+		map[5] = new HouseMap("Обязанности", new Long[] {157L,158L,159L});
+		map[6] = new HouseMap("Партнёрство", new Long[] {160L,161L,162L});
+		map[7] = new HouseMap("Риск", new Long[] {163L,164L,165L});
+		map[8] = new HouseMap("Непривычное окружение", new Long[] {166L,167L,168L});
+		map[9] = new HouseMap("Достижение целей", new Long[] {169L,170L,171L});
+		map[10] = new HouseMap("Социум", new Long[] {172L,173L,174L});
+		map[11] = new HouseMap("Внутренняя жизнь", new Long[] {175L,176L,177L});
+		return map;
 	}
 }
