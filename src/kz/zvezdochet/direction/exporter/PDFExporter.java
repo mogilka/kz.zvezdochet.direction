@@ -177,10 +177,11 @@ public class PDFExporter {
 					agemap.put("strong", new ArrayList<SkyPointAspect>());
 					agemap.put("inner", new ArrayList<SkyPointAspect>());
 				}
+				boolean isHouse = spa.getSkyPoint2() instanceof House;
 
 				String code = spa.getAspect().getType().getCode();
 				if (code.equals("NEUTRAL") || code.equals("NEGATIVE") || code.equals("POSITIVE")) {
-					if (spa.getSkyPoint2() instanceof Planet) {
+					if (!isHouse) {
 						List<SkyPointAspect> list = agemap.get("inner");
 						list.add(spa);
 					} else {
@@ -211,14 +212,14 @@ public class PDFExporter {
 						--point;
 					}
 
-					if (spa.getSkyPoint2() instanceof House) {
+					if (isHouse) {
 						long houseid = spa.getSkyPoint2().getId();
 						//данные для диаграммы сфер жизни
 						Map<Integer, Double> submap = seriesh.containsKey(houseid) ? seriesh.get(houseid) : new HashMap<Integer, Double>();
 						double val = submap.containsKey(age) ? submap.get(age) : 0;
 						submap.put(age, val + point);
 						seriesh.put(houseid, submap);
-
+	
 						//данные для диаграммы возраста
 						Map<Long, Double> submapa = seriesa.containsKey(age) ? seriesa.get(age) : new HashMap<Long, Double>();
 						val = submapa.containsKey(houseid) ? submapa.get(houseid) : 0;
