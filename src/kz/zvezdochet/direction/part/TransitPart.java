@@ -653,7 +653,10 @@ public class TransitPart extends ModelListView implements ICalculable {
 			"Аспект",
 			"Точка 2",
 			"Направление",
-			"Величина аспекта" };
+			"Величина аспекта",
+			"Знак Зодиака",
+			"Дом"
+		};
 	}
 
 	@Override

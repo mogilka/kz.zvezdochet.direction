@@ -20,14 +20,17 @@ public class TransitLabelProvider extends ArrayLabelProvider implements ITableLa
 	@Override
 	public String getColumnText(Object element, int columnIndex) {
 		SkyPointAspect aspect = (SkyPointAspect)element;
+		Planet planet = (Planet)aspect.getSkyPoint1();
 		Aspect realasp = aspect.getAspect();
 		switch (columnIndex) {
 			case 0: return String.valueOf(aspect.getAge());
-			case 1: return aspect.getSkyPoint1().getName();
+			case 1: return planet.getName();
 			case 2: return (null == realasp) ? "" : realasp.getName();
 			case 3: return aspect.getSkyPoint2().getName();
 			case 4: return aspect.isRetro() ? "R" : "";
 			case 5: return String.valueOf(aspect.getScore());
+			case 6: return planet.getSign() != null ? planet.getSign().getName() : null;
+			case 7: return planet.getHouse() != null ? planet.getHouse().getName() : null;
 		}
 		return null;
 	}

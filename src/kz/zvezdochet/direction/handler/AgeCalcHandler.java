@@ -12,6 +12,7 @@ import kz.zvezdochet.bean.AspectType;
 import kz.zvezdochet.bean.Event;
 import kz.zvezdochet.bean.House;
 import kz.zvezdochet.bean.Planet;
+import kz.zvezdochet.bean.Sign;
 import kz.zvezdochet.bean.SkyPoint;
 import kz.zvezdochet.bean.SkyPointAspect;
 import kz.zvezdochet.core.bean.Model;
@@ -34,6 +35,7 @@ public class AgeCalcHandler extends Handler {
 	private String aspectype;
 	private boolean retro = false;
 	List<Model> aspects = null;
+	Event event;
 
 	@Execute
 	public void execute(@Active MPart activePart) {
@@ -41,7 +43,7 @@ public class AgeCalcHandler extends Handler {
 			aged = new ArrayList<SkyPointAspect>();
 			AgePart agePart = (AgePart)activePart.getObject();
 			if (!agePart.check(0)) return;
-			Event event = agePart.getEvent();
+			event = agePart.getEvent();
 
 			Configuration conf = event.getConfiguration();
 			List<Model> planets = conf.getPlanets();
@@ -50,13 +52,15 @@ public class AgeCalcHandler extends Handler {
 			updateStatus("Расчёт дирекций на возраст", false);
 			List<Model> selplanets = new ArrayList<Model>();
 			Planet selplanet = agePart.getPlanet();
-			if (selplanet != null)
-				for (Model model : planets) {
-					if (selplanet.getId().equals(model.getId()))
+			for (Model model : planets) {
+				if (selplanet != null) {
+					if (selplanet.getId().equals(model.getId())) {
 						selplanets.add(model);
-				}
-			else
-				selplanets.addAll(planets);
+						break;
+					}
+				} else
+					selplanets.add(model);
+			}
 
 			List<Model> selhouses = new ArrayList<Model>();
 			House selhouse = agePart.getHouse();
@@ -127,16 +131,16 @@ public class AgeCalcHandler extends Handler {
 	 */
 	private void manageCalc(SkyPoint point1, SkyPoint point2, int age) {
 		if (point1.getCode().equals(point2.getCode())) return;
-		calc(point1, point2, age, false);
+		calc(new Planet((Planet)point1), point2, age, false);
 		if (!retro) return;
 		if (point2 instanceof Planet && point1 instanceof Planet) {
 			//если неретроградная итерация выявила дирекцию по аспекту,
 			//пропускаем расчёт ретроградного транзита
 			if (!agedp[age][point1.getNumber() - 1][point2.getNumber() - 1])
-				calc(point1, point2, age, true);
+				calc(new Planet((Planet)point1), point2, age, true);
 		} else {
 			if (!agedh[age][point1.getNumber() - 1][point2.getNumber() - 1])
-				calc(point1, point2, age, true);
+				calc(new Planet((Planet)point1), point2, age, true);
 		}
 	}
 
@@ -167,6 +171,9 @@ public class AgeCalcHandler extends Handler {
 					continue;
 				if (a.isExactTruncAspect(res)) {
 					SkyPointAspect aspect = new SkyPointAspect();
+					point1.setCoord(one);
+					initPlanetHouse(point1);
+					initPlanetSign(point1);
 					aspect.setSkyPoint1(point1);
 					aspect.setSkyPoint2(point2);
 					aspect.setScore(res);
@@ -195,10 +202,47 @@ public class AgeCalcHandler extends Handler {
 	 */
 	private double makeAge(double k, int age, boolean increment) {
 		double res;
-		if (increment)
-			res = ((k + age) > 360) ? k + age - 360 : k + age;
-		else
+		if (increment) {
+			double val = k + age;
+			res = (val > 360) ? val - 360 : val;
+		} else
 			res = (k > age) ? res = k - age : k + 360 - age;
       return res;
+	}
+
+	/**
+	 * Определяем дом дирекционной планеты
+	 * @param skyPoint планета
+	 */
+	private void initPlanetHouse(SkyPoint skyPoint) {
+		List<Model> houseList = event.getConfiguration().getHouses();
+		Planet planet = (Planet)skyPoint;
+		for (int j = 0; j < houseList.size(); j++) { 
+			House house = ((House)houseList.get(j));
+			double pcoord = planet.getCoord();
+			Double hmargin = (j == houseList.size() - 1) ?
+				((House)houseList.get(0)).getCoord() : 
+				((House)houseList.get(j + 1)).getCoord();
+			double[] res = CalcUtil.checkMarginalValues(house.getCoord(), hmargin, pcoord);
+			hmargin = res[0];
+			pcoord = res[1];
+			//если градус планеты находится в пределах куспидов
+			//текущей и предыдущей трети домов,
+			//запоминаем, в каком доме находится планета
+			if (Math.abs(pcoord) < hmargin & 
+					Math.abs(pcoord) >= house.getCoord())
+				planet.setHouse(house);
+		}
+	}
+
+	/**
+	 * Определяем знак дирекционной планеты
+	 * @param skyPoint планета
+	 * @throws DataAccessException 
+	 */
+	private void initPlanetSign(SkyPoint skyPoint) throws DataAccessException {
+		Planet planet = (Planet)skyPoint;
+		Sign sign = SkyPoint.getSign(planet.getCoord(), event.getBirthYear());
+		planet.setSign(sign);
 	}
 }
