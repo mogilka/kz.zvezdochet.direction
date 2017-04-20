@@ -164,6 +164,7 @@ public class PDFExporter {
 			initPlanetStatistics(event, spas);
 
 			Map<Long, Map<Integer, Double>> seriesh = new HashMap<Long, Map<Integer, Double>>();
+			Map<Integer, Map<Long, Double>> seriesa = new HashMap<Integer, Map<Long, Double>>();
 
 			//события
 			Map<Integer, Map<String, List<SkyPointAspect>>> map = new HashMap<Integer, Map<String, List<SkyPointAspect>>>();
@@ -210,13 +211,19 @@ public class PDFExporter {
 						--point;
 					}
 
-					//данные для диаграммы сфер жизни
 					if (spa.getSkyPoint2() instanceof House) {
 						long houseid = spa.getSkyPoint2().getId();
+						//данные для диаграммы сфер жизни
 						Map<Integer, Double> submap = seriesh.containsKey(houseid) ? seriesh.get(houseid) : new HashMap<Integer, Double>();
 						double val = submap.containsKey(age) ? submap.get(age) : 0;
 						submap.put(age, val + point);
 						seriesh.put(houseid, submap);
+
+						//данные для диаграммы возраста
+						Map<Long, Double> submapa = seriesa.containsKey(age) ? seriesa.get(age) : new HashMap<Long, Double>();
+						val = submapa.containsKey(houseid) ? submapa.get(houseid) : 0;
+						submapa.put(houseid, val + point);
+						seriesa.put(age, submapa);
 					}
 				}
 				map.put(age, agemap);
@@ -231,8 +238,26 @@ public class PDFExporter {
 			}
 			Image image = PDFUtil.printStackChart(writer, "Соотношение категорий событий", "Возраст", "Количество", bars, 500, 400, true);
 			chapter.add(image);
+
+			text = "Диаграммы в тексте обобщают информацию по каждому возрасту:";
+			chapter.add(new Paragraph(text, font));
+
+			com.itextpdf.text.List list = new com.itextpdf.text.List(false, false, 10);
+			ListItem li = new ListItem();
+	        li.add(new Chunk("Показатели выше нуля указывают на успех и лёгкость.", font));
+	        list.add(li);
+
+			li = new ListItem();
+	        li.add(new Chunk("Показатели на нуле указывают на сбалансированность ситуации.", font));
+	        list.add(li);
+
+			li = new ListItem();
+	        li.add(new Chunk("Показатели ниже нуля указывают на трудности и напряжение.", font));
+	        list.add(li);
+	        chapter.add(list);
 			doc.add(chapter);
 
+			HouseService serviceh = new HouseService();
 			Map<Integer, Map<String, List<SkyPointAspect>>> treeMap = new TreeMap<Integer, Map<String, List<SkyPointAspect>>>(map);
 			for (Map.Entry<Integer, Map<String, List<SkyPointAspect>>> entry : treeMap.entrySet()) {
 			    int age = entry.getKey();
@@ -247,7 +272,25 @@ public class PDFExporter {
 			    Map<String, List<SkyPointAspect>> agemap = entry.getValue();
 				for (Map.Entry<String, List<SkyPointAspect>> subentry : agemap.entrySet())
 					printEvents(event, chapter, age, subentry.getKey(), subentry.getValue());
+
+				//диаграмма возраста
+				Section section = PDFUtil.printSection(chapter, "Диаграмма");
+				Map<Long, Double> mapa = seriesa.get(age);
+				Bar[] items = new Bar[mapa.size()];
+				int i = -1;
+				for (Map.Entry<Long, Double> entry2 : mapa.entrySet()) {
+					House house = (House)serviceh.find(entry2.getKey());
+					Bar bar = new Bar();
+			    	bar.setName(house.getShortName());
+				    bar.setValue(entry2.getValue());
+					bar.setColor(house.getColor());
+					bar.setCategory(age + "");
+					items[++i] = bar;
+				}
+				image = PDFUtil.printBars(writer, agestr, "Сферы жизни", "Баллы", items, 500, 300, false, false);
+				section.add(image);
 				doc.add(chapter);
+				doc.add(Chunk.NEXTPAGE);
 			}
 			
 			if (term) {
@@ -258,8 +301,8 @@ public class PDFExporter {
 				chapter.add(p);
 
 				chapter.add(new Paragraph("Раздел событий:", font));
-				com.itextpdf.text.List list = new com.itextpdf.text.List(false, false, 10);
-				ListItem li = new ListItem();
+				list = new com.itextpdf.text.List(false, false, 10);
+				li = new ListItem();
 		        li.add(new Chunk("\u2191 — сильная планета, адекватно проявляющая себя в астрологическом доме", font));
 		        list.add(li);
 
@@ -295,10 +338,10 @@ public class PDFExporter {
 		        li.add(new Chunk("\u2193 — ослабленный аспект, проявляющийся менее ярко по сравнению с другими аспектами указанных планет (плохо для позитивных сочетаний, хорошо для негативных)", font));
 		        list.add(li);
 		        chapter.add(list);
+				doc.add(chapter);
 			}
-			doc.add(chapter);
 
-
+			doc.add(Chunk.NEXTPAGE);
 			chapter = new ChapterAutoNumber("Диаграммы");
 			chapter.setNumberDepth(0);
 			p = new Paragraph();
@@ -307,23 +350,8 @@ public class PDFExporter {
 
 			text = "Диаграммы обобщают приведённую выше информацию и наглядно отображают сферы жизни, которые будут занимать вас в каждом конкретном возрасте.";
 			chapter.add(new Paragraph(text, font));
-
-			com.itextpdf.text.List list = new com.itextpdf.text.List(false, false, 10);
-			ListItem li = new ListItem();
-	        li.add(new Chunk("Показатели выше нуля указывают на успех и лёгкость.", font));
-	        list.add(li);
-
-			li = new ListItem();
-	        li.add(new Chunk("Показатели на нуле указывают на сбалансированность ситуации.", font));
-	        list.add(li);
-
-			li = new ListItem();
-	        li.add(new Chunk("Показатели ниже нуля указывают на трудности и напряжение.", font));
-	        list.add(li);
-	        chapter.add(list);
 	        chapter.add(Chunk.NEWLINE);
 
-			HouseService serviceh = new HouseService();
 	        HouseMap[] houseMap = getHouseMap();
 	        for (HouseMap hmap : houseMap) {
 	        	Section section = PDFUtil.printSection(chapter, hmap.name);
