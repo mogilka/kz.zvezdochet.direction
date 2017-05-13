@@ -285,7 +285,7 @@ public class CalcCollationHandler extends Handler {
 				Aspect aspect = calc(planet, house);
 				if (aspect != null) {
 					//статистика домов
-					String key = house.getShortName();
+					String key = house.getName();
 					int[] vals = houseMap.containsKey(key) ? (int[])houseMap.get(key) : new int[3];
 					int typeid = (int)aspect.getTypeid();
 					int index = typeid - 1;

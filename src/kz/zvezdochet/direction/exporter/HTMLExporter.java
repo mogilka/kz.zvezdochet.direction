@@ -208,7 +208,7 @@ public class HTMLExporter {
 				SkyPoint skyPoint = spa.getSkyPoint2();
 				if (skyPoint instanceof House) {
 					House house = (House)skyPoint;
-					h5.add(planet.getShortName() + " " + type.getSymbol() + " " + house.getShortName());
+					h5.add(planet.getShortName() + " " + type.getSymbol() + " " + house.getName());
 					cell.add(h5);
 
 					DirectionText dirText = (DirectionText)service.find(planet, house, type);

@@ -94,7 +94,7 @@ public class HouseSaveHandler extends Handler {
 					House house = (House)dir.getSkyPoint2();
 					DirectionText dirText = (DirectionText)service.find(planet, house, null);
 					String sign = planet.isDamaged() || planet.isLilithed() ? "-" : "×";
-					String row = ++i + ") " + CoreUtil.getAgeString(key) + " [" + planet.getShortName() + " " + sign + " " + house.getShortName() + "] - ";
+					String row = ++i + ") " + CoreUtil.getAgeString(key) + " [" + planet.getShortName() + " " + sign + " " + house.getName() + "] - ";
 					if (null == dirText)
 						row += "\n\n";
 					else {

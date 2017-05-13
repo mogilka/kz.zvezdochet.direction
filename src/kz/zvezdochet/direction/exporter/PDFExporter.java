@@ -282,7 +282,7 @@ public class PDFExporter {
 				for (Map.Entry<Long, Double> entry2 : mapa.entrySet()) {
 					House house = (House)serviceh.find(entry2.getKey());
 					Bar bar = new Bar();
-			    	bar.setName(house.getShortName());
+			    	bar.setName(house.getName());
 				    bar.setValue(entry2.getValue());
 					bar.setColor(house.getColor());
 					bar.setCategory(age + "");
@@ -342,7 +342,6 @@ public class PDFExporter {
 				doc.add(chapter);
 			}
 
-			doc.add(Chunk.NEXTPAGE);
 			chapter = new ChapterAutoNumber("Диаграммы");
 			chapter.setNumberDepth(0);
 			p = new Paragraph();
@@ -364,8 +363,8 @@ public class PDFExporter {
 	        		if (null == hdata || 0 == hdata.size())
 	        			continue;
 					House house = (House)serviceh.find(houseid);
-					descrs.add(house.getShortName() + ": " + house.getDescription());
-			        XYSeries series = new XYSeries(house.getShortName());
+					descrs.add(house.getName() + ": " + house.getDescription());
+			        XYSeries series = new XYSeries(house.getName());
 	        		SortedSet<Integer> keys = new TreeSet<Integer>(hdata.keySet());
 	        		for (Integer key : keys)
 						series.add(key, hdata.get(key));
@@ -442,7 +441,7 @@ public class PDFExporter {
 	    				section.add(new Chunk(" " + house.getDesignation() + " дом", fonth5));
 	    				section.add(Chunk.NEWLINE);
 					} else
-						section.add(new Paragraph(planet.getShortName() + planet.getSymbol() + " " + type.getSymbol() + " " + house.getShortName(), fonth5));
+						section.add(new Paragraph(planet.getShortName() + planet.getSymbol() + " " + type.getSymbol() + " " + house.getName(), fonth5));
 
 					DirectionText dirText = (DirectionText)service.find(planet, house, type);
 					if (dirText != null) {
