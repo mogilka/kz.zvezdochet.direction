@@ -161,7 +161,7 @@ public class PDFExporter {
 			}
 
 			//инициализация статистики планет
-			initPlanetStatistics(event, spas);
+//			initPlanetStatistics(event, spas);
 
 			Map<Long, Map<Integer, Double>> seriesh = new HashMap<Long, Map<Integer, Double>>();
 			Map<Integer, Map<Long, Double>> seriesa = new HashMap<Integer, Map<Long, Double>>();
@@ -169,6 +169,11 @@ public class PDFExporter {
 			//события
 			Map<Integer, Map<String, List<SkyPointAspect>>> map = new HashMap<Integer, Map<String, List<SkyPointAspect>>>();
 			for (SkyPointAspect spa : spas) {
+				Planet planet = (Planet)spa.getSkyPoint1();
+				String pcode = planet.getCode();
+				if (pcode.equals("Kethu") && spa.getAspect().getCode().equals("OPPOSITION"))
+					continue;
+
 				int age = (int)spa.getAge();
 				Map<String, List<SkyPointAspect>> agemap = map.get(age);
 				if (null == agemap) {
@@ -195,8 +200,6 @@ public class PDFExporter {
 					}
 					double point = 0;
 					if (code.equals("NEUTRAL")) {
-						Planet planet = (Planet)spa.getSkyPoint1();
-						String pcode = planet.getCode();
 						if (pcode.equals("Lilith") || pcode.equals("Kethu")) {
 							negative.put(age, negative.get(age) + 1);
 							point -= 2;
@@ -521,7 +524,7 @@ public class PDFExporter {
 			if (!planet.isDone()) {
 				//афетика
 				for (Model type : positions) {
-					PositionType pType = (PositionType)type;
+					PositionType pType = (PositionType)type; 
 					String pCode = pType.getCode();
 					boolean daily = true;
 					if (!planet.getCode().equals("Sun") &&
@@ -531,10 +534,10 @@ public class PDFExporter {
 					Sign sign = service.getSignPosition(planet, pCode, daily);
 					if (sign != null && sign.getId() == planet.getSign().getId()) {
 						switch (pCode) {
-							case "HOME": planet.setSignHome(true); break;
-							case "EXALTATION": planet.setSignExaltated(true); break;
-							case "EXILE": planet.setSignExile(true); break;
-							case "DECLINE": planet.setSignDeclined(true); break;
+							case "HOME": planet.setSignHome(); break;
+							case "EXALTATION": planet.setSignExaltated(); break;
+							case "EXILE": planet.setSignExile(); break;
+							case "DECLINE": planet.setSignDeclined(); break;
 						}
 					}
 
@@ -543,10 +546,10 @@ public class PDFExporter {
 					int hnumber = CalcUtil.trunc((planet.getHouse().getNumber() + 2) / 3);
 					if (house != null && CalcUtil.trunc((house.getNumber() + 2) / 3) == hnumber) {
 						switch (pCode) {
-							case "HOME": planet.setHouseHome(true); break;
-							case "EXALTATION": planet.setHouseExaltated(true); break;
-							case "EXILE": planet.setHouseExile(true); break;
-							case "DECLINE": planet.setHouseDeclined(true); break;
+							case "HOME": planet.setHouseHome(); break;
+							case "EXALTATION": planet.setHouseExaltated(); break;
+							case "EXILE": planet.setHouseExile(); break;
+							case "DECLINE": planet.setHouseDeclined(); break;
 						}
 					}
 				}
@@ -555,13 +558,10 @@ public class PDFExporter {
 				if (spa.getSkyPoint2() instanceof Planet) {
 					if (spa.getAspect().getCode().equals("CONJUNCTION")) {
 						String code2 = spa.getSkyPoint2().getCode();
-						if (code2.equals("Lilith")) {
-							planet.setLilithed(true);
-							planet.setPerfect(false);
-						} else if (code2.equals("Kethu")) {
-							planet.setBroken(true);
-							planet.setPerfect(false);
-						}
+						if (code2.equals("Lilith"))
+							planet.setLilithed();
+						else if (code2.equals("Kethu"))
+							planet.setBroken();
 					}
 				}
 				planet.setDone(true);
