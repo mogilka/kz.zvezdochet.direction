@@ -169,7 +169,7 @@ public class AgeCalcHandler extends Handler {
 				Aspect a = (Aspect)realasp;
 				if (aspectype != null && !aspectype.equals(a.getType().getCode()))
 					continue;
-				if (a.isExactTruncAspect(res)) {
+				if (a.isExact(res)) {
 					SkyPointAspect aspect = new SkyPointAspect();
 					point1.setCoord(one);
 					initPlanetHouse(point1);
@@ -180,6 +180,7 @@ public class AgeCalcHandler extends Handler {
 					aspect.setAge(age);
 					aspect.setAspect(a);
 					aspect.setRetro(retro);
+					aspect.setExact(true);
 					aged.add(aspect);
 					if (point2 instanceof Planet && point1 instanceof Planet)
 						agedp[age][point1.getNumber() - 1][point2.getNumber() - 1] = true;

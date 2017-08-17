@@ -151,12 +151,13 @@ public class DateCalcHandler extends Handler {
 			//определяем, является ли аспект стандартным
 			for (Model realasp : aspects) {
 				Aspect a = (Aspect)realasp;
-				if (a.isExactTruncAspect(res)) {
+				if (a.isExact(res)) {
 					SkyPointAspect aspect = new SkyPointAspect();
 					aspect.setSkyPoint1(point1);
 					aspect.setSkyPoint2(point2);
 					aspect.setScore(res);
 					aspect.setAspect(a);
+					aspect.setExact(true);
 					aged.add(aspect);
 					break;
 				}

@@ -382,7 +382,7 @@ public class PeriodCalcHandler extends Handler {
 			List<Model> aspects = new AspectService().getList();
 			for (Model realasp : aspects) {
 				Aspect a = (Aspect)realasp;
-				if (a.isMain() && a.isExactTruncAspect(res)) {
+				if (a.isMain() && a.isExact(res)) {
 					if (a.getPlanetid() > 0)
 						continue;
 

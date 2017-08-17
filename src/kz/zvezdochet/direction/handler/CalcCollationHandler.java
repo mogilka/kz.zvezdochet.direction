@@ -215,7 +215,7 @@ public class CalcCollationHandler extends Handler {
 			//определяем, является ли аспект стандартным
 			for (Model realasp : aspects) {
 				Aspect a = (Aspect)realasp;
-				if (a.isExactTruncAspect(res)) {
+				if (a.isExact(res)) {
 					mtext.append("\t\t" + point1.getName() + " " + a.getType().getSymbol() + " " + point2.getName() + " > " + res + "\n");
 					return a;
 				}

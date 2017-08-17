@@ -125,8 +125,9 @@ public class TimelineHandler extends Handler {
 			//определяем, является ли аспект стандартным
 			for (Model realasp : aspects) {
 				Aspect a = (Aspect)realasp;
-				if (a.isExactTruncAspect(res)) {
+				if (a.isExact(res)) {
 					aspect.setAspect(a);
+					aspect.setExact(true);
 					break;
 				}
 			}
