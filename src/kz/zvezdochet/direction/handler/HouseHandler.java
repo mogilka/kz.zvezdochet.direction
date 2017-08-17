@@ -59,16 +59,22 @@ public class HouseHandler extends Handler {
 					House house = (House)houses.get(r);
 					double two = Math.abs(house.getCoord());
 					double res;
-					if (one - two > 0)
-						if (one - two < 189)
+					boolean retro = false;
+					if (one - two > 0) {
+						if (one - two < 189) {
 							res = one - two;
-						else
+							retro = true;
+						} else
 							res = 360 - one + two;
-					else if (two - one < 189)
-							res = two - one;
-						else
-							res = 360 - two + one;
-					if (res < 100) //TODO корректировать лимит возраста по дате смерти? =)
+					} else if (two - one < 189)
+						res = two - one;
+					else {
+						res = 360 - two + one;
+						retro = true;
+					}
+					if (retro)
+						res *= -1;
+					if (Math.abs(res) < 100) //TODO корректировать лимит возраста по дате смерти? =)
 						data[r][c + 1] = String.valueOf(CalcUtil.roundTo(res, 2));
 				}
 			}
