@@ -32,6 +32,7 @@ import kz.zvezdochet.service.AspectService;
 public class CalcCollationHandler extends Handler {
 	private StringBuffer atext;
 	private StringBuffer ptext;
+	private StringBuffer dtext;
 	private StringBuffer htext;
 	private StringBuffer mtext;
 
@@ -42,6 +43,7 @@ public class CalcCollationHandler extends Handler {
 			updateStatus("Групповой расчёт", false);
 			atext = new StringBuffer();
 			ptext = new StringBuffer();
+			dtext = new StringBuffer();
 			htext = new StringBuffer();
 			mtext = new StringBuffer();
 
@@ -73,21 +75,23 @@ public class CalcCollationHandler extends Handler {
 				mtext.append(participant.getName() + "\n");
 				Map<String, Integer> aspectMap = new HashMap<String, Integer>();
 				Map<String, Object> planetMap = new HashMap<String, Object>();
+				Map<String, Object> dirMap = new HashMap<String, Object>();
 				Map<String, Object> houseMap = new HashMap<String, Object>();
+				Map<String, Object> map = new HashMap<String, Object>();
 
 				if (participant.getRectification() != 3) {
 					if (!participant.isCalculated()) {
 						participant.calc(false);
 						updateStatus("Расчётная конфигурация " + participant.getName() + " создана", false);
 					}
-					makeTransits(event, participant);
+					map = makeTransits(event, participant);
 				}
 				List<Event> members = participant.getMembers();
 				if (members != null && members.size() > 0) {
 					Map<String, Object> map2 = new HashMap<String, Object>();
 					Map<String, Integer> amap = new HashMap<String, Integer>();
 					Map<String, Object> pmap = new HashMap<String, Object>();
-					Map<String, Object> hmap = new HashMap<String, Object>();
+					Map<String, Object> dmap = new HashMap<String, Object>();
 
 					for (Event member : members) {
 						if (!member.isCalculated()) {
@@ -119,17 +123,25 @@ public class CalcCollationHandler extends Handler {
 							planetMap.put(key, vals);
 						}
 
-						//дома
-						hmap = (Map<String, Object>)map2.get("Дома");
-						for (Map.Entry<String, Object> entry : hmap.entrySet()) {
+						//дирекции
+						dmap = (Map<String, Object>)map2.get("Дирекции");
+						for (Map.Entry<String, Object> entry : dmap.entrySet()) {
 						    String key = entry.getKey();
-						    int[] mvals = (int[])hmap.get(key);
-						    int[] vals = houseMap.containsKey(key) ? (int[])houseMap.get(key) : new int[3];
+						    int[] mvals = (int[])dmap.get(key);
+						    int[] vals = dirMap.containsKey(key) ? (int[])dirMap.get(key) : new int[3];
 						    for (int i = 0; i < 3; i++)
 						    	vals[i] += mvals[i];
-						    houseMap.put(key, vals);
+						    dirMap.put(key, vals);
 						}
+
+						//дома
+						houseMap = (Map<String, Object>)map2.get("Дома");
 					}
+				} else {
+					aspectMap = (Map<String, Integer>)map.get("Аспекты");
+					planetMap = (Map<String, Object>)map.get("Планеты");
+					dirMap = (Map<String, Object>)map.get("Дирекции");
+					houseMap = (Map<String, Object>)map.get("Дома");
 				}
 				//аспекты
 				atext.append("Аспекты " + participant.getName() + "\n");
@@ -158,11 +170,11 @@ public class CalcCollationHandler extends Handler {
 				}
 				ptext.append("\n");
 
-				//дома
-				htext.append("Дома " + participant.getName() + "\n");
-				for (String key : houseMap.keySet()) {
-					int[] vals = (int[])houseMap.get(key);
-					htext.append("\t" + key);
+				//дирекции
+				dtext.append("Дирекции " + participant.getName() + "\n");
+				for (String key : dirMap.keySet()) {
+					int[] vals = (int[])dirMap.get(key);
+					dtext.append("\t" + key);
 					int total = 0;
 					for (int i = 0; i < 3; i++) {
 						String t = "";
@@ -175,19 +187,25 @@ public class CalcCollationHandler extends Handler {
 							if (strlen < 7)
 								t += "\t";
 						}
-						htext.append("\t" + t + labels[i] + vals[i]);
+						dtext.append("\t" + t + labels[i] + vals[i]);
 						int val = vals[i];
 						if (1 == i)
 							val *= -1;
 						total += val;
 					}
-					htext.append("\t\t" + total + "\n");
+					dtext.append("\t\t" + total + "\n");
 				}
+				dtext.append("\n");
+
+				//дома
+				htext.append("Дома " + participant.getName() + "\n");
+				for (String key : houseMap.keySet())
+					htext.append("\t" + key + ": " + houseMap.get(key) + "\n");
 				htext.append("\n");
 			}
 			updateStatus("Групповой прогноз сформирован", false);
 
-			String text = atext + "\n" + ptext + "\n" + htext + "\n" + mtext;
+			String text = atext + "\n" + ptext + "\n" + dtext + "\n" + mtext + "\n" + htext;
 			collationPart.onCalc(text);
 			List<Object> params = new ArrayList<Object>();
 			params.add(new Object[] {"text", "String", text});
@@ -234,13 +252,16 @@ public class CalcCollationHandler extends Handler {
 		Map<String, Object> map = new HashMap<String, Object>();
 		Map<String, Integer> aspectMap = new HashMap<String, Integer>();
 		Map<String, Object> planetMap = new HashMap<String, Object>();
+		Map<String, Object> dirMap = new HashMap<String, Object>();
 		Map<String, Object> houseMap = new HashMap<String, Object>();
 
 		Long[] pfilter = Planet.getSportSet();
 		Long[] hfilter = House.getSportSet();
 
 		if (null == person.getConfiguration())
-			person.calc(false);
+			person.init(false);
+		if (null == event.getConfiguration())
+			event.init(false);
 		List<Model> planets = person.getConfiguration().getPlanets();
 		List<Model> planets2 = event.getConfiguration().getPlanets();
 		List<Model> houses = event.getConfiguration().getHouses();
@@ -286,7 +307,7 @@ public class CalcCollationHandler extends Handler {
 				if (aspect != null) {
 					//статистика домов
 					String key = house.getName();
-					int[] vals = houseMap.containsKey(key) ? (int[])houseMap.get(key) : new int[3];
+					int[] vals = dirMap.containsKey(key) ? (int[])dirMap.get(key) : new int[3];
 					int typeid = (int)aspect.getTypeid();
 					int index = typeid - 1;
 					if (1 == typeid) {
@@ -296,12 +317,40 @@ public class CalcCollationHandler extends Handler {
 							vals[index] += 1;
 					} else
 						vals[index] += 1;
+					dirMap.put(key, vals);
+				}
+			}
+		}
+		//планеты участника в домах события
+		for (Model model : planets) {
+			Planet planet = (Planet)model;
+			for (int j = 0; j < houses.size(); j++) {
+				House house = (House)houses.get(j);
+				if (!Arrays.asList(hfilter).contains(house.getId()))
+					continue;
+				double pcoord = planet.getCoord();
+				Double hmargin = (j == houses.size() - 1) ?
+					((House)houses.get(0)).getCoord() : 
+					((House)houses.get(j + 1)).getCoord();
+				double[] res = CalcUtil.checkMarginalValues(house.getCoord(), hmargin, pcoord);
+				hmargin = res[0];
+				pcoord = res[1];
+				//если градус планеты находится в пределах куспидов
+				//текущей и предыдущей трети домов,
+				//запоминаем, в каком доме находится планета
+				if (Math.abs(pcoord) < hmargin & 
+						Math.abs(pcoord) >= house.getCoord()) {
+					String key = house.getName();
+					String vals = houseMap.containsKey(key) ? (String)houseMap.get(key) : "";
+					vals += planet.getName() + " ";
 					houseMap.put(key, vals);
+					break;
 				}
 			}
 		}
 		map.put("Аспекты", aspectMap);
 		map.put("Планеты", planetMap);
+		map.put("Дирекции", dirMap);
 		map.put("Дома", houseMap);
 		return map;
 	}
