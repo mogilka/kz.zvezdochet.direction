@@ -451,7 +451,7 @@ public class PDFExporter {
 						String typeColor = type.getFontColor();
 						BaseColor color = PDFUtil.htmlColor2Base(typeColor);
 						section.add(new Paragraph(StringUtil.removeTags(dirText.getText()), new Font(baseFont, 12, Font.NORMAL, color)));
-						PDFUtil.printGender(section, dirText, female, child);
+						PDFUtil.printGender(section, dirText, female, child, true);
 					}
 					Rule rule = EventRules.ruleHouseDirection(spa, female);
 					if (rule != null)
@@ -501,7 +501,7 @@ public class PDFExporter {
 		    			String typeColor = type.getFontColor();
 						BaseColor color = PDFUtil.htmlColor2Base(typeColor);
 						section.add(new Paragraph(StringUtil.removeTags(dirText.getText()), new Font(baseFont, 12, Font.NORMAL, color)));
-						PDFUtil.printGender(section, dirText, female, child);
+						PDFUtil.printGender(section, dirText, female, child, true);
 					}
 				}
 			}

@@ -81,7 +81,7 @@ public class PeriodCalcHandler extends Handler {
 				if (!periodPart.check(0)) return;
 			Event person = periodPart.getPerson();
 			boolean female = person.isFemale();
-			boolean child = person.getAge() < person.MAX_TEEN_AGE;
+			boolean child = person.isChild();
 
 			Place place = periodPart.getPlace();
 			double zone = periodPart.getZone();

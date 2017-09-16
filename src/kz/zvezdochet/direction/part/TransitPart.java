@@ -509,7 +509,7 @@ public class TransitPart extends ModelListView implements ICalculable {
 //		System.out.println("onCalc" + MODE_CALC);
 		if (null == trevent)
 			syncModel(MODE_CALC);
-		trevent.init();
+		trevent.init(false);
 		aged = new ArrayList<SkyPointAspect>();
 
 		Event first = trevent;
@@ -701,7 +701,7 @@ public class TransitPart extends ModelListView implements ICalculable {
 		if (null == trevent.getId())
 			trevent.calc(false);
 		if (null == trevent.getConfiguration())
-			trevent.init();
+			trevent.init(false);
 		return trevent;
 	}
 
