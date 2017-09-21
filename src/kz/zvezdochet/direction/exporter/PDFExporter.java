@@ -363,11 +363,16 @@ public class PDFExporter {
 	        	for (int i = 0; i < 3; i++) {
 	        		long houseid = hmap.houseids[i];
 	        		Map<Integer, Double> hdata = seriesh.get(houseid);
-	        		if (null == hdata || 0 == hdata.size())
-	        			continue;
 					House house = (House)serviceh.find(houseid);
-					descrs.add(house.getName() + ": " + house.getDescription());
 			        XYSeries series = new XYSeries(house.getName());
+	        		if (null == hdata || 0 == hdata.size()) {
+//	        			if (i > 0) {
+//							series.add(initage, 0);
+//					        items.addSeries(series);
+//	        			}
+	        			continue;
+	        		}
+					descrs.add(house.getName() + ": " + house.getDescription());
 	        		SortedSet<Integer> keys = new TreeSet<Integer>(hdata.keySet());
 	        		for (Integer key : keys)
 						series.add(key, hdata.get(key));
