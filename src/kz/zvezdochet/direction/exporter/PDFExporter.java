@@ -142,12 +142,20 @@ public class PDFExporter {
 	        p.add(chunk);
 	        chapter.add(p);
 
-			chapter.add(new Paragraph("Прогноз содержит как позитивные, так и негативные события. "
+	        p = new Paragraph("Прогноз содержит как позитивные, так и негативные события. "
 				+ "Негатив - признак того, что вам необходим отдых, переосмысление и мобилизация ресурсов для решения проблемы. "
 				+ "А также это возможность смягчить напряжение, ведь вы будете знать о нём заранее. "
-				+ "Не зацикливайтесь на негативе, используйте свои сильные стороны и благоприятные события.", font));
+				+ "Не зацикливайтесь на негативе, используйте свои сильные стороны и благоприятные события.", font);
+	        p.setSpacingAfter(10);
+			chapter.add(p);
+
 			chapter.add(new Paragraph("Если из возраста в возраст событие повторяется, значит оно создаст большой резонанс.", font));
 			chapter.add(new Paragraph("Максимальная погрешность прогноза события ±1 год.", font));
+
+			p = new Paragraph("Если в прогнозе упомянуты ваши отец или мать, но их уже нет в живых, "
+				+ "значит речь идёт о людях, их заменяющих или похожих на них по характеру.", font);
+			p.setSpacingBefore(10);
+			chapter.add(p);
 
 			//данные для графика
 			Map<Integer,Integer> positive = new HashMap<Integer,Integer>();
@@ -242,27 +250,11 @@ public class PDFExporter {
 			}
 			Image image = PDFUtil.printStackChart(writer, "Соотношение категорий событий", "Возраст", "Количество", bars, 500, 400, true);
 			chapter.add(image);
-
-			text = "Диаграммы в тексте обобщают информацию по каждому возрасту:";
-			chapter.add(new Paragraph(text, font));
-
-			com.itextpdf.text.List list = new com.itextpdf.text.List(false, false, 10);
-			ListItem li = new ListItem();
-	        li.add(new Chunk("Показатели выше нуля указывают на успех и лёгкость.", font));
-	        list.add(li);
-
-			li = new ListItem();
-	        li.add(new Chunk("Показатели на нуле указывают на сбалансированность ситуации.", font));
-	        list.add(li);
-
-			li = new ListItem();
-	        li.add(new Chunk("Показатели ниже нуля указывают на трудности и напряжение.", font));
-	        list.add(li);
-	        chapter.add(list);
 			doc.add(chapter);
 
 			HouseService serviceh = new HouseService();
 			Map<Integer, Map<String, List<SkyPointAspect>>> treeMap = new TreeMap<Integer, Map<String, List<SkyPointAspect>>>(map);
+			int j = -1;
 			for (Map.Entry<Integer, Map<String, List<SkyPointAspect>>> entry : treeMap.entrySet()) {
 			    int age = entry.getKey();
 			    String agestr = CoreUtil.getAgeString(age);
@@ -279,6 +271,8 @@ public class PDFExporter {
 
 				//диаграмма возраста
 				Section section = PDFUtil.printSection(chapter, "Диаграмма");
+				if (++j < 1)
+					printDiagramDescr(section);
 				Map<Long, Double> mapa = seriesa.get(age);
 				Bar[] items = new Bar[mapa.size()];
 				int i = -1;
@@ -305,8 +299,8 @@ public class PDFExporter {
 				chapter.add(p);
 
 				chapter.add(new Paragraph("Раздел событий:", font));
-				list = new com.itextpdf.text.List(false, false, 10);
-				li = new ListItem();
+				com.itextpdf.text.List list = new com.itextpdf.text.List(false, false, 10);
+				ListItem li = new ListItem();
 		        li.add(new Chunk("\u2191 — сильная планета, адекватно проявляющая себя в астрологическом доме", font));
 		        list.add(li);
 
@@ -381,9 +375,9 @@ public class PDFExporter {
 				image = PDFUtil.printGraphics(writer, "", "Возраст", "Баллы", items, 500, 300, true);
 				section.add(image);
 
-				list = new com.itextpdf.text.List(false, false, 10);
+				com.itextpdf.text.List list = new com.itextpdf.text.List(false, false, 10);
 				for (String descr : descrs) {
-					li = new ListItem();
+					ListItem li = new ListItem();
 					li.add(new Chunk(descr, font));
 					list.add(li);
 				}
@@ -566,7 +560,7 @@ public class PDFExporter {
 						if (code2.equals("Lilith"))
 							planet.setLilithed();
 						else if (code2.equals("Kethu"))
-							planet.setBroken();
+							planet.setKethued();
 					}
 				}
 				planet.setDone(true);
@@ -584,6 +578,10 @@ public class PDFExporter {
 		}
 	}
 
+	/**
+	 * Карта домов с разбитием на трети
+	 * @return карта основных домов
+	 */
 	private HouseMap[] getHouseMap() {
 		HouseMap[] map = new HouseMap[12];
 		map[0] = new HouseMap("Личность", new Long[] {142L,143L,144L});
@@ -599,5 +597,28 @@ public class PDFExporter {
 		map[10] = new HouseMap("Социум", new Long[] {172L,173L,174L});
 		map[11] = new HouseMap("Внутренняя жизнь", new Long[] {175L,176L,177L});
 		return map;
+	}
+
+	/**
+	 * Выводим описание диаграммы возраста
+	 * @param section раздел
+	 */
+	private void printDiagramDescr(Section section) {
+		String text = "Диаграмма обобщает информацию о событиях возраста:";
+		section.add(new Paragraph(text, font));
+
+		com.itextpdf.text.List list = new com.itextpdf.text.List(false, false, 10);
+		ListItem li = new ListItem();
+        li.add(new Chunk("Показатели выше нуля указывают на успех и лёгкость.", font));
+        list.add(li);
+
+		li = new ListItem();
+        li.add(new Chunk("Показатели на нуле указывают на сбалансированность ситуации.", font));
+        list.add(li);
+
+		li = new ListItem();
+        li.add(new Chunk("Показатели ниже нуля указывают на трудности и напряжение.", font));
+        list.add(li);
+        section.add(list);
 	}
 }
