@@ -250,11 +250,37 @@ public class PDFExporter {
 			}
 			Image image = PDFUtil.printStackChart(writer, "Соотношение категорий событий", "Возраст", "Количество", bars, 500, 400, true);
 			chapter.add(image);
-			doc.add(chapter);
+			chapter.add(Chunk.NEXTPAGE);
+
+			//примечание
+			chapter.add(new Paragraph("Примечание:", font));
+			com.itextpdf.text.List list = new com.itextpdf.text.List(false, false, 10);
+			ListItem li = new ListItem();
+	        li.add(new Chunk("Зелёным цветом выделены позитивные события", new Font(baseFont, 12, Font.NORMAL, new BaseColor(0, 102, 102))));
+	        list.add(li);
+
+			li = new ListItem();
+	        li.add(new Chunk("Красным цветом выделены негативные события", new Font(baseFont, 12, Font.NORMAL, new BaseColor(102, 0, 51))));
+	        list.add(li);
+
+			li = new ListItem();
+	        li.add(new Chunk("Чёрным цветом выделены важные события", font));
+	        list.add(li);
+
+			li = new ListItem();
+	        li.add(new Chunk("В разделе «Значимые события» описаны жизненноважные события, которые надолго запомнятся и повлекут за собой перемены. "
+	        	+ "События остальных разделов краткосрочные и не имеют больших последствий", font));
+	        list.add(li);
+
+			li = new ListItem();
+	        li.add(new Chunk("Заголовки абзацев (например, «Духовность + Компаньоны») используются для структурирования текста и "
+	        	+ "указывают на сферу жизни, к которому относится описываемое событие", font));
+	        list.add(li);
+	        chapter.add(list);
+	        doc.add(chapter);
 
 			HouseService serviceh = new HouseService();
 			Map<Integer, Map<String, List<SkyPointAspect>>> treeMap = new TreeMap<Integer, Map<String, List<SkyPointAspect>>>(map);
-			int j = -1;
 			for (Map.Entry<Integer, Map<String, List<SkyPointAspect>>> entry : treeMap.entrySet()) {
 			    int age = entry.getKey();
 			    String agestr = CoreUtil.getAgeString(age);
@@ -271,8 +297,7 @@ public class PDFExporter {
 
 				//диаграмма возраста
 				Section section = PDFUtil.printSection(chapter, "Диаграмма");
-				if (++j < 1)
-					printDiagramDescr(section);
+				printDiagramDescr(section);
 				Map<Long, Double> mapa = seriesa.get(age);
 				Bar[] items = new Bar[mapa.size()];
 				int i = -1;
@@ -299,8 +324,8 @@ public class PDFExporter {
 				chapter.add(p);
 
 				chapter.add(new Paragraph("Раздел событий:", font));
-				com.itextpdf.text.List list = new com.itextpdf.text.List(false, false, 10);
-				ListItem li = new ListItem();
+				list = new com.itextpdf.text.List(false, false, 10);
+				li = new ListItem();
 		        li.add(new Chunk("\u2191 — сильная планета, адекватно проявляющая себя в астрологическом доме", font));
 		        list.add(li);
 
@@ -375,9 +400,9 @@ public class PDFExporter {
 				image = PDFUtil.printGraphics(writer, "", "Возраст", "Баллы", items, 500, 300, true);
 				section.add(image);
 
-				com.itextpdf.text.List list = new com.itextpdf.text.List(false, false, 10);
+				list = new com.itextpdf.text.List(false, false, 10);
 				for (String descr : descrs) {
-					ListItem li = new ListItem();
+					li = new ListItem();
 					li.add(new Chunk(descr, font));
 					list.add(li);
 				}
