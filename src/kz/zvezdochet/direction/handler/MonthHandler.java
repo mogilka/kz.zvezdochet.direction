@@ -255,8 +255,9 @@ public class MonthHandler extends Handler {
 
 				//разбивка по месяцам
 				int m = calendar.get(Calendar.MONTH);
+				String mtitle = new SimpleDateFormat("LLLL").format(date) + " " + y;
 				if (month != m) {
-					section = PDFUtil.printSection(chapter, new SimpleDateFormat("LLLL").format(date) + " " + y);
+					section = PDFUtil.printSection(chapter, mtitle);
 					month = m;
 				}
 
@@ -268,18 +269,19 @@ public class MonthHandler extends Handler {
 						sitems.add(tsdi);
 					series.put(entry2.getKey(), sitems);
 				}
+			}
+			for (Map.Entry<Long, List<TimeSeriesDataItem>> entry : series.entrySet()) {
+				List<TimeSeriesDataItem> sitems = entry.getValue();
+				if (null == sitems || 0 == sitems.size())
+					continue;
+				House house = (House)service.find(entry.getKey());
+				String title = house.getName();
+				TimeSeries timeSeries = new TimeSeries(title);
+				for (TimeSeriesDataItem tsdi : sitems)
+					timeSeries.add(tsdi);
 				TimeSeriesCollection dataset = new TimeSeriesCollection();
-				for (Map.Entry<Long, List<TimeSeriesDataItem>> entry3 : series.entrySet()) {
-					List<TimeSeriesDataItem> sitems = entry3.getValue();
-					if (null == sitems || 0 == sitems.size())
-						continue;
-					House house = (House)service.find(entry3.getKey());
-					TimeSeries timeSeries = new TimeSeries(house.getName());
-					for (TimeSeriesDataItem tsdi : sitems)
-						timeSeries.add(tsdi);
-					dataset.addSeries(timeSeries);
-				}
-			    com.itextpdf.text.Image image = PDFUtil.printTimeChart(writer, "Прогноз периода", "Даты", "Баллы", dataset, 500, 0, true);
+				dataset.addSeries(timeSeries);
+			    com.itextpdf.text.Image image = PDFUtil.printTimeChart(writer, title, "Даты", "Баллы", dataset, 500, 0, true);
 				section.add(image);
 			}
 			if (start.get(Calendar.YEAR) == end.get(Calendar.YEAR))

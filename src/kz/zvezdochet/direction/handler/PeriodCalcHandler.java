@@ -179,7 +179,6 @@ public class PeriodCalcHandler extends Handler {
 			chapter.add(alist);
 
 			chapter.add(new Paragraph("Если сфера жизни повторно упоминается в течение дня, значит она будет насыщена событиями и мыслями.", font));
-			chapter.add(new Paragraph("Если прогноз на день отсутствует, значит нет однозначного толкования.", font));
 			doc.add(chapter);
 
 			DirectionAspectService servicea = new DirectionAspectService();
