@@ -152,7 +152,7 @@ public class PDFExporter {
 			chapter.add(new Paragraph("Если из возраста в возраст событие повторяется, значит оно создаст большой резонанс.", font));
 			chapter.add(new Paragraph("Максимальная погрешность прогноза события ±1 год.", font));
 
-			p = new Paragraph("Если в прогнозе упомянуты ваши отец или мать, но их уже нет в живых, "
+			p = new Paragraph("Если в прогнозе упомянуты люди, которых уже нет в живых (родители, супруги, родственники), "
 				+ "значит речь идёт о людях, их заменяющих или похожих на них по характеру.", font);
 			p.setSpacingBefore(10);
 			chapter.add(p);
@@ -266,17 +266,11 @@ public class PDFExporter {
 			li = new ListItem();
 	        li.add(new Chunk("Чёрным цветом выделены важные события", font));
 	        list.add(li);
-
-			li = new ListItem();
-	        li.add(new Chunk("В разделе «Значимые события» описаны жизненноважные события, которые надолго запомнятся и повлекут за собой перемены. "
-	        	+ "События остальных разделов краткосрочные и не имеют больших последствий", font));
-	        list.add(li);
-
-			li = new ListItem();
-	        li.add(new Chunk("Заголовки абзацев (например, «Духовность + Компаньоны») используются для структурирования текста и "
-	        	+ "указывают на сферу жизни, к которому относится описываемое событие", font));
-	        list.add(li);
 	        chapter.add(list);
+
+	        chapter.add(Chunk.NEWLINE);
+	        chapter.add(new Paragraph("Заголовки абзацев (например, «Добро + Прибыль») используются для структурирования текста и "
+	        	+ "указывают на сферу жизни, к которой относится описываемое событие", font));
 	        doc.add(chapter);
 
 			HouseService serviceh = new HouseService();
@@ -424,13 +418,25 @@ public class PDFExporter {
 	private Section printEvents(Event event, Chapter chapter, int age, String code, List<SkyPointAspect> spas) {
 		try {
 			String header = "";
-			if (code.equals("main"))
+			Paragraph p = null;
+			String agestr = CoreUtil.getAgeString(age);
+			if (code.equals("main")) {
 				header += "Значимые события";
-			else if (code.equals("strong"))
+				p = new Paragraph("В данном разделе описаны жизненноважные, долгожданные, переломные события, "
+					+ "которые произойдут в возрасте " + agestr + ", надолго запомнятся и повлекут за собой перемены", font);
+			} else if (code.equals("strong")) {
 				header += "Менее значимые события";
-			else if (code.equals("inner"))
+				p = new Paragraph("В данном разделе описаны краткосрочные события, "
+					+ "которые произойдут в возрасте " + agestr + " и не будут иметь больших последствий", font);
+			} else if (code.equals("inner")) {
 				header += "Проявления личности";
+				p = new Paragraph("В данном разделе описаны черты вашей личности, которые станут особенно яркими в возрасте " + agestr, font);
+			}
 			Section section = PDFUtil.printSection(chapter, header);
+			if (p != null) {
+				p.setSpacingAfter(10);
+				section.add(p);
+			}
 			boolean female = event.isFemale();
 
 			DirectionService service = new DirectionService();
