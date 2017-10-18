@@ -210,7 +210,7 @@ public class PeriodCalcHandler extends Handler {
 					prev.setBirth(cal.getTime());
 					prev.setPlace(place);
 					prev.setZone(zone);
-					prev.calc(false);
+					prev.calc(true);
 
 					List<Planet> iplanets = new ArrayList<Planet>();
 					List<Model> eplanets = event.getConfiguration().getPlanets();
