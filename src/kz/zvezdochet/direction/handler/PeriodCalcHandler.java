@@ -50,6 +50,7 @@ import kz.zvezdochet.core.util.DateUtil;
 import kz.zvezdochet.core.util.PlatformUtil;
 import kz.zvezdochet.core.util.StringUtil;
 import kz.zvezdochet.direction.Activator;
+import kz.zvezdochet.direction.bean.PeriodItem;
 import kz.zvezdochet.direction.part.PeriodPart;
 import kz.zvezdochet.direction.service.DirectionAspectService;
 import kz.zvezdochet.export.handler.PageEventHandler;
@@ -405,25 +406,5 @@ public class PeriodCalcHandler extends Handler {
 			e.printStackTrace();
 		}
 		return null;
-	}
-
-	private class PeriodItem {
-		public Aspect aspect;
-		public House house;
-		public Planet planet;
-		public Planet planet2;
-
-		@Override
-		public boolean equals(Object obj) {
-			PeriodItem other = (PeriodItem)obj;
-			return this.house.getId() == other.house.getId()
-					&& this.aspect.getId() == other.aspect.getId();
-		}
-
-		@Override
-		public int hashCode() {
-			Integer i = new Integer(house.getId().toString() + aspect.getId().toString());
-			return i.hashCode();
-		}
 	}
 }
