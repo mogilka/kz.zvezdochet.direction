@@ -188,11 +188,11 @@ public class SearchPart extends ModelListView {
 				kz.zvezdochet.bean.Event event = model.getEvent();
 				if (model != null)
 					switch (columnIndex) {
-						case 1: return model.getId().toString();
-						case 2: return event.getName();
-						case 3: return DateUtil.formatDateTime(event.getBirth());
-						case 4: return model.getDescription();
-						case 5: return DateUtil.formatDateTime(model.getCreated_at());
+						case 0: return model.getId().toString();
+						case 1: return event.getName();
+						case 2: return DateUtil.formatDateTime(event.getBirth());
+						case 3: return model.getDescription();
+						case 4: return DateUtil.formatDateTime(model.getCreated_at());
 					}
 				return null;
 			}
