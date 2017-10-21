@@ -144,64 +144,72 @@ public class CalcCollationHandler extends Handler {
 					houseMap = (Map<String, Object>)map.get("Дома");
 				}
 				//аспекты
-				atext.append("Аспекты " + participant.getName() + "\n");
-				for (String key : aspectMap.keySet()) {
-					String t = key.length() < 5 ? "\t" : "";
-					atext.append("\t" + key + "\t" + t + aspectMap.get(key) + "\n");
+				if (aspectMap != null) {
+					atext.append("Аспекты " + participant.getName() + "\n");
+					for (String key : aspectMap.keySet()) {
+						String t = key.length() < 5 ? "\t" : "";
+						atext.append("\t" + key + "\t" + t + aspectMap.get(key) + "\n");
+					}
+					atext.append("\n");
 				}
-				atext.append("\n");
 
 				//планеты
-				ptext.append("Планеты " + participant.getName() + "\n");
 				String[] labels = {"=", "-", "+"};
-				for (String key : planetMap.keySet()) {
-					int[] vals = (int[])planetMap.get(key);
-					ptext.append("\t" + key);
-					int total = 0;
-					for (int i = 0; i < 3; i++) {
-						String t = (i < 1 && key.length() < 7) ? "\t" : "";
-						ptext.append("\t" + t + labels[i] + vals[i]);
-						int val = vals[i];
-						if (1 == i)
-							val *= -1;
-						total += val;
+				if (planetMap != null) {
+					ptext.append("Планеты " + participant.getName() + "\n");
+					for (String key : planetMap.keySet()) {
+						int[] vals = (int[])planetMap.get(key);
+						ptext.append("\t" + key);
+						int total = 0;
+						for (int i = 0; i < 3; i++) {
+							String t = (i < 1 && key.length() < 7) ? "\t" : "";
+							ptext.append("\t" + t + labels[i] + vals[i]);
+							int val = vals[i];
+							if (1 == i)
+								val *= -1;
+							total += val;
+						}
+						ptext.append("\t\t" + total + "\n");
 					}
-					ptext.append("\t\t" + total + "\n");
+					ptext.append("\n");
 				}
-				ptext.append("\n");
 
 				//дирекции
-				dtext.append("Дирекции " + participant.getName() + "\n");
-				for (String key : dirMap.keySet()) {
-					int[] vals = (int[])dirMap.get(key);
-					dtext.append("\t" + key);
-					int total = 0;
-					for (int i = 0; i < 3; i++) {
-						String t = "";
-						if (i < 1) {
-							int strlen = key.length();
-							if (strlen < 15)
-								t += "\t";
-							if (strlen < 10)
-								t += "\t";
-							if (strlen < 7)
-								t += "\t";
+				if (dirMap != null) {
+					dtext.append("Дирекции " + participant.getName() + "\n");
+					for (String key : dirMap.keySet()) {
+						int[] vals = (int[])dirMap.get(key);
+						dtext.append("\t" + key);
+						int total = 0;
+						for (int i = 0; i < 3; i++) {
+							String t = "";
+							if (i < 1) {
+								int strlen = key.length();
+								if (strlen < 15)
+									t += "\t";
+								if (strlen < 10)
+									t += "\t";
+								if (strlen < 7)
+									t += "\t";
+							}
+							dtext.append("\t" + t + labels[i] + vals[i]);
+							int val = vals[i];
+							if (1 == i)
+								val *= -1;
+							total += val;
 						}
-						dtext.append("\t" + t + labels[i] + vals[i]);
-						int val = vals[i];
-						if (1 == i)
-							val *= -1;
-						total += val;
+						dtext.append("\t\t" + total + "\n");
 					}
-					dtext.append("\t\t" + total + "\n");
+					dtext.append("\n");
 				}
-				dtext.append("\n");
 
 				//дома
-				htext.append("Дома " + participant.getName() + "\n");
-				for (String key : houseMap.keySet())
-					htext.append("\t" + key + ": " + houseMap.get(key) + "\n");
-				htext.append("\n");
+				if (houseMap != null) {
+					htext.append("Дома " + participant.getName() + "\n");
+					for (String key : houseMap.keySet())
+						htext.append("\t" + key + ": " + houseMap.get(key) + "\n");
+					htext.append("\n");
+				}
 			}
 			updateStatus("Групповой прогноз сформирован", false);
 
