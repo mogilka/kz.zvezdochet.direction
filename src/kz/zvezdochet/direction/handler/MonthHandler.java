@@ -4,6 +4,7 @@ import java.io.FileOutputStream;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -80,7 +81,6 @@ public class MonthHandler extends Handler {
 			double zone = periodPart.getZone();
 	
 			Configuration conf = person.getConfiguration();
-			List<Model> planets = conf.getPlanets();
 			List<Model> houses = conf.getHouses();
 	
 			updateStatus("Расчёт транзитов на период", false);
@@ -178,157 +178,161 @@ public class MonthHandler extends Handler {
 	        chapter.add(list);
 			doc.add(chapter);
 
-			Map<Long, List<TimeSeriesDataItem>> series = new HashMap<Long, List<TimeSeriesDataItem>>();
+			Map<Integer, Map<Integer, List<Long>>> years = new TreeMap<Integer, Map<Integer, List<Long>>>();
+			Map<Integer, Map<Integer, Map<Long, List<TimeSeriesDataItem>>>> years2 = new TreeMap<Integer, Map<Integer, Map<Long, List<TimeSeriesDataItem>>>>();
 
-			Map<Long, Map<Long, Integer>> dates = new TreeMap<Long, Map<Long, Integer>>();
 			System.out.println("Prepared for: " + (System.currentTimeMillis() - run));
 			run = System.currentTimeMillis();
 
+			//разбивка дат по годам и месяцам
 			for (Date date = start.getTime(); start.before(end); start.add(Calendar.DATE, 1), date = start.getTime()) {
-//				Map<Long, Double> pmap = new HashMap<Long, Double>();
-
-				String sdate = DateUtil.formatCustomDateTime(date, "yyyy-MM-dd") + " 12:00:00";
-				Event event = new Event();
-				Date edate = DateUtil.getDatabaseDateTime(sdate);
-				event.setBirth(edate);
-				event.setPlace(place);
-				event.setZone(zone);
-				event.calc(false);
-				event.getConfiguration().initPlanetAspects();
-
-				Event prev = new Event();
-				Calendar cal = Calendar.getInstance();
-				cal.setTime(edate);
-				cal.add(Calendar.DATE, -1);
-				prev.setBirth(cal.getTime());
-				prev.setPlace(place);
-				prev.setZone(zone);
-				prev.calc(false);
-				prev.getConfiguration().initPlanetAspects();
-
-				List<Planet> iplanets = new ArrayList<Planet>();
-				List<Model> eplanets = event.getConfiguration().getPlanets();
-				for (Model model : eplanets) {
-					Planet planet = (Planet)model;
-					List<Object> ingresses = planet.isIngressed(prev, event);
-					if (ingresses != null && ingresses.size() > 0)
-						iplanets.add(planet);
-				}
-
-//				Map<Long, Set<PeriodItem>> pitems = new HashMap<Long, Set<PeriodItem>>();
-				Map<Long, Integer> hitems = new HashMap<Long, Integer>();
-				for (Planet eplanet : iplanets) {
-//					for (Model model : planets) { //TODO придумать, как выводить транзиты планет
-//						Planet planet = (Planet)model;
-//						PeriodItem item = calc(eplanet, planet);
-//						if (null == item)
-//							continue;
-//						long id = item.aspect.getTypeid();
-//						Set<PeriodItem> list = pitems.get(id);
-//						if (null == list)
-//							list = new HashSet<PeriodItem>();
-//						list.add(item);
-//						pitems.put(id, list);
-//
-//						double val = pmap.containsKey(id) ? pmap.get(id) : 0;
-//						pmap.put(id, val + 1);
-//					}
-					for (Model model : houses) {
-						House house = (House)model;
-						PeriodItem item = calc(eplanet, house, aspects);
-						if (null == item)
-							continue;
-						long id = house.getId();
-						int val = hitems.containsKey(id) ? hitems.get(id) : 0;
-						hitems.put(id, val + item.aspect.getType().getPoints());
-					}
-				}
-
-				long time = date.getTime();
-				Map<Long, Integer> items = dates.containsKey(time) ? dates.get(time) : hitems;
-				dates.put(time, items);
-			}
-			System.out.println("Composed for: " + (System.currentTimeMillis() - run));
-
-			run = System.currentTimeMillis();
-			int year = 0;
-			int month = -1;
-			Section section = null;
-			HouseService service = new HouseService();
-			for (Map.Entry<Long, Map<Long, Integer>> entry : dates.entrySet()) {
-				Date date = new Date(entry.getKey());
-
-				//разбивка по годам
 				Calendar calendar = Calendar.getInstance();
 				calendar.setTime(date);
 				int y = calendar.get(Calendar.YEAR);
-				if (year != y) {
-					if (year != 0)
-						doc.add(chapter);
-
-					String syear = String.valueOf(y);
-					chapter = new ChapterAutoNumber(syear);
-					chapter.setNumberDepth(0);
-		
-					p = new Paragraph();
-					PDFUtil.printHeader(p, syear);
-					chapter.add(p);
-
-					year = y;
-				}
-
-				//разбивка по месяцам
 				int m = calendar.get(Calendar.MONTH);
-				String mtitle = new SimpleDateFormat("LLLL").format(date) + " " + y;
-				if (month != m) {
-					section = PDFUtil.printSection(chapter, mtitle);
-					month = m;
-				}
+				
+				Map<Integer, List<Long>> months = years.containsKey(y) ? years.get(y) : new TreeMap<Integer, List<Long>>();
+				List<Long> dates = months.containsKey(m) ? months.get(m) : new ArrayList<Long>();
+				long time = date.getTime(); 
+				if (!dates.contains(time))
+					dates.add(time);
+				Collections.sort(dates);
+				months.put(m, dates);
+				years.put(y, months);
 
-				Map<Long, Integer> items = entry.getValue();
-				for (Map.Entry<Long, Integer> entry2 : items.entrySet()) {
-					List<TimeSeriesDataItem> sitems = series.containsKey(entry2.getKey()) ? series.get(entry2.getKey()) : new ArrayList<TimeSeriesDataItem>();
-					TimeSeriesDataItem tsdi = new TimeSeriesDataItem(new Day(date), entry2.getValue());
-					if (!sitems.contains(tsdi))
-						sitems.add(tsdi);
-					series.put(entry2.getKey(), sitems);
-				}
+				Map<Integer, Map<Long, List<TimeSeriesDataItem>>> months2 = years2.containsKey(y) ? years2.get(y) : new TreeMap<Integer, Map<Long, List<TimeSeriesDataItem>>>();
+				months2.put(m, new TreeMap<Long, List<TimeSeriesDataItem>>());
+				years2.put(y, months2);
 			}
 
-	        HouseMap[] houseMap = HouseMap.getMap();
-	        Font hfont = new Font(baseFont, 16, Font.BOLD, PDFUtil.FONTCOLOR);
-	        for (HouseMap hmap : houseMap) {
-	        	section.addSection(new Paragraph(hmap.name, hfont));
-				List<String> descrs = new ArrayList<String>();
-				TimeSeriesCollection dataset = new TimeSeriesCollection();
-	        	for (int i = 0; i < 3; i++) {
-	        		long houseid = hmap.houseids[i];
-	        		List<TimeSeriesDataItem> hdata = series.get(houseid);
-	        		if (null == hdata || 0 == hdata.size())
-	        			continue;
-					House house = (House)service.find(houseid);
-					TimeSeries timeSeries = new TimeSeries(house.getName());
-					descrs.add(house.getName() + ": " + house.getDescription());
-					for (TimeSeriesDataItem tsdi : hdata)
-						timeSeries.add(tsdi);
-					dataset.addSeries(timeSeries);
-	        	}	        	
-			    com.itextpdf.text.Image image = PDFUtil.printTimeChart(writer, "", "Даты", "Баллы", dataset, 500, 0, true);
-				section.add(image);
+			//создаём аналогичный массив, но с домами вместо дат
+			for (Map.Entry<Integer, Map<Integer, List<Long>>> entry : years.entrySet()) {
+				int y = entry.getKey();
+				Map<Integer, List<Long>> months = years.get(y);
 
-				list = new com.itextpdf.text.List(false, false, 10);
-				for (String descr : descrs) {
-					li = new ListItem();
-					li.add(new Chunk(descr, font));
-					list.add(li);
+				for (Map.Entry<Integer, List<Long>> entry2 : months.entrySet()) {
+					int m = entry2.getKey();
+
+					List<Long> dates = months.get(m);
+					for (Long time : dates) {
+						Date date = new Date(time);
+
+						String sdate = DateUtil.formatCustomDateTime(date, "yyyy-MM-dd") + " 12:00:00";
+						Event event = new Event();
+						Date edate = DateUtil.getDatabaseDateTime(sdate);
+						event.setBirth(edate);
+						event.setPlace(place);
+						event.setZone(zone);
+						event.calc(false);
+						event.getConfiguration().initPlanetAspects();
+		
+						Event prev = new Event();
+						Calendar cal = Calendar.getInstance();
+						cal.setTime(edate);
+						cal.add(Calendar.DATE, -1);
+						prev.setBirth(cal.getTime());
+						prev.setPlace(place);
+						prev.setZone(zone);
+						prev.calc(false);
+						prev.getConfiguration().initPlanetAspects();
+
+						List<Planet> iplanets = new ArrayList<Planet>();
+						List<Model> eplanets = event.getConfiguration().getPlanets();
+						for (Model model : eplanets) {
+							Planet planet = (Planet)model;
+							List<Object> ingresses = planet.isIngressed(prev, event);
+							if (ingresses != null && ingresses.size() > 0)
+								iplanets.add(planet);
+						}
+
+						Map<Long, Integer> hitems = new HashMap<Long, Integer>();
+						for (Planet eplanet : iplanets) {
+							for (Model model : houses) {
+								House house = (House)model;
+								PeriodItem item = calc(eplanet, house, aspects);
+								if (null == item)
+									continue;
+								long id = house.getId();
+								int val = hitems.containsKey(id) ? hitems.get(id) : 0;
+								hitems.put(id, val + item.aspect.getType().getPoints());
+							}
+						}
+
+						Map<Integer, Map<Long, List<TimeSeriesDataItem>>> months2 = years2.containsKey(y) ? years2.get(y) : new TreeMap<Integer, Map<Long, List<TimeSeriesDataItem>>>();
+						Map<Long, List<TimeSeriesDataItem>> items = months2.containsKey(m) ? months2.get(m) : new TreeMap<Long, List<TimeSeriesDataItem>>();
+						for (Map.Entry<Long, Integer> entry3 : hitems.entrySet()) {
+							long hid = entry3.getKey();
+							List<TimeSeriesDataItem> series = items.containsKey(hid) ? items.get(hid) : new ArrayList<TimeSeriesDataItem>();
+							TimeSeriesDataItem tsdi = new TimeSeriesDataItem(new Day(date), entry3.getValue());
+							if (!series.contains(tsdi))
+								series.add(tsdi);
+							items.put(hid, series);
+						}
+						months2.put(m, items);
+					}
 				}
-				section.add(Chunk.NEWLINE);
-				section.add(list);
-				section.add(Chunk.NEWLINE);
-	        }
-			if (start.get(Calendar.YEAR) == end.get(Calendar.YEAR))
+			}
+			years = null;
+			System.out.println("Composed for: " + (System.currentTimeMillis() - run));
+
+			//генерируем документ
+			run = System.currentTimeMillis();
+			HouseService service = new HouseService();
+	        HouseMap[] houseMap = HouseMap.getMap();
+			for (Map.Entry<Integer, Map<Integer, Map<Long, List<TimeSeriesDataItem>>>> entry : years2.entrySet()) {
+				int y = entry.getKey();
+				String syear = String.valueOf(y);
+				chapter = new ChapterAutoNumber(syear);
+				chapter.setNumberDepth(0);
+	
+				p = new Paragraph();
+				PDFUtil.printHeader(p, syear);
+				chapter.add(p);
+
+				Map<Integer, Map<Long, List<TimeSeriesDataItem>>> months2 = years2.get(y);
+
+				for (Map.Entry<Integer, Map<Long, List<TimeSeriesDataItem>>> entry2 : months2.entrySet()) {
+					int m = entry2.getKey();
+					Calendar calendar = Calendar.getInstance();
+					calendar.set(y, m, 1);
+					Section section = PDFUtil.printSection(chapter, new SimpleDateFormat("LLLL").format(calendar.getTime()) + " " + y);
+
+					Map<Long, List<TimeSeriesDataItem>> items = entry2.getValue();
+			        Font hfont = new Font(baseFont, 16, Font.BOLD, PDFUtil.FONTCOLOR);
+			        for (HouseMap hmap : houseMap) {
+						List<String> descrs = new ArrayList<String>();
+						TimeSeriesCollection dataset = new TimeSeriesCollection();
+			        	for (int i = 0; i < 3; i++) {
+			        		long houseid = hmap.houseids[i];
+			        		List<TimeSeriesDataItem> series = items.containsKey(houseid) ? items.get(houseid) : new ArrayList<TimeSeriesDataItem>();
+			        		if (null == series || 0 == series.size())
+			        			continue;
+							House house = (House)service.find(houseid);
+							TimeSeries timeSeries = new TimeSeries(house.getName());
+							descrs.add(house.getName() + ": " + house.getDescription());
+							for (TimeSeriesDataItem tsdi : series)
+								timeSeries.add(tsdi);
+							dataset.addSeries(timeSeries);
+			        	}
+			        	if (dataset.getSeriesCount() > 0) {
+				        	section.addSection(new Paragraph(hmap.name, hfont));
+						    com.itextpdf.text.Image image = PDFUtil.printTimeChart(writer, "", "Даты", "Баллы", dataset, 500, 0, true);
+							section.add(image);
+	
+							list = new com.itextpdf.text.List(false, false, 10);
+							for (String descr : descrs) {
+								li = new ListItem();
+								li.add(new Chunk(descr, font));
+								list.add(li);
+							}
+							section.add(list);
+							section.add(Chunk.NEWLINE);
+			        	}
+					}
+			        chapter.add(Chunk.NEXTPAGE);
+				}
 				doc.add(chapter);
-			doc.add(Chunk.NEWLINE);
+			}
 	        doc.add(PDFUtil.printCopyright());
 
 	        long time = System.currentTimeMillis();
