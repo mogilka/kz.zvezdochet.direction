@@ -18,7 +18,6 @@ import org.eclipse.jface.viewers.CellEditor;
 import org.eclipse.jface.viewers.CheckboxCellEditor;
 import org.eclipse.jface.viewers.EditingSupport;
 import org.eclipse.jface.viewers.IBaseLabelProvider;
-import org.eclipse.jface.viewers.ILabelProviderListener;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
@@ -27,17 +26,12 @@ import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.jface.viewers.TableViewerColumn;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Image;
-import org.eclipse.swt.graphics.Point;
-import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Label;
-import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Table;
-import org.eclipse.swt.widgets.TableColumn;
-import org.eclipse.swt.widgets.TableItem;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
 
@@ -142,11 +136,14 @@ public class CollationPart extends ModelPart implements ICalculable {
 			"Имя",
 			"Дата",
 			"Победитель" };
+		int i = -1;
 		for (String column : columns) {
-			TableColumn tableColumn = new TableColumn(tbParticipants, SWT.NONE);
-			tableColumn.setText(column);		
-			tableColumn.addListener(SWT.Selection, TableSortListenerFactory.getListener(
+			TableViewerColumn tableColumn = new TableViewerColumn(tvParticipants, SWT.NONE);
+			tableColumn.getColumn().setText(column);		
+			tableColumn.getColumn().addListener(SWT.Selection, TableSortListenerFactory.getListener(
 				TableSortListenerFactory.STRING_COMPARATOR));
+			if (++i > 1)
+				tableColumn.setEditingSupport(new ParticipantEditingSupport(tvParticipants));
 		}
 		tvParticipants.setContentProvider(new ArrayContentProvider());
 		tvParticipants.setLabelProvider(getParticipantProvider());
@@ -195,21 +192,6 @@ public class CollationPart extends ModelPart implements ICalculable {
 		tbMembers = tvMembers.getTable();
 		tbMembers.setHeaderVisible(true);
 		tbMembers.setLinesVisible(true);
-	    tbMembers.addListener(SWT.MouseDown, new Listener() {
-	        public void handleEvent(org.eclipse.swt.widgets.Event e) {
-	            Point pt = new Point(e.x, e.y);
-	            TableItem item = tbMembers.getItem(pt);
-	            if (item != null) {
-	                for (int col = 0; col < tbMembers.getColumnCount(); col++) {
-	                    Rectangle rect = item.getBounds(col);
-	                    if (rect.contains(pt)) {
-	                        System.out.println("item clicked.");
-	                        System.out.println("column is " + col);
-	                    }
-	                }
-	            }
-	        }
-	    });
 		columns = new String[] {
 			"Имя",
 			"Дата",
@@ -219,7 +201,7 @@ public class CollationPart extends ModelPart implements ICalculable {
 			"Сэйв",
 			"Фол",
 			"Замена" };
-		int i = -1;
+		i = -1;
 		for (String column : columns) {
 			TableViewerColumn tableColumn = new TableViewerColumn(tvMembers, SWT.NONE);
 			tableColumn.getColumn().setText(column);		
@@ -372,11 +354,6 @@ public class CollationPart extends ModelPart implements ICalculable {
 				}
 				return null;
 			}
-			@Override
-			public void addListener(ILabelProviderListener listener) {
-				// TODO Auto-generated method stub
-				super.addListener(listener);
-			}
 		};
 	}
 
@@ -454,6 +431,11 @@ public class CollationPart extends ModelPart implements ICalculable {
 		}
 	}
 
+	/**
+	 * Быстрое редактирование таблицы фигурантов
+	 * @author nataly
+	 *
+	 */
 	public class MemberEditingSupport extends EditingSupport {
 	    private final TableViewer viewer;
 	    private int type;
@@ -499,6 +481,42 @@ public class CollationPart extends ModelPart implements ICalculable {
 				case 6: member.setFoul(val); break;
 				case 7: member.setSubstitute(val);
 	        }
+	        viewer.update(element, null);
+	    }
+	}
+
+	/**
+	 * Быстрое редактирование таблицы участников
+	 * @author nataly
+	 *
+	 */
+	public class ParticipantEditingSupport extends EditingSupport {
+	    private final TableViewer viewer;
+
+	    public ParticipantEditingSupport(TableViewer viewer) {
+	        super(viewer);
+	        this.viewer = viewer;
+	    }
+
+	    @Override
+	    protected CellEditor getCellEditor(Object element) {
+	        return new CheckboxCellEditor(null, SWT.CHECK | SWT.READ_ONLY);
+	    }
+
+	    @Override
+	    protected boolean canEdit(Object element) {
+	        return true;
+	    }
+
+	    @Override
+	    protected Object getValue(Object element) {
+	        Participant participant = (Participant)element;
+			return participant.isWin();
+	    }
+	    @Override
+	    protected void setValue(Object element, Object value) {
+	        Participant participant = (Participant)element;
+			participant.setWin((Boolean)value);
 	        viewer.update(element, null);
 	    }
 	}
