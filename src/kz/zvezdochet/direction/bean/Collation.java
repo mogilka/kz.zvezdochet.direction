@@ -5,8 +5,10 @@ import java.util.List;
 
 import kz.zvezdochet.bean.Event;
 import kz.zvezdochet.core.bean.Model;
+import kz.zvezdochet.core.service.DataAccessException;
 import kz.zvezdochet.core.service.ModelService;
 import kz.zvezdochet.direction.service.CollationService;
+import kz.zvezdochet.direction.service.ParticipantService;
 
 /**
  * Групповой прогноз
@@ -16,14 +18,6 @@ import kz.zvezdochet.direction.service.CollationService;
 public class Collation extends Model {
 	private static final long serialVersionUID = 4521653171625744610L;
 
-	public static String getTableName() {
-		return "collation";
-	}
-
-	/**
-	 * Идентификатор события
-	 */
-	private long eventid;
 	/**
 	 * Событие
 	 */
@@ -31,15 +25,11 @@ public class Collation extends Model {
 	/**
 	 * Список участников события
 	 */
-	private List<Event> participants;
+	private List<Participant> participants;
 	/**
-	 * Описание (фактический результат события)
+	 * Описание
 	 */
 	private String description = "";
-	/**
-	 * Прогнозируемый результат события
-	 */
-	private String text = "";
 	/**
 	 * Признак успешного расчёта
 	 */
@@ -49,19 +39,11 @@ public class Collation extends Model {
 	 */
 	private Date created_at;
 
-	public long getEventid() {
-		return eventid;
-	}
-
-	public void setEventid(long eventid) {
-		this.eventid = eventid;
-	}
-
-	public List<Event> getParticipants() {
+	public List<Participant> getParticipants() {
 		return participants;
 	}
 
-	public void setParticipants(List<Event> participants) {
+	public void setParticipants(List<Participant> participants) {
 		this.participants = participants;
 	}
 
@@ -100,15 +82,6 @@ public class Collation extends Model {
 
 	public void setEvent(Event event) {
 		this.event = event;
-		this.eventid = event.getId();
-	}
-
-	public String getText() {
-		return text;
-	}
-
-	public void setText(String text) {
-		this.text = text;
 	}
 
 	/**
@@ -121,5 +94,14 @@ public class Collation extends Model {
 	}
 	public void setNeedSaveRel(boolean needSaveRel) {
 		this.needSaveRel = needSaveRel;
+	}
+
+	@Override
+	public void init(boolean mode) {
+		try {
+			setParticipants(new ParticipantService().finds(id));
+		} catch (DataAccessException e) {
+			e.printStackTrace();
+		}
 	}
 }

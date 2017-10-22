@@ -15,6 +15,8 @@ import kz.zvezdochet.core.service.ModelService;
 import kz.zvezdochet.core.tool.Connector;
 import kz.zvezdochet.core.util.DateUtil;
 import kz.zvezdochet.direction.bean.Collation;
+import kz.zvezdochet.direction.bean.Member;
+import kz.zvezdochet.direction.bean.Participant;
 import kz.zvezdochet.service.EventService;
 
 /**
@@ -35,23 +37,21 @@ public class CollationService extends ModelService {
 		try {
 			String sql;
 			if (null == model.getId()) 
-				sql = "insert into " + tableName + " values(0,?,?,?,?,?)";
+				sql = "insert into " + tableName + " values(0,?,?,?,?)";
 			else
 				sql = "update " + tableName + " set " +
 					"calculated = ?, " +
 					"eventid = ?, " +
 					"description = ?, " +
 					"created_at = ?, " +
-					"text = ? " +
 					"where id = ?";
 			ps = Connector.getInstance().getConnection().prepareStatement(sql);
 			ps.setInt(1, collation.isCalculated() ? 1 : 0);
-			ps.setLong(2, collation.getEventid());
+			ps.setLong(2, collation.getEvent().getId());
 			ps.setString(3, collation.getDescription());
 			ps.setString(4, DateUtil.formatCustomDateTime(new Date(), "yyyy-MM-dd HH:mm:ss"));
-			ps.setString(5, collation.getText());
 			if (model.getId() != null) 
-				ps.setLong(6, model.getId());
+				ps.setLong(5, model.getId());
 
 			result = ps.executeUpdate();
 			if (1 == result) {
@@ -81,40 +81,6 @@ public class CollationService extends ModelService {
 		return model;
 	}
 
-	/**
-	 * Поиск участников события
-	 * @param collationid идентификатор прогноза
-	 * @return список участников
-	 */
-	public List<Event> findParticipants(Long collationid) throws DataAccessException {
-		if (null == collationid) return null;
-		List<Event> list = new ArrayList<Event>();
-        PreparedStatement ps = null;
-        ResultSet rs = null;
-		try {
-			String sql = "select * from " + getParticipantTable() + " where collationid = ?";
-			ps = Connector.getInstance().getConnection().prepareStatement(sql);
-			ps.setLong(1, collationid);
-			rs = ps.executeQuery();
-			while (rs.next()) {
-				Event event = (Event)new EventService().find(rs.getLong("eventid"));
-				if (2 == event.getHuman())
-					event.setMembers(findMembers(collationid, event.getId()));
-				list.add(event);
-			}
-		} catch (Exception e) {
-			e.printStackTrace();
-		} finally {
-			try { 
-				if (rs != null) rs.close();
-				if (ps != null) ps.close();
-			} catch (SQLException e) { 
-				e.printStackTrace(); 
-			}
-		}
-		return list;
-	}
-
 	@Override
 	public Model create() {
 		return new Collation();
@@ -126,13 +92,10 @@ public class CollationService extends ModelService {
 		model.setId(Long.parseLong(rs.getString("ID")));
 		if (rs.getString("description") != null)
 			model.setDescription(rs.getString("description"));
-		if (rs.getString("text") != null)
-			model.setText(rs.getString("text"));
 		model.setCreated_at(DateUtil.getDatabaseDateTime(rs.getString("created_at")));
 		String s = rs.getString("calculated");
 		model.setCalculated(s.equals("1") ? true : false);
 		model.setEvent((Event)new EventService().find(rs.getLong("eventid")));
-		model.setParticipants(findParticipants(model.getId()));
 		return model;
 	}
 
@@ -214,22 +177,23 @@ public class CollationService extends ModelService {
 	public void saveParticipants(Collation model) {
         PreparedStatement ps = null;
 		try {
-			String table = getParticipantTable();
+			String table = new ParticipantService().getTableName();
 			String sql = "delete from " + table + " where collationid = " + model.getId();
 			Connection conn = Connector.getInstance().getConnection();
 			ps = conn.prepareStatement(sql);
 			ps.execute();
 			ps.close();
 
-			List<Event> participants = model.getParticipants();
+			List<Participant> participants = model.getParticipants();
 			if (participants != null && participants.size() > 0) {
 				conn.setAutoCommit(false);
 				//сохраняем участников
-				sql = "insert into " + table + " values(?,?)";
+				sql = "insert into " + table + "(collationid, eventid, win) values(?,?,?)";
 				ps = conn.prepareStatement(sql);
-				for (Event event : participants) {
-					ps.setLong(1, model.getId());            
-					ps.setLong(2, event.getId());
+				for (Participant part : participants) {
+					ps.setLong(1, model.getId());
+					ps.setLong(2, part.getEvent().getId());
+					ps.setInt(3, part.isWin() ? 1 : 0);
 					ps.addBatch();
 				}
 				int[] modified = ps.executeBatch();
@@ -242,17 +206,22 @@ public class CollationService extends ModelService {
 				}
 
 				//сохраняем фигурантов
-				table = getMemberTable();
-				sql = "insert into " + table + " values(?,?,?)";
+				table = new MemberService().getTableName();
+				sql = "insert into " + table + "(eventid, participantid, hit, pass, miss, save, foul, substitute) values(?,?,?,?,?,?,?,?)";
 				ps = conn.prepareStatement(sql);
 				int batchcnt = 0;
-				for (Event participant : participants) {
-					List<Event> members = participant.getMembers();
+				for (Participant part : participants) {
+					List<Member> members = part.getMembers();
 					if (members != null && members.size() > 0) {
-						for (Event member : members) {
-							ps.setLong(1, member.getId());
-							ps.setLong(2, participant.getId());
-							ps.setLong(3, model.getId());
+						for (Member member : members) {
+							ps.setLong(1, member.getEvent().getId());
+							ps.setLong(2, part.getId());
+							ps.setInt(3, member.isHit() ? 1 : 0);
+							ps.setInt(4, member.isPass() ? 1 : 0);
+							ps.setInt(5, member.isMiss() ? 1 : 0);
+							ps.setInt(6, member.isSave() ? 1 : 0);
+							ps.setInt(7, member.isFoul() ? 1 : 0);
+							ps.setInt(8, member.isSubstitute() ? 1 : 0);
 							ps.addBatch();
 							++batchcnt;
 						}
@@ -261,6 +230,7 @@ public class CollationService extends ModelService {
 				if (batchcnt > 0)
 					modified = ps.executeBatch();
 
+				//TODO сохранять аспекты, дома и дирекции участников и фигурантов
 				conn.commit();
 			}
 		} catch (Exception e) {
@@ -272,55 +242,5 @@ public class CollationService extends ModelService {
 				e.printStackTrace();
 			}
 		}
-	}
-
-	/**
-	 * Возвращает имя таблицы, хранящей участников события
-	 * @return имя ТБД
-	 */
-	public String getParticipantTable() {
-		return "collation_participants";
-	}
-
-	/**
-	 * Возвращает имя таблицы, хранящей фигурантов события
-	 * @return имя ТБД
-	 */
-	public String getMemberTable() {
-		return "collation_members";
-	}
-
-	/**
-	 * Поиск участников сообщества
-	 * @param collationid идентификатор прогноза
-	 * @param participantid идентификатор сообщества
-	 * @return список участников
-	 */
-	public List<Event> findMembers(Long collationid, Long participantid) throws DataAccessException {
-		if (null == collationid || null == participantid) return null;
-		List<Event> list = new ArrayList<Event>();
-        PreparedStatement ps = null;
-        ResultSet rs = null;
-		try {
-			String sql = "select * from " + getMemberTable() + 
-				" where collationid = ?" +
-				" and participantid = ?";
-			ps = Connector.getInstance().getConnection().prepareStatement(sql);
-			ps.setLong(1, collationid);
-			ps.setLong(2, participantid);
-			rs = ps.executeQuery();
-			while (rs.next())
-				list.add((Event)new EventService().find(rs.getLong("memberid")));
-		} catch (Exception e) {
-			e.printStackTrace();
-		} finally {
-			try { 
-				if (rs != null) rs.close();
-				if (ps != null) ps.close();
-			} catch (SQLException e) { 
-				e.printStackTrace(); 
-			}
-		}
-		return list;
 	}
 }

@@ -14,21 +14,32 @@ import org.eclipse.jface.fieldassist.TextContentAdapter;
 import org.eclipse.jface.layout.GridDataFactory;
 import org.eclipse.jface.layout.GridLayoutFactory;
 import org.eclipse.jface.viewers.ArrayContentProvider;
+import org.eclipse.jface.viewers.CellEditor;
+import org.eclipse.jface.viewers.CheckboxCellEditor;
+import org.eclipse.jface.viewers.EditingSupport;
 import org.eclipse.jface.viewers.IBaseLabelProvider;
+import org.eclipse.jface.viewers.ILabelProviderListener;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.jface.viewers.TableViewer;
+import org.eclipse.jface.viewers.TableViewerColumn;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.graphics.Image;
+import org.eclipse.swt.graphics.Point;
+import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableColumn;
+import org.eclipse.swt.widgets.TableItem;
 import org.eclipse.swt.widgets.Text;
+import org.eclipse.ui.plugin.AbstractUIPlugin;
 
 import kz.zvezdochet.bean.Event;
 import kz.zvezdochet.core.handler.Handler;
@@ -42,6 +53,8 @@ import kz.zvezdochet.core.ui.view.ModelPart;
 import kz.zvezdochet.core.ui.view.View;
 import kz.zvezdochet.core.util.DateUtil;
 import kz.zvezdochet.direction.bean.Collation;
+import kz.zvezdochet.direction.bean.Member;
+import kz.zvezdochet.direction.bean.Participant;
 import kz.zvezdochet.part.ICalculable;
 import kz.zvezdochet.provider.EventProposalProvider;
 import kz.zvezdochet.provider.EventProposalProvider.EventContentProposal;
@@ -57,7 +70,6 @@ public class CollationPart extends ModelPart implements ICalculable {
 
 	private Text txEvent;
 	private Text txDescription;
-	private Text txText;
 	private TableViewer tvParticipants;
 	private Table tbParticipants;
 	private TableViewer tvMembers;
@@ -74,13 +86,7 @@ public class CollationPart extends ModelPart implements ICalculable {
 		txEvent.setFocus();
 
 		lb = new Label(parent, SWT.NONE);
-		lb.setText("Прогноз");
-		txText = new Text(parent, SWT.MULTI | SWT.BORDER | SWT.WRAP | SWT.V_SCROLL);
-		txText.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
-		txText.setSize(SWT.DEFAULT, 48);
-
-		lb = new Label(parent, SWT.NONE);
-		lb.setText("Фактический итог");
+		lb.setText("Описание");
 		txDescription = new Text(parent, SWT.BORDER);
 		txDescription.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false));
 
@@ -134,7 +140,8 @@ public class CollationPart extends ModelPart implements ICalculable {
 
 		String[] columns = new String[] {
 			"Имя",
-			"Дата" };
+			"Дата",
+			"Победитель" };
 		for (String column : columns) {
 			TableColumn tableColumn = new TableColumn(tbParticipants, SWT.NONE);
 			tableColumn.setText(column);		
@@ -142,7 +149,7 @@ public class CollationPart extends ModelPart implements ICalculable {
 				TableSortListenerFactory.STRING_COMPARATOR));
 		}
 		tvParticipants.setContentProvider(new ArrayContentProvider());
-		tvParticipants.setLabelProvider(getLabelProvider());
+		tvParticipants.setLabelProvider(getParticipantProvider());
 
 		ListSelectionListener listener = new ListSelectionListener();
 		tvParticipants.addSelectionChangedListener(new ISelectionChangedListener() {
@@ -151,7 +158,7 @@ public class CollationPart extends ModelPart implements ICalculable {
 				if (!event.getSelection().isEmpty()) {
 					IStructuredSelection sel = (IStructuredSelection)event.getSelection();
 					if (sel.getFirstElement() != null) {
-						Event participant = (Event)sel.getFirstElement();
+						Participant participant = (Participant)sel.getFirstElement();
 						initMemberTable(participant.getMembers());
 					}
 				}				
@@ -188,15 +195,41 @@ public class CollationPart extends ModelPart implements ICalculable {
 		tbMembers = tvMembers.getTable();
 		tbMembers.setHeaderVisible(true);
 		tbMembers.setLinesVisible(true);
-
+	    tbMembers.addListener(SWT.MouseDown, new Listener() {
+	        public void handleEvent(org.eclipse.swt.widgets.Event e) {
+	            Point pt = new Point(e.x, e.y);
+	            TableItem item = tbMembers.getItem(pt);
+	            if (item != null) {
+	                for (int col = 0; col < tbMembers.getColumnCount(); col++) {
+	                    Rectangle rect = item.getBounds(col);
+	                    if (rect.contains(pt)) {
+	                        System.out.println("item clicked.");
+	                        System.out.println("column is " + col);
+	                    }
+	                }
+	            }
+	        }
+	    });
+		columns = new String[] {
+			"Имя",
+			"Дата",
+			"Гол",
+			"Пас",
+			"Промах",
+			"Сэйв",
+			"Фол",
+			"Замена" };
+		int i = -1;
 		for (String column : columns) {
-			TableColumn tableColumn = new TableColumn(tbMembers, SWT.NONE);
-			tableColumn.setText(column);		
-			tableColumn.addListener(SWT.Selection, TableSortListenerFactory.getListener(
+			TableViewerColumn tableColumn = new TableViewerColumn(tvMembers, SWT.NONE);
+			tableColumn.getColumn().setText(column);		
+			tableColumn.getColumn().addListener(SWT.Selection, TableSortListenerFactory.getListener(
 				TableSortListenerFactory.STRING_COMPARATOR));
+			if (++i > 1)
+				tableColumn.setEditingSupport(new MemberEditingSupport(tvMembers, i));
 		}
 		tvMembers.setContentProvider(new ArrayContentProvider());
-		tvMembers.setLabelProvider(getLabelProvider());
+		tvMembers.setLabelProvider(getMemberProvider());
 
 		listener = new ListSelectionListener();
 		tvMembers.addSelectionChangedListener(listener);
@@ -247,12 +280,16 @@ public class CollationPart extends ModelPart implements ICalculable {
 				if (null == event)
 					DialogUtil.alertError("Задайте участника события");
 				else {
-					List<Event> participants = collation.getParticipants();
+					List<Participant> participants = collation.getParticipants();
 					if (null == participants)
-						participants = new ArrayList<Event>();
-					if (participants.contains(event))
-						return;
-					participants.add(event);
+						participants = new ArrayList<Participant>();
+					else {
+						for (Participant participant : participants)
+							if (participant.getEvent().getId() == event.getId())
+								return;
+					}
+					Participant participant = new Participant(event, collation);
+					participants.add(participant);
 					collation.setParticipants(participants);
 					tvParticipants.add(event);
 					tvParticipants.setSelection(new StructuredSelection(event));
@@ -277,16 +314,68 @@ public class CollationPart extends ModelPart implements ICalculable {
 		return true;
 	}
 
-	private IBaseLabelProvider getLabelProvider() {
+	private IBaseLabelProvider getParticipantProvider() {
 		return new ModelLabelProvider() {
 			@Override
 			public String getColumnText(Object element, int columnIndex) {
-				Event event = (Event)element;
+				Participant participant = (Participant)element;
+				Event event = participant.getEvent();
 				switch (columnIndex) {
 					case 0: return event.getName();
 					case 1: return DateUtil.formatDateTime(event.getBirth());
 				}
 				return null;
+			}
+			@Override
+			public Image getColumnImage(Object element, int columnIndex) {
+				Participant participant = (Participant)element;
+				switch (columnIndex) {
+					case 2: return participant.isWin() ? CHECKED : UNCHECKED;
+				}
+				return null;
+			}
+		};
+	}
+
+	private final Image CHECKED = AbstractUIPlugin.imageDescriptorFromPlugin("kz.zvezdochet.core", "icons/checked.gif").createImage();
+    private final Image UNCHECKED = AbstractUIPlugin.imageDescriptorFromPlugin("kz.zvezdochet.core", "icons/unchecked.gif").createImage();
+
+    /**
+     * Прорисовщик фигурантов
+     * @return значение ячейки
+     * @see http://www.vogella.com/tutorials/EclipseJFaceTableAdvanced/article.html
+     * TODO When you need to change an image call TreeViewer.update or TreeViewer.refresh 
+     * if the children of the object also need refreshing. This will call the label provider again
+     */
+	private IBaseLabelProvider getMemberProvider() {
+		return new ModelLabelProvider() {
+			@Override
+			public String getColumnText(Object element, int columnIndex) {
+				Member member = (Member)element;
+				Event event = member.getEvent();
+				switch (columnIndex) {
+					case 0: return event.getName();
+					case 1: return DateUtil.formatDateTime(event.getBirth());
+				}
+				return null;
+			}
+			@Override
+			public Image getColumnImage(Object element, int columnIndex) {
+				Member member = (Member)element;
+				switch (columnIndex) {
+					case 2: return member.isHit() ? CHECKED : UNCHECKED;
+					case 3: return member.isPass() ? CHECKED : UNCHECKED;
+					case 4: return member.isMiss() ? CHECKED : UNCHECKED;
+					case 5: return member.isSave() ? CHECKED : UNCHECKED;
+					case 6: return member.isFoul() ? CHECKED : UNCHECKED;
+					case 7: return member.isSubstitute() ? CHECKED : UNCHECKED;
+				}
+				return null;
+			}
+			@Override
+			public void addListener(ILabelProviderListener listener) {
+				// TODO Auto-generated method stub
+				super.addListener(listener);
 			}
 		};
 	}
@@ -303,7 +392,7 @@ public class CollationPart extends ModelPart implements ICalculable {
 	public void onCalc(Object obj) {
 //		System.out.println(obj);
 		try {
-			txText.setText(obj.toString());
+//			txText.setText(obj.toString());
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -318,7 +407,6 @@ public class CollationPart extends ModelPart implements ICalculable {
 		else
 			txEvent.setText(collation.getEvent().getName());
 		txDescription.setText(collation.getDescription());
-		txText.setText(collation.getText());
 		initParticipantTable(collation.getParticipants());
 		initMemberTable(null);
 	}
@@ -331,7 +419,7 @@ public class CollationPart extends ModelPart implements ICalculable {
 	/**
 	 * Инициализация таблицы участников
 	 */
-	private void initParticipantTable(List<Event> data) {
+	private void initParticipantTable(List<Participant> data) {
 		try {
 			showBusy(true);
 			if (null == data)
@@ -350,7 +438,7 @@ public class CollationPart extends ModelPart implements ICalculable {
 	/**
 	 * Инициализация таблицы фигурантов
 	 */
-	private void initMemberTable(List<Event> data) {
+	private void initMemberTable(List<Member> data) {
 		try {
 			showBusy(true);
 			if (null == data)
@@ -364,5 +452,54 @@ public class CollationPart extends ModelPart implements ICalculable {
 		} finally {
 			showBusy(false);
 		}
+	}
+
+	public class MemberEditingSupport extends EditingSupport {
+	    private final TableViewer viewer;
+	    private int type;
+
+	    public MemberEditingSupport(TableViewer viewer, int type) {
+	        super(viewer);
+	        this.viewer = viewer;
+	        this.type = type;
+	    }
+
+	    @Override
+	    protected CellEditor getCellEditor(Object element) {
+	        return new CheckboxCellEditor(null, SWT.CHECK | SWT.READ_ONLY);
+	    }
+
+	    @Override
+	    protected boolean canEdit(Object element) {
+	        return true;
+	    }
+
+	    @Override
+	    protected Object getValue(Object element) {
+	        Member member = (Member)element;
+	        switch (type) {
+				case 2: return member.isHit();
+				case 3: return member.isPass();
+				case 4: return member.isMiss();
+				case 5: return member.isSave();
+				case 6: return member.isFoul();
+				case 7: return member.isSubstitute();
+	        }
+	        return null;
+	    }
+	    @Override
+	    protected void setValue(Object element, Object value) {
+	        Member member = (Member)element;
+	        boolean val = (Boolean)value;
+	        switch (type) {
+				case 2: member.setHit(val); break;
+				case 3: member.setPass(val); break;
+				case 4: member.setMiss(val); break;
+				case 5: member.setSave(val); break;
+				case 6: member.setFoul(val); break;
+				case 7: member.setSubstitute(val);
+	        }
+	        viewer.update(element, null);
+	    }
 	}
 }
