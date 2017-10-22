@@ -48,4 +48,6 @@ public class Transit extends Model {
 	public void setPersonid(long personid) {
 		this.personid = personid;
 	}
+	@Override
+	public void init(boolean mode) {}
 }
