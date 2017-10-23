@@ -7,7 +7,6 @@ import kz.zvezdochet.analytics.bean.PlanetHouseText;
 import kz.zvezdochet.bean.Event;
 import kz.zvezdochet.bean.SkyPointAspect;
 import kz.zvezdochet.core.bean.Model;
-import kz.zvezdochet.core.service.DataAccessException;
 import kz.zvezdochet.core.service.ModelService;
 import kz.zvezdochet.direction.service.ParticipantService;
 
