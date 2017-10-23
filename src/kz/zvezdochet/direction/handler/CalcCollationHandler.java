@@ -68,13 +68,15 @@ public class CalcCollationHandler extends Handler {
 				Map<String, Object> map = new HashMap<String, Object>();
 
 				Event pevent = participant.getEvent();
-				if (pevent.getRectification() != 3) {
-					if (!pevent.isCalculated()) {
-						pevent.calc(false);
-						updateStatus("Расчётная конфигурация " + pevent.getName() + " создана", false);
-					}
-					map = makeTransits(event, pevent);
+				if (!pevent.isCalculated()) {
+					pevent.calc(false);
+					updateStatus("Расчётная конфигурация " + pevent.getName() + " создана", false);
 				}
+				map = makeTransits(event, pevent);
+				participant.setAspects((List<SkyPointAspect>)map.get("Аспекты"));
+				participant.setDirections((List<SkyPointAspect>)map.get("Дирекции"));
+				participant.setHouses((List<PlanetHouseText>)map.get("Дома"));
+
 				List<Member> members = participant.getMembers();
 				if (members != null && members.size() > 0) {
 					Map<String, Object> map2 = new HashMap<String, Object>();
@@ -93,10 +95,6 @@ public class CalcCollationHandler extends Handler {
 						member.setDirections((List<SkyPointAspect>)map2.get("Дирекции"));
 						member.setHouses((List<PlanetHouseText>)map2.get("Дома"));
 					}
-				} else {
-					participant.setAspects((List<SkyPointAspect>)map.get("Аспекты"));
-					participant.setDirections((List<SkyPointAspect>)map.get("Дирекции"));
-					participant.setHouses((List<PlanetHouseText>)map.get("Дома"));
 				}
 			}
 			collationPart.onCalc(collation);
@@ -129,6 +127,7 @@ public class CalcCollationHandler extends Handler {
 					spa.setAspect(a);
 					spa.setSkyPoint1(point1);
 					spa.setSkyPoint2(point2);
+					spa.setExact(true);
 					return spa;
 				}
 			}
