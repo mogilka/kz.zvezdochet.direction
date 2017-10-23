@@ -84,18 +84,6 @@ public class Collation extends Model {
 		this.event = event;
 	}
 
-	/**
-	 * Признак необходимости сохранить данные об участниках в БД
-	 */
-	private boolean needSaveRel = false;
-
-	public boolean isNeedSaveRel() {
-		return needSaveRel;
-	}
-	public void setNeedSaveRel(boolean needSaveRel) {
-		this.needSaveRel = needSaveRel;
-	}
-
 	@Override
 	public void init(boolean mode) {
 		try {

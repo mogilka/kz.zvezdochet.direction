@@ -67,8 +67,18 @@ public class CollationService extends ModelService {
 						rsid.close();
 				}
 			}
-			if (collation.isNeedSaveRel())
+			ps.close();
+
+			if (!collation.isCalculated()) {
 				saveParticipants(collation);
+
+				sql = "update " + tableName + " set calculated = 1 where id = ?";
+				ps = Connector.getInstance().getConnection().prepareStatement(sql);
+				ps.setLong(1, model.getId());
+				result = ps.executeUpdate();
+				if (1 == result)
+					collation.setCalculated(true);
+			}
 		} catch (Exception e) {
 			e.printStackTrace();
 		} finally {
