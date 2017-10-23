@@ -36,7 +36,6 @@ import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Table;
-import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
 
@@ -179,19 +178,20 @@ public class CollationPart extends ModelPart implements ICalculable {
 						initAspects(participant.getAspects());
 						initDirections(participant.getDirections());
 						initHouses(participant.getHouses());
+						if (-1 == folder.getSelectionIndex())
+							folder.setSelection(0);
 					}
 				}				
 			}
 		});
 		tvParticipants.addDoubleClickListener(listener);
 
-		//вкладки участников
+		//вкладки участника
 		Group grTabs = new Group(parent, SWT.NONE);
 		folder = new CTabFolder(grTabs, SWT.BORDER);
 		folder.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 		folder.setSimple(false);
 		folder.setUnselectedCloseVisible(false);
-		folder.setSelection(0);
 		Tab[] tabs = initTabs();
 		for (Tab tab : tabs) {
 			CTabItem item = new CTabItem(folder, SWT.CLOSE);
@@ -200,6 +200,23 @@ public class CollationPart extends ModelPart implements ICalculable {
 			item.setControl(tab.control);
 		}
 		folder.pack();
+		GridLayoutFactory.swtDefaults().applyTo(grTabs);
+		GridDataFactory.fillDefaults().grab(true, true).applyTo(grTabs);
+
+		//вкладки фигуранта
+		grTabs = new Group(parent, SWT.NONE);
+		subfolder = new CTabFolder(grTabs, SWT.BORDER);
+		subfolder.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
+		subfolder.setSimple(false);
+		subfolder.setUnselectedCloseVisible(false);
+		tabs = initSubtabs();
+		for (Tab tab : tabs) {
+			CTabItem item = new CTabItem(subfolder, SWT.CLOSE);
+			item.setText(tab.name);
+			item.setImage(tab.image);
+			item.setControl(tab.control);
+		}
+		subfolder.pack();
 		GridLayoutFactory.swtDefaults().applyTo(grTabs);
 		GridDataFactory.fillDefaults().grab(true, true).applyTo(grTabs);
 
@@ -349,6 +366,7 @@ public class CollationPart extends ModelPart implements ICalculable {
 					case 5: return member.isSave() ? CHECKED : UNCHECKED;
 					case 6: return member.isFoul() ? CHECKED : UNCHECKED;
 					case 7: return member.isSubstitute() ? CHECKED : UNCHECKED;
+					case 8: return member.isInjury() ? CHECKED : UNCHECKED;
 				}
 				return null;
 			}
@@ -382,6 +400,9 @@ public class CollationPart extends ModelPart implements ICalculable {
 		initAspects(null);
 		initDirections(null);
 		initHouses(null);
+		initSubaspects(null);
+		initSubdirections(null);
+		initSubhouses(null);
 	}
 
 	@Override
@@ -463,6 +484,7 @@ public class CollationPart extends ModelPart implements ICalculable {
 				case 5: return member.isSave();
 				case 6: return member.isFoul();
 				case 7: return member.isSubstitute();
+				case 8: return member.isInjury();
 	        }
 	        return null;
 	    }
@@ -476,7 +498,8 @@ public class CollationPart extends ModelPart implements ICalculable {
 				case 4: member.setMiss(val); break;
 				case 5: member.setSave(val); break;
 				case 6: member.setFoul(val); break;
-				case 7: member.setSubstitute(val);
+				case 7: member.setSubstitute(val); break;
+				case 8: member.setInjury(val);
 	        }
 	        viewer.update(element, null);
 	    }
@@ -564,7 +587,8 @@ public class CollationPart extends ModelPart implements ICalculable {
 			"Промах",
 			"Сэйв",
 			"Фол",
-			"Замена" };
+			"Замена",
+			"Травма" };
 		int i = -1;
 		for (String column : columns) {
 			TableViewerColumn tableColumn = new TableViewerColumn(tvMembers, SWT.NONE);
@@ -576,29 +600,24 @@ public class CollationPart extends ModelPart implements ICalculable {
 		}
 		tvMembers.setContentProvider(new ArrayContentProvider());
 		tvMembers.setLabelProvider(getMemberProvider());
-
 		ListSelectionListener listener = new ListSelectionListener();
-		tvMembers.addSelectionChangedListener(listener);
+		tvMembers.addSelectionChangedListener(new ISelectionChangedListener() {
+			@Override
+			public void selectionChanged(SelectionChangedEvent event) {
+				if (!event.getSelection().isEmpty()) {
+					IStructuredSelection sel = (IStructuredSelection)event.getSelection();
+					if (sel.getFirstElement() != null) {
+						Member member = (Member)sel.getFirstElement();
+						initSubaspects(member.getAspects());
+						initSubdirections(member.getDirections());
+						initSubhouses(member.getHouses());
+						if (-1 == subfolder.getSelectionIndex())
+							subfolder.setSelection(0);
+					}
+				}				
+			}
+		});
 		tvMembers.addDoubleClickListener(listener);
-
-		//вкладки фигуранта
-		Group grTabs = new Group(grMembers, SWT.NONE);
-		subfolder = new CTabFolder(grTabs, SWT.BORDER);
-		subfolder.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
-		subfolder.setSimple(false);
-		subfolder.setUnselectedCloseVisible(false);
-		subfolder.setSelection(0);
-		Tab[] subtabs = initSubtabs();
-		for (Tab subtab : subtabs) {
-			CTabItem item = new CTabItem(subfolder, SWT.CLOSE);
-			item.setText(subtab.name);
-			item.setImage(subtab.image);
-			item.setControl(subtab.control);
-		}
-		subfolder.pack();
-		GridLayoutFactory.swtDefaults().applyTo(grTabs);
-		GridDataFactory.fillDefaults().grab(true, true).applyTo(grTabs);
-
 		tab.control = grMembers;
 		tabs[0] = tab;
 
@@ -698,68 +717,83 @@ public class CollationPart extends ModelPart implements ICalculable {
 		Tab tab = new Tab();
 		tab.name = "Аспекты";
 		tab.image = AbstractUIPlugin.imageDescriptorFromPlugin("kz.zvezdochet", "icons/aspect.gif").createImage();
-		Group grSubaspects = new Group(subfolder, SWT.NONE);
-		Object[] titles = {
+		Group grAspects = new Group(subfolder, SWT.NONE);
+	    tvSubaspects = new TableViewer(grAspects, SWT.BORDER | SWT.FULL_SELECTION);
+	    Table table = tvSubaspects.getTable();
+	    table.setHeaderVisible(true);
+	    table.setLinesVisible(true);
+		table.setSize(grAspects.getSize());
+		GridDataFactory.fillDefaults().align(SWT.FILL, SWT.FILL).grab(true, true).applyTo(table);
+		String[] titles = {
 			"Планета",
 			"Аспект",
 			"Планета"
 		};
-		Table table = new Table(grSubaspects, SWT.BORDER | SWT.V_SCROLL);
-		table.setLinesVisible(true);
-		table.setHeaderVisible(true);
-		table.setSize(grSubaspects.getSize());
-		GridDataFactory.fillDefaults().align(SWT.FILL, SWT.FILL).grab(true, true).applyTo(table);
-		for (Object title : titles) {
-			TableColumn column = new TableColumn(table, SWT.NONE);
-			column.setText(title.toString());
-		}	
-		tab.control = grSubaspects;
-		GridLayoutFactory.swtDefaults().applyTo(grSubaspects);
-		GridDataFactory.fillDefaults().grab(true, true).applyTo(grSubaspects);
+		for (String column : titles) {
+			TableViewerColumn tableColumn = new TableViewerColumn(tvSubaspects, SWT.NONE);
+			tableColumn.getColumn().setText(column);		
+			tableColumn.getColumn().addListener(SWT.Selection, TableSortListenerFactory.getListener(
+				TableSortListenerFactory.STRING_COMPARATOR));
+		}
+		tvSubaspects.setContentProvider(new ArrayContentProvider());
+		tvSubaspects.setLabelProvider(new AspectLabelProvider());
+		tab.control = grAspects;
+		GridLayoutFactory.swtDefaults().applyTo(grAspects);
+		GridDataFactory.fillDefaults().grab(true, true).applyTo(grAspects);
 		tabs[0] = tab;
 		
 		//дирекции
 		tab = new Tab();
 		tab.name = "Дирекции";
 		tab.image = AbstractUIPlugin.imageDescriptorFromPlugin("kz.zvezdochet.direction", "icons/direction.gif").createImage();
-		Group grSubdirections = new Group(subfolder, SWT.NONE);
+		Group grDirections = new Group(subfolder, SWT.NONE);
+	    tvSubdirections = new TableViewer(grDirections, SWT.BORDER | SWT.FULL_SELECTION);
+	    table = tvSubdirections.getTable();
+	    table.setHeaderVisible(true);
+	    table.setLinesVisible(true);
+		table.setSize(grDirections.getSize());
+		GridDataFactory.fillDefaults().align(SWT.FILL, SWT.FILL).grab(true, true).applyTo(table);
 		String[] titles2 = {
 			"Планета",
 			"Аспект",
 			"Дом"};
-		table = new Table(grSubdirections, SWT.BORDER | SWT.V_SCROLL);
-		table.setLinesVisible(true);
-		table.setHeaderVisible(true);
-		table.setSize(grSubdirections.getSize());
-		GridDataFactory.fillDefaults().align(SWT.FILL, SWT.FILL).grab(true, true).applyTo(table);
 		for (String title : titles2) {
-			TableColumn column = new TableColumn (table, SWT.NONE);
-			column.setText(title);
+			TableViewerColumn tableColumn = new TableViewerColumn(tvSubdirections, SWT.NONE);
+			tableColumn.getColumn().setText(title);
+			tableColumn.getColumn().addListener(SWT.Selection, TableSortListenerFactory.getListener(
+				TableSortListenerFactory.STRING_COMPARATOR));
 		}
-		tab.control = grSubdirections;
-		GridLayoutFactory.swtDefaults().applyTo(grSubdirections);
-		GridDataFactory.fillDefaults().grab(true, true).applyTo(grSubdirections);
+		tvSubdirections.setContentProvider(new ArrayContentProvider());
+		tvSubdirections.setLabelProvider(new AspectLabelProvider());
+		tab.control = grDirections;
+		GridLayoutFactory.swtDefaults().applyTo(grDirections);
+		GridDataFactory.fillDefaults().grab(true, true).applyTo(grDirections);
 		tabs[1] = tab;
 		
 		//дома
 		tab = new Tab();
 		tab.name = "Дома";
 		tab.image = AbstractUIPlugin.imageDescriptorFromPlugin("kz.zvezdochet", "icons/home.gif").createImage();
-		Group grSubhouses = new Group(subfolder, SWT.NONE);
-		Object[] titles3 = {
+		Group grHouses = new Group(subfolder, SWT.NONE);
+	    tvSubhouses = new TableViewer(grHouses, SWT.BORDER | SWT.FULL_SELECTION);
+	    table = tvHouses.getTable();
+	    table.setHeaderVisible(true);
+	    table.setLinesVisible(true);
+		table.setSize(grHouses.getSize());
+		GridDataFactory.fillDefaults().align(SWT.FILL, SWT.FILL).grab(true, true).applyTo(table);
+		String[] titles3 = {
 			"Планета",
 			"Дом"
 		};
-		table = new Table(grSubhouses, SWT.BORDER | SWT.V_SCROLL);
-		table.setLinesVisible(true);
-		table.setHeaderVisible(true);
-		table.setSize(grSubhouses.getSize());
-		GridDataFactory.fillDefaults().align(SWT.FILL, SWT.FILL).grab(true, true).applyTo(table);
-		for (Object title : titles3) {
-			TableColumn column = new TableColumn(table, SWT.NONE);
-			column.setText(title.toString());
+		for (String title : titles3) {
+			TableViewerColumn tableColumn = new TableViewerColumn(tvSubhouses, SWT.NONE);
+			tableColumn.getColumn().setText(title);
+			tableColumn.getColumn().addListener(SWT.Selection, TableSortListenerFactory.getListener(
+				TableSortListenerFactory.STRING_COMPARATOR));
 		}	
-		tab.control = grSubhouses;
+		tvSubhouses.setContentProvider(new ArrayContentProvider());
+		tvSubhouses.setLabelProvider(new PlanetHouseLabelProvider());
+		tab.control = grHouses;
 		tabs[2] = tab;
 		return tabs;
 	}
@@ -815,6 +849,66 @@ public class CollationPart extends ModelPart implements ICalculable {
 				table.removeAll();
 			else
 				tvHouses.setInput(data);
+			for (int i = 0; i < table.getColumnCount(); i++)
+				table.getColumn(i).pack();
+		} catch(Exception e) {
+			e.printStackTrace();
+		} finally {
+			showBusy(false);
+		}
+	}
+
+	/**
+	 * Инициализация таблицы аспектов фигуранта
+	 */
+	private void initSubaspects(List<SkyPointAspect> data) {
+		try {
+			showBusy(true);
+			Table table = tvSubaspects.getTable();
+			if (null == data)
+				table.removeAll();
+			else
+				tvSubaspects.setInput(data);
+			for (int i = 0; i < table.getColumnCount(); i++)
+				table.getColumn(i).pack();
+		} catch(Exception e) {
+			e.printStackTrace();
+		} finally {
+			showBusy(false);
+		}
+	}
+
+	/**
+	 * Инициализация таблицы дирекций фигуранта
+	 */
+	private void initSubdirections(List<SkyPointAspect> data) {
+		try {
+			showBusy(true);
+			Table table = tvSubdirections.getTable();
+			if (null == data)
+				table.removeAll();
+			else
+				tvSubdirections.setInput(data);
+			for (int i = 0; i < table.getColumnCount(); i++)
+				table.getColumn(i).pack();
+		} catch(Exception e) {
+			e.printStackTrace();
+		} finally {
+			showBusy(false);
+		}
+	}
+
+	/**
+	 * Инициализация таблицы домов фигуранта
+	 */
+	private void initSubhouses(List<PlanetHouseText> data) {
+		try {
+			showBusy(true);
+			Table table = tvSubhouses.getTable();
+			if (null == data)
+				table.removeAll();
+			else
+				tvSubhouses.setInput(data);
 			for (int i = 0; i < table.getColumnCount(); i++)
 				table.getColumn(i).pack();
 		} catch(Exception e) {

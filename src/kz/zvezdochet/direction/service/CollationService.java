@@ -217,7 +217,7 @@ public class CollationService extends ModelService {
 
 				//сохраняем фигурантов
 				table = new MemberService().getTableName();
-				sql = "insert into " + table + "(eventid, participantid, hit, pass, miss, save, foul, substitute) values(?,?,?,?,?,?,?,?)";
+				sql = "insert into " + table + "(eventid, participantid, hit, pass, miss, save, foul, substitute, injury) values(?,?,?,?,?,?,?,?,?)";
 				ps = conn.prepareStatement(sql);
 				int batchcnt = 0;
 				for (Participant part : participants) {
@@ -232,6 +232,7 @@ public class CollationService extends ModelService {
 							ps.setInt(6, member.isSave() ? 1 : 0);
 							ps.setInt(7, member.isFoul() ? 1 : 0);
 							ps.setInt(8, member.isSubstitute() ? 1 : 0);
+							ps.setInt(9, member.isInjury() ? 1 : 0);
 							ps.addBatch();
 							++batchcnt;
 						}

@@ -176,4 +176,17 @@ public class Member extends Model {
 	public void setParticipantid(long participantid) {
 		this.participantid = participantid;
 	}
+
+	/**
+	 * Признак травмы
+	 */
+	private boolean injury = false;
+
+	public boolean isInjury() {
+		return injury;
+	}
+
+	public void setInjury(boolean injury) {
+		this.injury = injury;
+	}
 }

@@ -52,6 +52,8 @@ public class MemberService extends ModelService {
 		model.setFoul(s.equals("1") ? true : false);
 		s = rs.getString("substitute");
 		model.setSubstitute(s.equals("1") ? true : false);
+		s = rs.getString("injury");
+		model.setInjury(s.equals("1") ? true : false);
 		return model;
 	}
 
