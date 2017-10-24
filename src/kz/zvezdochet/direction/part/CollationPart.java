@@ -6,6 +6,12 @@ import java.util.List;
 import javax.annotation.PostConstruct;
 import javax.inject.Inject;
 
+import org.eclipse.core.commands.Command;
+import org.eclipse.core.commands.ExecutionEvent;
+import org.eclipse.core.commands.ExecutionException;
+import org.eclipse.core.commands.NotEnabledException;
+import org.eclipse.core.commands.NotHandledException;
+import org.eclipse.core.commands.common.NotDefinedException;
 import org.eclipse.jface.bindings.keys.KeyStroke;
 import org.eclipse.jface.fieldassist.ContentProposalAdapter;
 import org.eclipse.jface.fieldassist.IContentProposal;
@@ -27,6 +33,8 @@ import org.eclipse.jface.viewers.TableViewerColumn;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.CTabFolder;
 import org.eclipse.swt.custom.CTabItem;
+import org.eclipse.swt.events.ModifyEvent;
+import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.layout.GridData;
@@ -35,9 +43,16 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.Text;
+import org.eclipse.swt.widgets.ToolBar;
+import org.eclipse.swt.widgets.ToolItem;
+import org.eclipse.ui.PlatformUI;
+import org.eclipse.ui.commands.ICommandService;
+import org.eclipse.ui.handlers.IHandlerService;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
+import org.eclipse.ui.services.IServiceLocator;
 
 import kz.zvezdochet.analytics.bean.PlanetHouseText;
 import kz.zvezdochet.analytics.provider.PlanetHouseLabelProvider;
@@ -85,6 +100,7 @@ public class CollationPart extends ModelPart implements ICalculable {
 	private TableViewer tvSubaspects;
 	private TableViewer tvSubdirections;
 	private TableViewer tvSubhouses;
+	private ToolItem tiMembers;
 
 	@PostConstruct @Override
 	public View create(Composite parent) {
@@ -100,6 +116,12 @@ public class CollationPart extends ModelPart implements ICalculable {
 		lb.setText("Описание");
 		txDescription = new Text(parent, SWT.BORDER);
 		txDescription.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false));
+		txDescription.addModifyListener(new ModifyListener() {
+			@Override
+			public void modifyText(ModifyEvent e) {
+				part.setDirty(true);
+			}
+		});
 
 		EventProposalProvider proposalProvider = new EventProposalProvider(new Object[] {0});
 	    ContentProposalAdapter adapter = new ContentProposalAdapter(
@@ -192,9 +214,72 @@ public class CollationPart extends ModelPart implements ICalculable {
 		folder.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 		folder.setSimple(false);
 		folder.setUnselectedCloseVisible(false);
+
+		ToolBar toolBar = new ToolBar(folder, SWT.FLAT);
+		tiMembers = new ToolItem(toolBar, SWT.PUSH);
+		tiMembers.setImage(AbstractUIPlugin.imageDescriptorFromPlugin("kz.zvezdochet.core", "icons/applyElement.gif").createImage());
+		tiMembers.setToolTipText("Сохранить изменнённых фигурантов");
+		tiMembers.setEnabled(false);
+		tiMembers.addListener(SWT.MouseDown, new Listener() {
+			@Override
+			public void handleEvent(org.eclipse.swt.widgets.Event event) {
+				try {
+					IHandlerService hservice = (IHandlerService)((IServiceLocator)PlatformUI.getWorkbench()).getService(IHandlerService.class);
+					ICommandService cservice = (ICommandService)((IServiceLocator)PlatformUI.getWorkbench()).getService(IHandlerService.class);
+					Command command = cservice.getCommand("kz.zvezdochet.core.command.savemodel");
+					ExecutionEvent executionEvent = hservice.createExecutionEvent(command, new org.eclipse.swt.widgets.Event());
+//					((IEvaluationContext) executionEvent.getApplicationContext()).addVariable(ISources.ACTIVE_CURRENT_SELECTION_NAME, new StructuredSelection(getInputFile()));
+					command.executeWithChecks(executionEvent);
+				} catch (ExecutionException e) {
+					e.printStackTrace();
+				} catch (NotDefinedException e) {
+					e.printStackTrace();
+				} catch (NotEnabledException e) {
+					e.printStackTrace();
+				} catch (NotHandledException e) {
+					e.printStackTrace();
+				}
+				
+//				Parameterization[] params = new Parameterization[] {
+//					new Parameterization(command.getParameter(Constants.COMMAND_PARAM), "true")
+//				};
+//				ParameterizedCommand parametrizedCommand = new ParameterizedCommand(command, params);
+//				hservice.executeCommand(parametrizedCommand, null);
+
+//				ParameterizedCommand openCommand = commandService.createCommand("your-command-ID", null);
+//				 handlerService.executeHandler(openCommand);
+				
+////				@Inject
+//				private ECommand commandService;
+////				@Inject
+//				private EHandlerService handlerService;
+//				Command cmd = commandService.getCommand(command);
+//				    ParameterizedCommand pCmd = new ParameterizedCommand(cmd, null);
+//				    if (handlerService.canExecute(pCmd)) {
+//				      handlerService.executeHandler(pCmd);
+//				    }
+
+//				// Retrieve the corresponding Services
+//				IHandlerService handlerService = (IHandlerService) getSite().getService(IHandlerService.class);
+//				ICommandService commandService = (ICommandService) getSite().getService(ICommandService.class);
+//
+//				// Retrieve the command
+//				Command generateCmd = commandService.getCommand("my_command_id");
+//
+//				// Create an ExecutionEvent and specify the IFile associated
+//				ExecutionEvent executionEvent = handlerService.createExecutionEvent(generateCmd, new Event());
+//				((IEvaluationContext) executionEvent.getApplicationContext()).addVariable(ISources.ACTIVE_CURRENT_SELECTION_NAME, new StructuredSelection(getInputFile()));
+//
+//				// Launch the command
+//				generateCmd.executeWithChecks(executionEvent);
+			}
+		});
+		folder.setTopRight(toolBar);
+		folder.setTabHeight(Math.max(toolBar.computeSize(SWT.DEFAULT, SWT.DEFAULT).y, folder.getTabHeight()));
+
 		Tab[] tabs = initTabs();
 		for (Tab tab : tabs) {
-			CTabItem item = new CTabItem(folder, SWT.CLOSE);
+			CTabItem item = new CTabItem(folder, SWT.NONE);
 			item.setText(tab.name);
 			item.setImage(tab.image);
 			item.setControl(tab.control);
@@ -211,7 +296,7 @@ public class CollationPart extends ModelPart implements ICalculable {
 		subfolder.setUnselectedCloseVisible(false);
 		tabs = initSubtabs();
 		for (Tab tab : tabs) {
-			CTabItem item = new CTabItem(subfolder, SWT.CLOSE);
+			CTabItem item = new CTabItem(subfolder, SWT.NONE);
 			item.setText(tab.name);
 			item.setImage(tab.image);
 			item.setControl(tab.control);
@@ -246,7 +331,7 @@ public class CollationPart extends ModelPart implements ICalculable {
 				participant.setMembers(members);
 				tvMembers.add(event);
 				tvMembers.setSelection(new StructuredSelection(event));
-				((Collation)model).setCalculated(false);
+				tiMembers.setEnabled(true);
 			}				
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -281,6 +366,7 @@ public class CollationPart extends ModelPart implements ICalculable {
 					tvParticipants.add(event);
 					tvParticipants.setSelection(new StructuredSelection(event));
 					((Collation)model).setCalculated(false);
+					part.setDirty(true);
 				}
 			}
 		} catch (DataAccessException e) {
@@ -502,7 +588,7 @@ public class CollationPart extends ModelPart implements ICalculable {
 				case 8: member.setInjury(val);
 	        }
 	        viewer.update(element, null);
-	        member.getParticipant().getCollation().setCalculated(false);
+	        tiMembers.setEnabled(true);
 	    }
 	}
 
@@ -540,6 +626,7 @@ public class CollationPart extends ModelPart implements ICalculable {
 			participant.setWin((Boolean)value);
 	        viewer.update(element, null);
 	        participant.getCollation().setCalculated(false);
+	        part.setDirty(true);
 	    }
 	}
 
