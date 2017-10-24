@@ -407,7 +407,7 @@ public class CollationPart extends ModelPart implements ICalculable {
 
 	@Override
 	public void syncModel(int mode) throws Exception {
-		// TODO Auto-generated method stub
+//		 tvParticipants.getInput()
 	}
 
 	/**
@@ -502,6 +502,7 @@ public class CollationPart extends ModelPart implements ICalculable {
 				case 8: member.setInjury(val);
 	        }
 	        viewer.update(element, null);
+	        member.getParticipant().getCollation().setCalculated(false);
 	    }
 	}
 
@@ -538,6 +539,7 @@ public class CollationPart extends ModelPart implements ICalculable {
 	        Participant participant = (Participant)element;
 			participant.setWin((Boolean)value);
 	        viewer.update(element, null);
+	        participant.getCollation().setCalculated(false);
 	    }
 	}
 

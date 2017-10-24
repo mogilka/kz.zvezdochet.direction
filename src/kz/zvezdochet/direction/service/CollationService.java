@@ -8,7 +8,9 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
+import kz.zvezdochet.analytics.bean.PlanetHouseText;
 import kz.zvezdochet.bean.Event;
+import kz.zvezdochet.bean.SkyPointAspect;
 import kz.zvezdochet.core.bean.Model;
 import kz.zvezdochet.core.service.DataAccessException;
 import kz.zvezdochet.core.service.ModelService;
@@ -43,7 +45,7 @@ public class CollationService extends ModelService {
 					"calculated = ?, " +
 					"eventid = ?, " +
 					"description = ?, " +
-					"created_at = ?, " +
+					"created_at = ? " +
 					"where id = ?";
 			ps = Connector.getInstance().getConnection().prepareStatement(sql);
 			ps.setInt(1, collation.isCalculated() ? 1 : 0);
@@ -186,44 +188,171 @@ public class CollationService extends ModelService {
 	 */
 	public void saveParticipants(Collation model) {
         PreparedStatement ps = null;
+        ResultSet rs = null;
+        int result = -1;
 		try {
-			String table = new ParticipantService().getTableName();
-			String sql = "delete from " + table + " where collationid = " + model.getId();
+			String ptable = new ParticipantService().getTableName();
+			String mtable = new MemberService().getTableName();
+			String patable = getPartAspectTableName();
+			String pdtable = getPartDirectionTableName();
+			String phtable = getPartHouseTableName();
+			String matable = getMemberAspectTableName();
+			String mdtable = getMemberDirectionTableName();
+			String mhtable = getMemberHouseTableName();
 			Connection conn = Connector.getInstance().getConnection();
-			ps = conn.prepareStatement(sql);
-			ps.execute();
-			ps.close();
 
+			//участники
 			List<Participant> participants = model.getParticipants();
 			if (participants != null && participants.size() > 0) {
 				conn.setAutoCommit(false);
-				//сохраняем участников
-				sql = "insert into " + table + "(collationid, eventid, win) values(?,?,?)";
-				ps = conn.prepareStatement(sql);
+
 				for (Participant part : participants) {
+					String sql = "select * from " + ptable + " where id = ?";
+					ps = conn.prepareStatement(sql);
+					ps.setLong(1, part.getId());
+					rs = ps.executeQuery();
+					boolean exists = rs.next();
+					if (exists)
+						sql = "update " + ptable + " set " +
+							"collationid = ?, " +
+							"eventid = ?, " +
+							"win = ? " +
+							"where id = ?";
+					else
+						sql = "insert into " + ptable + " values(0,?,?,?)";
+					ps.close();
+
+					ps = conn.prepareStatement(sql);
 					ps.setLong(1, model.getId());
 					ps.setLong(2, part.getEvent().getId());
 					ps.setInt(3, part.isWin() ? 1 : 0);
-					ps.addBatch();
-				}
-				int[] modified = ps.executeBatch();
-				ps.close();
-				for (int i = 0; i < modified.length; i++) {
-				    if (-2 == modified[i])
-				    	System.out.println("Execution " + i + " failed: unknown number of rows modified");
-				    else
-				    	System.out.println("Execution " + i + " success: " + modified[i] + " rows modified");
-				}
+					if (exists) 
+						ps.setLong(4, part.getId());
+					result = ps.executeUpdate();
+					if (1 == result) {
+						if (exists) { 
+							Long autoIncKeyFromApi = -1L;
+							ResultSet rsid = ps.getGeneratedKeys();
+							if (rsid.next()) {
+								autoIncKeyFromApi = rsid.getLong(1);
+								part.setId(autoIncKeyFromApi);
+								System.out.println(autoIncKeyFromApi + "\t" + ps);
+							}
+							if (rsid != null)
+								rsid.close();
+						}
+					}
+					ps.close();
 
-				//сохраняем фигурантов
-				table = new MemberService().getTableName();
-				sql = "insert into " + table + "(eventid, participantid, hit, pass, miss, save, foul, substitute, injury) values(?,?,?,?,?,?,?,?,?)";
-				ps = conn.prepareStatement(sql);
-				int batchcnt = 0;
-				for (Participant part : participants) {
+					//аспекты
+					sql = "delete from " + patable + " where participantid = ?";
+					ps.setLong(1, part.getId());
+					ps = conn.prepareStatement(sql);
+					ps.execute();
+					ps.close();
+
+					List<SkyPointAspect> aspects = part.getAspects();
+					if (aspects != null && aspects.size() > 0) {
+						sql = "insert into " + patable + "(participantid, planet1id, planet2id, aspectid) values(?,?,?,?)";
+						ps = conn.prepareStatement(sql);
+						for (SkyPointAspect aspect : aspects) {
+							ps.setLong(1, part.getId());
+							ps.setLong(2, aspect.getSkyPoint1().getId());
+							ps.setLong(3, aspect.getSkyPoint2().getId());
+							ps.setLong(4, aspect.getAspect().getId());
+							ps.addBatch();
+						}
+						int[] modified = ps.executeBatch();
+						ps.close();
+						for (int i = 0; i < modified.length; i++) {
+						    if (-2 == modified[i])
+						    	System.out.println("Execution " + i + " failed: unknown number of rows modified");
+						    else
+						    	System.out.println("Execution " + i + " success: " + modified[i] + " rows modified");
+						}
+					}
+
+					//дирекции
+					sql = "delete from " + pdtable + " where participantid = ?";
+					ps.setLong(1, part.getId());
+					ps = conn.prepareStatement(sql);
+					ps.execute();
+					ps.close();
+
+					List<SkyPointAspect> dirs = part.getDirections();
+					if (dirs != null && dirs.size() > 0) {
+						sql = "insert into " + pdtable + "(participantid, planetid, houseid, aspectid) values(?,?,?,?)";
+						ps = conn.prepareStatement(sql);
+						for (SkyPointAspect aspect : dirs) {
+							ps.setLong(1, part.getId());
+							ps.setLong(2, aspect.getSkyPoint1().getId());
+							ps.setLong(3, aspect.getSkyPoint2().getId());
+							ps.setLong(4, aspect.getAspect().getId());
+							ps.addBatch();
+						}
+						int[] modified = ps.executeBatch();
+						ps.close();
+						for (int i = 0; i < modified.length; i++) {
+						    if (-2 == modified[i])
+						    	System.out.println("Execution " + i + " failed: unknown number of rows modified");
+						    else
+						    	System.out.println("Execution " + i + " success: " + modified[i] + " rows modified");
+						}
+					}
+
+					//дома
+					sql = "delete from " + phtable + " where participantid = ?";
+					ps.setLong(1, part.getId());
+					ps = conn.prepareStatement(sql);
+					ps.execute();
+					ps.close();
+
+					List<PlanetHouseText> houses = part.getHouses();
+					if (houses != null && houses.size() > 0) {
+						sql = "insert into " + phtable + "(participantid, planetid, houseid) values(?,?,?)";
+						ps = conn.prepareStatement(sql);
+						for (PlanetHouseText aspect : houses) {
+							ps.setLong(1, part.getId());
+							ps.setLong(2, aspect.getPlanet().getId());
+							ps.setLong(3, aspect.getHouse().getId());
+							ps.addBatch();
+						}
+						int[] modified = ps.executeBatch();
+						ps.close();
+						for (int i = 0; i < modified.length; i++) {
+						    if (-2 == modified[i])
+						    	System.out.println("Execution " + i + " failed: unknown number of rows modified");
+						    else
+						    	System.out.println("Execution " + i + " success: " + modified[i] + " rows modified");
+						}
+					}
+
+					//фигуранты
 					List<Member> members = part.getMembers();
 					if (members != null && members.size() > 0) {
 						for (Member member : members) {
+							sql = "select * from " + mtable + " where id = ?";
+							ps = Connector.getInstance().getConnection().prepareStatement(sql);
+							ps.setLong(1, member.getId());
+							rs = ps.executeQuery();
+							exists = rs.next();
+							if (exists)
+								sql = "update " + mtable + " set " +
+									"eventid = ?, " +
+									"participantid = ?, " +
+									"hit = ?, " +
+									"pass = ?, " +
+									"miss = ?, " +
+									"save = ?, " +
+									"foul = ?, " +
+									"substitute = ?, " +
+									"injury = ? " +
+									"where id = ?";
+							else
+								sql = "insert into " + mtable + " values(0,?,?,?,?,?,?,?,?,?)";
+							ps.close();
+
+							ps = conn.prepareStatement(sql);
 							ps.setLong(1, member.getEvent().getId());
 							ps.setLong(2, part.getId());
 							ps.setInt(3, member.isHit() ? 1 : 0);
@@ -233,15 +362,109 @@ public class CollationService extends ModelService {
 							ps.setInt(7, member.isFoul() ? 1 : 0);
 							ps.setInt(8, member.isSubstitute() ? 1 : 0);
 							ps.setInt(9, member.isInjury() ? 1 : 0);
-							ps.addBatch();
-							++batchcnt;
+							if (exists) 
+								ps.setLong(10, member.getId());
+							result = ps.executeUpdate();
+							if (1 == result) {
+								if (exists) { 
+									Long autoIncKeyFromApi = -1L;
+									ResultSet rsid = ps.getGeneratedKeys();
+									if (rsid.next()) {
+										autoIncKeyFromApi = rsid.getLong(1);
+										member.setId(autoIncKeyFromApi);
+										System.out.println(autoIncKeyFromApi + "\t" + ps);
+									}
+									if (rsid != null)
+										rsid.close();
+								}
+							}
+							ps.close();
+							
+							//аспекты
+							sql = "delete from " + matable + " where memberid = ?";
+							ps.setLong(1, member.getId());
+							ps = conn.prepareStatement(sql);
+							ps.execute();
+							ps.close();
+
+							aspects = member.getAspects();
+							if (aspects != null && aspects.size() > 0) {
+								sql = "insert into " + matable + "(memberid, planet1id, planet2id, aspectid) values(?,?,?,?)";
+								ps = conn.prepareStatement(sql);
+								for (SkyPointAspect aspect : aspects) {
+									ps.setLong(1, member.getId());
+									ps.setLong(2, aspect.getSkyPoint1().getId());
+									ps.setLong(3, aspect.getSkyPoint2().getId());
+									ps.setLong(4, aspect.getAspect().getId());
+									ps.addBatch();
+								}
+								int[] modified = ps.executeBatch();
+								ps.close();
+								for (int i = 0; i < modified.length; i++) {
+								    if (-2 == modified[i])
+								    	System.out.println("Execution " + i + " failed: unknown number of rows modified");
+								    else
+								    	System.out.println("Execution " + i + " success: " + modified[i] + " rows modified");
+								}
+							}
+
+							//дирекции
+							sql = "delete from " + mdtable + " where memberid = ?";
+							ps.setLong(1, member.getId());
+							ps = conn.prepareStatement(sql);
+							ps.execute();
+							ps.close();
+
+							dirs = member.getDirections();
+							if (dirs != null && dirs.size() > 0) {
+								sql = "insert into " + mdtable + "(memberid, planetid, houseid, aspectid) values(?,?,?,?)";
+								ps = conn.prepareStatement(sql);
+								for (SkyPointAspect aspect : dirs) {
+									ps.setLong(1, member.getId());
+									ps.setLong(2, aspect.getSkyPoint1().getId());
+									ps.setLong(3, aspect.getSkyPoint2().getId());
+									ps.setLong(4, aspect.getAspect().getId());
+									ps.addBatch();
+								}
+								int[] modified = ps.executeBatch();
+								ps.close();
+								for (int i = 0; i < modified.length; i++) {
+								    if (-2 == modified[i])
+								    	System.out.println("Execution " + i + " failed: unknown number of rows modified");
+								    else
+								    	System.out.println("Execution " + i + " success: " + modified[i] + " rows modified");
+								}
+							}
+
+							//дома
+							sql = "delete from " + mhtable + " where memberid = ?";
+							ps.setLong(1, member.getId());
+							ps = conn.prepareStatement(sql);
+							ps.execute();
+							ps.close();
+
+							houses = member.getHouses();
+							if (houses != null && houses.size() > 0) {
+								sql = "insert into " + mhtable + "(memberid, planetid, houseid) values(?,?,?)";
+								ps = conn.prepareStatement(sql);
+								for (PlanetHouseText aspect : houses) {
+									ps.setLong(1, member.getId());
+									ps.setLong(2, aspect.getPlanet().getId());
+									ps.setLong(3, aspect.getHouse().getId());
+									ps.addBatch();
+								}
+								int[] modified = ps.executeBatch();
+								ps.close();
+								for (int i = 0; i < modified.length; i++) {
+								    if (-2 == modified[i])
+								    	System.out.println("Execution " + i + " failed: unknown number of rows modified");
+								    else
+								    	System.out.println("Execution " + i + " success: " + modified[i] + " rows modified");
+								}
+							}
 						}
 					}
 				}
-				if (batchcnt > 0)
-					modified = ps.executeBatch();
-
-				//TODO сохранять аспекты, дома и дирекции участников и фигурантов
 				conn.commit();
 			}
 		} catch (Exception e) {
@@ -253,5 +476,24 @@ public class CollationService extends ModelService {
 				e.printStackTrace();
 			}
 		}
+	}
+
+	private String getPartAspectTableName() {
+		return "participant_aspects";
+	}
+	private String getPartDirectionTableName() {
+		return "participant_directions";
+	}
+	private String getPartHouseTableName() {
+		return "participant_houses";
+	}
+	private String getMemberAspectTableName() {
+		return "member_aspects";
+	}
+	private String getMemberDirectionTableName() {
+		return "member_directions";
+	}
+	private String getMemberHouseTableName() {
+		return "member_houses";
 	}
 }
