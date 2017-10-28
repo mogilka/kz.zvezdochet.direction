@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.eclipse.e4.core.contexts.Active;
+import org.eclipse.e4.core.di.annotations.CanExecute;
 import org.eclipse.e4.core.di.annotations.Execute;
 import org.eclipse.e4.ui.model.application.ui.basic.MPart;
 
@@ -212,5 +213,17 @@ public class CalcCollationHandler extends Handler {
 		map.put("Дирекции", dirMap);
 		map.put("Дома", houseMap);
 		return map;
+	}
+
+	@CanExecute
+	public boolean canExecute(@Active MPart activePart) {
+		CollationPart collationPart = (CollationPart)activePart.getObject();
+		Collation collation = null;
+		try {
+			collation = (Collation)collationPart.getModel(0, false);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return (collation != null && collation.getId() != null);
 	}
 }

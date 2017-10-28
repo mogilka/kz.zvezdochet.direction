@@ -33,8 +33,8 @@ import org.eclipse.jface.viewers.TableViewerColumn;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.CTabFolder;
 import org.eclipse.swt.custom.CTabItem;
-import org.eclipse.swt.events.ModifyEvent;
-import org.eclipse.swt.events.ModifyListener;
+import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.layout.GridData;
@@ -43,7 +43,6 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Label;
-import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.swt.widgets.ToolBar;
@@ -73,6 +72,7 @@ import kz.zvezdochet.direction.bean.Collation;
 import kz.zvezdochet.direction.bean.Member;
 import kz.zvezdochet.direction.bean.Participant;
 import kz.zvezdochet.direction.provider.AspectLabelProvider;
+import kz.zvezdochet.direction.service.MemberService;
 import kz.zvezdochet.part.ICalculable;
 import kz.zvezdochet.provider.EventProposalProvider;
 import kz.zvezdochet.provider.EventProposalProvider.EventContentProposal;
@@ -116,12 +116,12 @@ public class CollationPart extends ModelPart implements ICalculable {
 		lb.setText("Описание");
 		txDescription = new Text(parent, SWT.BORDER);
 		txDescription.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false));
-		txDescription.addModifyListener(new ModifyListener() {
-			@Override
-			public void modifyText(ModifyEvent e) {
-				part.setDirty(true);
-			}
-		});
+//		txDescription.addModifyListener(new ModifyListener() {
+//			@Override
+//			public void modifyText(ModifyEvent e) {
+//				part.setDirty(true);
+//			}
+//		});
 
 		EventProposalProvider proposalProvider = new EventProposalProvider(new Object[] {0});
 	    ContentProposalAdapter adapter = new ContentProposalAdapter(
@@ -172,6 +172,7 @@ public class CollationPart extends ModelPart implements ICalculable {
 		tbParticipants.setLinesVisible(true);
 
 		String[] columns = new String[] {
+			"№",
 			"Имя",
 			"Дата",
 			"Точность",
@@ -220,24 +221,51 @@ public class CollationPart extends ModelPart implements ICalculable {
 		tiMembers.setImage(AbstractUIPlugin.imageDescriptorFromPlugin("kz.zvezdochet.core", "icons/applyElement.gif").createImage());
 		tiMembers.setToolTipText("Сохранить изменнённых фигурантов");
 		tiMembers.setEnabled(false);
-		tiMembers.addListener(SWT.MouseDown, new Listener() {
+		tiMembers.addSelectionListener(new SelectionListener() {
 			@Override
-			public void handleEvent(org.eclipse.swt.widgets.Event event) {
-				try {
-					IHandlerService hservice = (IHandlerService)((IServiceLocator)PlatformUI.getWorkbench()).getService(IHandlerService.class);
-					ICommandService cservice = (ICommandService)((IServiceLocator)PlatformUI.getWorkbench()).getService(IHandlerService.class);
-					Command command = cservice.getCommand("kz.zvezdochet.core.command.savemodel");
-					ExecutionEvent executionEvent = hservice.createExecutionEvent(command, new org.eclipse.swt.widgets.Event());
-//					((IEvaluationContext) executionEvent.getApplicationContext()).addVariable(ISources.ACTIVE_CURRENT_SELECTION_NAME, new StructuredSelection(getInputFile()));
-					command.executeWithChecks(executionEvent);
-				} catch (ExecutionException e) {
-					e.printStackTrace();
-				} catch (NotDefinedException e) {
-					e.printStackTrace();
-				} catch (NotEnabledException e) {
-					e.printStackTrace();
-				} catch (NotHandledException e) {
-					e.printStackTrace();
+			public void widgetSelected(SelectionEvent se) {
+				if (part.isDirty()) {
+					try {
+						IHandlerService hservice = (IHandlerService)((IServiceLocator)PlatformUI.getWorkbench()).getService(IHandlerService.class);
+						ICommandService cservice = (ICommandService)((IServiceLocator)PlatformUI.getWorkbench()).getService(IHandlerService.class);
+						Command command = cservice.getCommand("kz.zvezdochet.core.command.savemodel");
+						ExecutionEvent executionEvent = hservice.createExecutionEvent(command, new org.eclipse.swt.widgets.Event());
+	//					((IEvaluationContext) executionEvent.getApplicationContext()).addVariable(ISources.ACTIVE_CURRENT_SELECTION_NAME, new StructuredSelection(getInputFile()));
+						command.executeWithChecks(executionEvent);
+					} catch (ExecutionException e) {
+						e.printStackTrace();
+					} catch (NotDefinedException e) {
+						e.printStackTrace();
+					} catch (NotEnabledException e) {
+						e.printStackTrace();
+					} catch (NotHandledException e) {
+						e.printStackTrace();
+					}
+					initParticipants(((Collation)model).getParticipants(), true);
+				}
+
+				IStructuredSelection selected = (IStructuredSelection)tvParticipants.getSelection();
+				if (!selected.isEmpty()) {
+					Participant participant = (Participant)selected.getFirstElement();
+
+					@SuppressWarnings("unchecked")
+					List<Member> members = (List<Member>)tvMembers.getInput();
+					if (members != null && members.size() > 0) {
+						MemberService service = new MemberService();
+						boolean saved = true;
+						for (Member member : members) {
+							member.setParticipant(participant);
+							try {
+								if (null == service.save(member)) {
+									saved = false;
+									break;
+								}
+							} catch (DataAccessException e) {
+								e.printStackTrace();
+							}
+						}
+						tiMembers.setEnabled(!saved);
+					}
 				}
 				
 //				Parameterization[] params = new Parameterization[] {
@@ -273,6 +301,8 @@ public class CollationPart extends ModelPart implements ICalculable {
 //				// Launch the command
 //				generateCmd.executeWithChecks(executionEvent);
 			}
+			@Override
+			public void widgetDefaultSelected(SelectionEvent e) {}
 		});
 		folder.setTopRight(toolBar);
 		folder.setTabHeight(Math.max(toolBar.computeSize(SWT.DEFAULT, SWT.DEFAULT).y, folder.getTabHeight()));
@@ -321,16 +351,18 @@ public class CollationPart extends ModelPart implements ICalculable {
 				DialogUtil.alertError("Задайте сообщество, в которое добавляется участник");
 				return;
 			} else {
-				Event participant = (Event)sel.getFirstElement();
-				List<Event> members = participant.getMembers();
+				Participant participant = (Participant)sel.getFirstElement();
+				List<Member> members = participant.getMembers();
 				if (null == members)
-					members = new ArrayList<Event>();
-				if (members.contains(event))
-					return;
-				members.add(event);
+					members = new ArrayList<Member>();
+				for (Member member : members)
+					if (member.getEvent().getId().equals(event.getId()))
+						return;
+				Member member = new Member(event);
+				members.add(member);
 				participant.setMembers(members);
-				tvMembers.add(event);
-				tvMembers.setSelection(new StructuredSelection(event));
+				tvMembers.add(member);
+				tvMembers.setSelection(new StructuredSelection(member));
 				tiMembers.setEnabled(true);
 			}				
 		} catch (Exception e) {
@@ -363,8 +395,8 @@ public class CollationPart extends ModelPart implements ICalculable {
 					Participant participant = new Participant(event, collation);
 					participants.add(participant);
 					collation.setParticipants(participants);
-					tvParticipants.add(event);
-					tvParticipants.setSelection(new StructuredSelection(event));
+					tvParticipants.add(participant);
+					tvParticipants.setSelection(new StructuredSelection(participant));
 					((Collation)model).setCalculated(false);
 					part.setDirty(true);
 				}
@@ -383,6 +415,10 @@ public class CollationPart extends ModelPart implements ICalculable {
 				DialogUtil.alertError("Выберите событие");
 				return false;
 			}
+			if (tiMembers.isEnabled()) {
+				DialogUtil.alertWarning("Сохраните фигурантов участника");
+				return false;
+			}
 		}
 		return true;
 	}
@@ -394,9 +430,10 @@ public class CollationPart extends ModelPart implements ICalculable {
 				Participant participant = (Participant)element;
 				Event event = participant.getEvent();
 				switch (columnIndex) {
-					case 0: return event.getName();
-					case 1: return DateUtil.formatDateTime(event.getBirth());
-					case 2: return Event.calcs[event.getRectification()];
+					case 0: return (null == participant.getId()) ? "" : participant.getId().toString();
+					case 1: return event.getName();
+					case 2: return DateUtil.formatDateTime(event.getBirth());
+					case 3: return Event.calcs[event.getRectification()];
 				}
 				return null;
 			}
@@ -410,8 +447,8 @@ public class CollationPart extends ModelPart implements ICalculable {
 			}
 			@Override
 			public Color getForeground(Object element, int columnIndex) {
+				Participant participant = (Participant)element;
 				if (2 == columnIndex) {
-					Participant participant = (Participant)element;
 					if (3 == participant.getEvent().getRectification())
 						return Display.getCurrent().getSystemColor(SWT.COLOR_RED);
 				}
@@ -437,8 +474,9 @@ public class CollationPart extends ModelPart implements ICalculable {
 				Member member = (Member)element;
 				Event event = member.getEvent();
 				switch (columnIndex) {
-					case 0: return event.getName();
-					case 1: return DateUtil.formatDateTime(event.getBirth());
+					case 0: return (null == member.getId()) ? "" : member.getId().toString();
+					case 1: return event.getName();
+					case 2: return DateUtil.formatDateTime(event.getBirth());
 				}
 				return null;
 			}
@@ -481,7 +519,7 @@ public class CollationPart extends ModelPart implements ICalculable {
 		else
 			txEvent.setText(collation.getEvent().getName());
 		txDescription.setText(collation.getDescription());
-		initParticipantTable(collation.getParticipants());
+		initParticipants(collation.getParticipants(), false);
 		initMembers(null);
 		initAspects(null);
 		initDirections(null);
@@ -493,19 +531,41 @@ public class CollationPart extends ModelPart implements ICalculable {
 
 	@Override
 	public void syncModel(int mode) throws Exception {
-//		 tvParticipants.getInput()
+		if (!check(mode)) return;
+		model = (null == model) ? new Collation() : model;
+		if (Handler.MODE_SAVE == mode)
+			((Collation)model).setDescription(txDescription.getText());
 	}
 
 	/**
 	 * Инициализация таблицы участников
 	 */
-	private void initParticipantTable(List<Participant> data) {
+	private void initParticipants(List<Participant> data, boolean refresh) {
 		try {
 			showBusy(true);
 			if (null == data)
 				tbParticipants.removeAll();
-			else
-				tvParticipants.setInput(data);
+			else {
+				if (refresh) {
+					@SuppressWarnings("unchecked")
+					List<Participant> participants = (List<Participant>)tvParticipants.getInput();
+					if (null == participants || 0 == participants.size())
+						tvParticipants.setInput(data);
+					else {
+						int sel = tvParticipants.getTable().getSelectionIndex();
+						for (Participant item : data)
+							for (Participant participant : participants) {
+								if (participant.getEvent().getId() == item.getEvent().getId())
+									if (null == participant.getId())
+										participant.setId(item.getId());
+							}
+						tvParticipants.setInput(participants);
+						if (sel >= 0)
+							tvParticipants.getTable().setSelection(sel);
+					}
+				} else
+					tvParticipants.setInput(data);
+			}
 			for (int i = 0; i < tbParticipants.getColumnCount(); i++)
 				tbParticipants.getColumn(i).pack();
 		} catch(Exception e) {
@@ -669,6 +729,7 @@ public class CollationPart extends ModelPart implements ICalculable {
 		tbMembers.setHeaderVisible(true);
 		tbMembers.setLinesVisible(true);
 		String[] columns = new String[] {
+			"№",
 			"Имя",
 			"Дата",
 			"Гол",

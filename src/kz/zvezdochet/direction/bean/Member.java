@@ -189,4 +189,13 @@ public class Member extends Model {
 	public void setInjury(boolean injury) {
 		this.injury = injury;
 	}
+
+	public Member() {
+		super();
+	}
+
+	public Member(Event event) {
+		super();
+		this.event = event;
+	}	
 }

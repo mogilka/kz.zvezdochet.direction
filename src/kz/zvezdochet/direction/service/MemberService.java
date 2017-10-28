@@ -1,5 +1,6 @@
 package kz.zvezdochet.direction.service;
 
+import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -26,7 +27,70 @@ public class MemberService extends ModelService {
 
 	@Override
 	public Model save(Model model) throws DataAccessException {
-		return null;
+		Member member = (Member)model;
+        PreparedStatement ps = null;
+        ResultSet rs = null;
+        int result = -1;
+		try {
+			String sql = "select * from " + tableName + " where id = ?";
+			Connection conn = Connector.getInstance().getConnection();
+			ps = conn.prepareStatement(sql);
+			ps.setLong(1, member.getId() != null ? member.getId() : 0);
+			rs = ps.executeQuery();
+			boolean exists = rs.next();
+			if (exists)
+				sql = "update " + tableName + " set " +
+					"eventid = ?, " +
+					"participantid = ?, " +
+					"hit = ?, " +
+					"pass = ?, " +
+					"miss = ?, " +
+					"save = ?, " +
+					"foul = ?, " +
+					"substitute = ?, " +
+					"injury = ? " +
+					"where id = ?";
+			else
+				sql = "insert into " + tableName + " values(0,?,?,?,?,?,?,?,?,?)";
+			ps.close();
+
+			ps = conn.prepareStatement(sql);
+			ps.setLong(1, member.getEvent().getId());
+			ps.setLong(2, member.getParticipant().getId());
+			ps.setInt(3, member.isHit() ? 1 : 0);
+			ps.setInt(4, member.isPass() ? 1 : 0);
+			ps.setInt(5, member.isMiss() ? 1 : 0);
+			ps.setInt(6, member.isSave() ? 1 : 0);
+			ps.setInt(7, member.isFoul() ? 1 : 0);
+			ps.setInt(8, member.isSubstitute() ? 1 : 0);
+			ps.setInt(9, member.isInjury() ? 1 : 0);
+			if (exists) 
+				ps.setLong(10, member.getId());
+			result = ps.executeUpdate();
+			if (1 == result) {
+				if (exists) { 
+					Long autoIncKeyFromApi = -1L;
+					ResultSet rsid = ps.getGeneratedKeys();
+					if (rsid.next()) {
+						autoIncKeyFromApi = rsid.getLong(1);
+						member.setId(autoIncKeyFromApi);
+						System.out.println(autoIncKeyFromApi + "\t" + ps);
+					}
+					if (rsid != null)
+						rsid.close();
+				}
+			}
+			ps.close();
+		} catch (Exception e) {
+			e.printStackTrace();
+		} finally {
+			try {
+				if (ps != null)	ps.close();
+			} catch (SQLException e) {
+				e.printStackTrace();
+			}
+		}
+		return member;
 	}
 
 	@Override

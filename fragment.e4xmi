@@ -101,7 +101,7 @@
           <children xsi:type="basic:Part" xmi:id="_xgGNoDFkEeavjuhVUd4MzQ" elementId="kz.zvezdochet.direction.part.collation" contributionURI="bundleclass://kz.zvezdochet.direction/kz.zvezdochet.direction.part.CollationPart" label="&#x41f;&#x440;&#x43e;&#x433;&#x43d;&#x43e;&#x437;" iconURI="platform:/plugin/kz.zvezdochet.direction/icons/chart_line.png">
             <toolbar xmi:id="__G6IwDOtEeamVt0DJCGKag" elementId="kz.zvezdochet.direction.toolbar.2">
               <children xsi:type="menu:HandledToolItem" xmi:id="_s1WqsDOyEeamVt0DJCGKag" elementId="kz.zvezdochet.direction.handledtoolitem.savecollation" label="&#x421;&#x43e;&#x445;&#x440;&#x430;&#x43d;&#x438;&#x442;&#x44c;" iconURI="platform:/plugin/kz.zvezdochet.core/icons/applyElement.gif" command="__sAgMDR5Eeabx9tcaBjnJA"/>
-              <children xsi:type="menu:HandledToolItem" xmi:id="_608LADOyEeamVt0DJCGKag" elementId="kz.zvezdochet.direction.handledtoolitem.calcollation" label="&#x420;&#x430;&#x441;&#x447;&#x451;&#x442;" iconURI="platform:/plugin/kz.zvezdochet/icons/calc.png" command="_W7TOMDOyEeamVt0DJCGKag"/>
+              <children xsi:type="menu:HandledToolItem" xmi:id="_608LADOyEeamVt0DJCGKag" elementId="kz.zvezdochet.direction.handledtoolitem.calcollation" label="&#x420;&#x430;&#x441;&#x447;&#x451;&#x442;" iconURI="platform:/plugin/kz.zvezdochet/icons/calc.png" enabled="false" command="_W7TOMDOyEeamVt0DJCGKag"/>
             </toolbar>
           </children>
         </children>
