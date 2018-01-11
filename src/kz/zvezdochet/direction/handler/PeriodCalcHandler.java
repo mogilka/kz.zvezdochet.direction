@@ -111,7 +111,7 @@ public class PeriodCalcHandler extends Handler {
 	        PDFUtil.getMetaData(doc, "Прогноз событий");
 
 	        //раздел
-			Chapter chapter = new ChapterAutoNumber("Общая информация");
+			Chapter chapter = new ChapterAutoNumber(PDFUtil.printHeader(new Paragraph(), "Общая информация"));
 			chapter.setNumberDepth(0);
 
 			//шапка
@@ -259,13 +259,9 @@ public class PeriodCalcHandler extends Handler {
 				}
 				if (times.size() > 0) {
 					String sdfdate = sdf.format(date);
-					chapter = new ChapterAutoNumber(sdfdate);
+					chapter = new ChapterAutoNumber(PDFUtil.printHeader(new Paragraph(), sdfdate));
 					chapter.setNumberDepth(0);
 	
-					p = new Paragraph();
-					PDFUtil.printHeader(p, sdfdate);
-					chapter.add(p);
-
 					for (Map.Entry<Integer, Map<Long, Set<PeriodItem>>> entry : times.entrySet()) {
 						Map <Long, Set<PeriodItem>> items = entry.getValue();
 						if (items != null && items.size() > 0) {
@@ -335,11 +331,8 @@ public class PeriodCalcHandler extends Handler {
 			}
 
 			if (days) {
-				chapter = new ChapterAutoNumber("Диаграммы");
+				chapter = new ChapterAutoNumber(PDFUtil.printHeader(new Paragraph(), "Диаграммы"));
 				chapter.setNumberDepth(0);
-				p = new Paragraph();
-				PDFUtil.printHeader(p, "Диаграммы");
-				chapter.add(p);
 
 				//общая диаграмма
 				TimeSeriesCollection dataset = new TimeSeriesCollection();

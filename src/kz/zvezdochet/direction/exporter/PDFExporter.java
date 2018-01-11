@@ -103,16 +103,12 @@ public class PDFExporter {
 	        PDFUtil.getMetaData(doc, "Прогноз событий");
 
 	        //раздел
-			Chapter chapter = new ChapterAutoNumber("Общая информация");
+			Chapter chapter = new ChapterAutoNumber(PDFUtil.printHeader(new Paragraph(), "Прогноз событий"));
 			chapter.setNumberDepth(0);
 
 			//шапка
-			Paragraph p = new Paragraph();
-			PDFUtil.printHeader(p, "Прогноз событий");
-			chapter.add(p);
-
 			String text = DateUtil.fulldtf.format(event.getBirth());
-			p = new Paragraph(text, font);
+			Paragraph p = new Paragraph(text, font);
 	        p.setAlignment(Element.ALIGN_CENTER);
 			chapter.add(p);
 
@@ -279,12 +275,8 @@ public class PDFExporter {
 			for (Map.Entry<Integer, Map<String, List<SkyPointAspect>>> entry : treeMap.entrySet()) {
 			    int age = entry.getKey();
 			    String agestr = CoreUtil.getAgeString(age);
-				chapter = new ChapterAutoNumber(agestr);
+				chapter = new ChapterAutoNumber(PDFUtil.printHeader(new Paragraph(), agestr));
 				chapter.setNumberDepth(0);
-
-				p = new Paragraph();
-				PDFUtil.printHeader(p, agestr);
-				chapter.add(p);
 
 			    Map<String, List<SkyPointAspect>> agemap = entry.getValue();
 				for (Map.Entry<String, List<SkyPointAspect>> subentry : agemap.entrySet())
@@ -312,11 +304,8 @@ public class PDFExporter {
 			}
 			
 			if (term) {
-				chapter = new ChapterAutoNumber("Сокращения");
+				chapter = new ChapterAutoNumber(PDFUtil.printHeader(new Paragraph(), "Сокращения"));
 				chapter.setNumberDepth(0);
-				p = new Paragraph();
-				PDFUtil.printHeader(p, "Сокращения");
-				chapter.add(p);
 
 				chapter.add(new Paragraph("Раздел событий:", font));
 				list = new com.itextpdf.text.List(false, false, 10);
@@ -359,7 +348,7 @@ public class PDFExporter {
 				doc.add(chapter);
 			}
 
-			chapter = new ChapterAutoNumber("Диаграммы");
+			chapter = new ChapterAutoNumber(PDFUtil.printHeader(new Paragraph(), "Сокращения"));
 			chapter.setNumberDepth(0);
 			p = new Paragraph();
 			PDFUtil.printHeader(p, "Диаграммы");
@@ -456,26 +445,28 @@ public class PDFExporter {
 				if (skyPoint instanceof House) {
 					House house = (House)skyPoint;
 					if (term) {
-	    				section.add(new Chunk(planet.getMark("house"), fonth5));
-	    				section.add(new Chunk(planet.getSymbol(), PDFUtil.getHeaderAstroFont()));
-	    				section.add(new Chunk(" " + planet.getName() + " (", fonth5));
+						p = new Paragraph();
+	    				p.add(new Chunk(planet.getMark("house"), fonth5));
+	    				p.add(new Chunk(planet.getSymbol(), PDFUtil.getHeaderAstroFont()));
+	    				p.add(new Chunk(" " + planet.getName() + " (", fonth5));
 
 	    				if (planet.getSign().getCode().equals("Ophiuchus"))
-	    					section.add(new Chunk("\u221E", fonth5));
+	    					p.add(new Chunk("\u221E", fonth5));
 	    				else
-	    					section.add(new Chunk(planet.getSign().getSymbol(), PDFUtil.getHeaderAstroFont()));
+	    					p.add(new Chunk(planet.getSign().getSymbol(), PDFUtil.getHeaderAstroFont()));
 
-	    				section.add(new Chunk(", " + planet.getHouse().getDesignation() + ") ", fonth5));
+	    				p.add(new Chunk(", " + planet.getHouse().getDesignation() + ") ", fonth5));
 	    				
 	    				if (spa.getAspect().getCode().equals("CONJUNCTION") || spa.getAspect().getCode().equals("OPPOSITION"))
-	    					section.add(new Chunk(spa.getAspect().getSymbol(), PDFUtil.getHeaderAstroFont()));
+	    					p.add(new Chunk(spa.getAspect().getSymbol(), PDFUtil.getHeaderAstroFont()));
 	    				else
-	    					section.add(new Chunk(type.getSymbol(), fonth5));
+	    					p.add(new Chunk(type.getSymbol(), fonth5));
 
-	    				section.add(new Chunk(" " + house.getDesignation() + " дом", fonth5));
+	    				p.add(new Chunk(" " + house.getDesignation() + " дом", fonth5));
+	    				section.addSection(p);
 	    				section.add(Chunk.NEWLINE);
 					} else
-						section.add(new Paragraph(planet.getShortName() + planet.getSymbol() + " " + type.getSymbol() + " " + house.getName(), fonth5));
+						section.addSection(new Paragraph(planet.getShortName() + " " + type.getSymbol() + " " + house.getName(), fonth5));
 
 					DirectionText dirText = (DirectionText)service.find(planet, house, type);
 					if (dirText != null) {
