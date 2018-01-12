@@ -13,6 +13,7 @@ import java.util.TreeSet;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
 
+import com.itextpdf.text.Anchor;
 import com.itextpdf.text.BaseColor;
 import com.itextpdf.text.Chapter;
 import com.itextpdf.text.ChapterAutoNumber;
@@ -268,6 +269,34 @@ public class PDFExporter {
 	        chapter.add(Chunk.NEWLINE);
 	        chapter.add(new Paragraph("Заголовки абзацев (например, «Добро + Прибыль») используются для структурирования текста и "
 	        	+ "указывают на сферу жизни, к которой относится описываемое событие", font));
+
+	        //
+			chapter.add(Chunk.NEWLINE);
+			p = new Paragraph("Как найти событие?", fonth5);
+			p.setSpacingAfter(10);
+			chapter.add(p);
+			com.itextpdf.text.List ilist = new com.itextpdf.text.List(false, false, 10);
+			li = new ListItem();
+			Font fonta = PDFUtil.getLinkFont();
+			Anchor anchor = new Anchor("Диаграммы", fonta);
+            anchor.setReference("#diagrams");
+			li.add(new Chunk("Перейдите в раздел ", font));
+	        li.add(anchor);
+	        li.add(new Chunk(" в конце документа", font));
+	        ilist.add(li);
+
+			li = new ListItem();
+	        li.add(new Chunk("Найдите диаграмму нужной вам категории событий", font));
+	        ilist.add(li);
+
+			li = new ListItem();
+	        li.add(new Chunk("Посмотрите возраст на вершине графика. Указанное событие должно произойти в этом возрасте", font));
+	        ilist.add(li);
+
+			li = new ListItem();
+	        li.add(new Chunk("Перейдите в раздел данного возраста и прочтите толкование события", font));
+	        ilist.add(li);
+	        chapter.add(ilist);
 	        doc.add(chapter);
 
 			HouseService serviceh = new HouseService();
@@ -348,14 +377,15 @@ public class PDFExporter {
 				doc.add(chapter);
 			}
 
-			chapter = new ChapterAutoNumber(PDFUtil.printHeader(new Paragraph(), "Сокращения"));
+			chapter = new ChapterAutoNumber(PDFUtil.printHeader(new Paragraph(), "Диаграммы"));
 			chapter.setNumberDepth(0);
-			p = new Paragraph();
-			PDFUtil.printHeader(p, "Диаграммы");
-			chapter.add(p);
 
+			p = new Paragraph();
 			text = "Диаграммы обобщают приведённую выше информацию и наглядно отображают сферы жизни, которые будут занимать вас в каждом конкретном возрасте.";
-			chapter.add(new Paragraph(text, font));
+			Anchor anchorTarget = new Anchor(text, font);
+			anchorTarget.setName("diagrams");
+		    p.add(anchorTarget);
+			chapter.add(p);
 	        chapter.add(Chunk.NEWLINE);
 
 	        HouseMap[] houseMap = HouseMap.getMap();
@@ -484,42 +514,40 @@ public class PDFExporter {
 					if (planet.getNumber() > planet2.getNumber())
 						continue;
 
-					PlanetAspectText dirText = (PlanetAspectText)servicea.find(planet, planet2, spa.getAspect());
-					if (null == dirText)
-	    				section.add(new Paragraph(planet.getShortName() + " " + type.getSymbol() + " " + planet2.getShortName(), fonth5));
-					else {
-		    			if (term) {
-		    				List<Model> planets = event.getConfiguration().getPlanets();
-		    				int pindex = planets.indexOf(planet2);
-		    				Planet aspl2 = (Planet)planets.get(pindex);
+					PlanetAspectText dirText = (PlanetAspectText)servicea.find(spa, true);
+	    			if (term) {
+	    				List<Model> planets = event.getConfiguration().getPlanets();
+	    				int pindex = planets.indexOf(planet2);
+	    				Planet aspl2 = (Planet)planets.get(pindex);
 
-		    				section.add(new Chunk(dirText.getMark(planet, aspl2), fonth5));
-		    				section.add(new Chunk(planet.getSymbol(), PDFUtil.getHeaderAstroFont()));
-		    				section.add(new Chunk(" " + planet.getName() + " (", fonth5));
+	    				section.add(new Chunk(dirText.getMark(planet, aspl2), fonth5));
+	    				section.add(new Chunk(planet.getSymbol(), PDFUtil.getHeaderAstroFont()));
+	    				section.add(new Chunk(" " + planet.getName() + " (", fonth5));
 
-		    				if (planet.getSign().getCode().equals("Ophiuchus"))
-		    					section.add(new Chunk("\u221E", fonth5));
-		    				else
-		    					section.add(new Chunk(planet.getSign().getSymbol(), PDFUtil.getHeaderAstroFont()));
+	    				if (planet.getSign().getCode().equals("Ophiuchus"))
+	    					section.add(new Chunk("\u221E", fonth5));
+	    				else
+	    					section.add(new Chunk(planet.getSign().getSymbol(), PDFUtil.getHeaderAstroFont()));
 
-		    				section.add(new Chunk(", " + planet.getHouse().getDesignation() + ") ", PDFUtil.getHeaderAstroFont()));
+	    				section.add(new Chunk(", " + planet.getHouse().getDesignation() + ") ", PDFUtil.getHeaderAstroFont()));
 		    				
-		    				if (spa.getAspect().getCode().equals("CONJUNCTION") || spa.getAspect().getCode().equals("OPPOSITION"))
-		    					section.add(new Chunk(spa.getAspect().getSymbol(), PDFUtil.getHeaderAstroFont()));
-		    				else
-		    					section.add(new Chunk(type.getSymbol(), fonth5));
+	    				if (spa.getAspect().getCode().equals("CONJUNCTION") || spa.getAspect().getCode().equals("OPPOSITION"))
+	    					section.add(new Chunk(spa.getAspect().getSymbol(), PDFUtil.getHeaderAstroFont()));
+	    				else
+	    					section.add(new Chunk(type.getSymbol(), fonth5));
 
-		    				section.add(new Chunk(" " + planet2.getSymbol(), PDFUtil.getHeaderAstroFont()));
-		    				section.add(new Chunk(" " + planet2.getName() + " (", fonth5));
-		    				if (planet2.getSign().getCode().equals("Ophiuchus"))
-		    					section.add(new Chunk("\u221E", fonth5));
-		    				else
-		    					section.add(new Chunk(planet2.getSign().getSymbol(), PDFUtil.getHeaderAstroFont()));
-		    				section.add(new Chunk(", " + planet2.getHouse().getDesignation() + ")", PDFUtil.getHeaderAstroFont()));
-		    				section.add(Chunk.NEWLINE);
-		    			} else
-		    				section.add(new Paragraph(planet.getShortName() + " " + type.getSymbol() + " " + planet2.getShortName(), fonth5));
+	    				section.add(new Chunk(" " + planet2.getSymbol(), PDFUtil.getHeaderAstroFont()));
+	    				section.add(new Chunk(" " + planet2.getName() + " (", fonth5));
+	    				if (planet2.getSign().getCode().equals("Ophiuchus"))
+	    					section.add(new Chunk("\u221E", fonth5));
+	    				else
+	    					section.add(new Chunk(planet2.getSign().getSymbol(), PDFUtil.getHeaderAstroFont()));
+	    				section.add(new Chunk(", " + planet2.getHouse().getDesignation() + ")", PDFUtil.getHeaderAstroFont()));
+	    				section.add(Chunk.NEWLINE);
+	    			} else
+	    				section.add(new Paragraph(planet.getShortName() + " " + type.getSymbol() + " " + planet2.getShortName(), fonth5));
 
+					if (dirText != null) {
 		    			String typeColor = type.getFontColor();
 						BaseColor color = PDFUtil.htmlColor2Base(typeColor);
 						section.add(new Paragraph(StringUtil.removeTags(dirText.getText()), new Font(baseFont, 12, Font.NORMAL, color)));
@@ -601,15 +629,15 @@ public class PDFExporter {
 
 		com.itextpdf.text.List list = new com.itextpdf.text.List(false, false, 10);
 		ListItem li = new ListItem();
-        li.add(new Chunk("Показатели выше нуля указывают на успех и лёгкость.", font));
+        li.add(new Chunk("Показатели выше нуля указывают на успех и лёгкость", font));
         list.add(li);
 
 		li = new ListItem();
-        li.add(new Chunk("Показатели на нуле указывают на сбалансированность ситуации.", font));
+        li.add(new Chunk("Показатели на нуле указывают на сбалансированность ситуации", font));
         list.add(li);
 
 		li = new ListItem();
-        li.add(new Chunk("Показатели ниже нуля указывают на трудности и напряжение.", font));
+        li.add(new Chunk("Показатели ниже нуля указывают на трудности и напряжение", font));
         list.add(li);
         section.add(list);
 	}
