@@ -282,12 +282,8 @@ public class MonthHandler extends Handler {
 			for (Map.Entry<Integer, Map<Integer, Map<Long, List<TimeSeriesDataItem>>>> entry : years2.entrySet()) {
 				int y = entry.getKey();
 				String syear = String.valueOf(y);
-				chapter = new ChapterAutoNumber(syear);
+				chapter = new ChapterAutoNumber(PDFUtil.printHeader(new Paragraph(), syear));
 				chapter.setNumberDepth(0);
-	
-				p = new Paragraph();
-				PDFUtil.printHeader(p, syear);
-				chapter.add(p);
 
 				Map<Integer, Map<Long, List<TimeSeriesDataItem>>> months2 = years2.get(y);
 
