@@ -6,7 +6,7 @@ import kz.zvezdochet.bean.Planet;
 
 /**
  * Вспомогательный класс для отчётов
- * @author nataly
+ * @author Nataly Didenko
  *
  */
 public class PeriodItem {

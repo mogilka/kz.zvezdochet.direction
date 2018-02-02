@@ -597,7 +597,7 @@ public class CollationPart extends ModelPart implements ICalculable {
 
 	/**
 	 * Быстрое редактирование таблицы фигурантов
-	 * @author nataly
+	 * @author Nataly Didenko
 	 *
 	 */
 	public class MemberEditingSupport extends EditingSupport {
@@ -654,7 +654,7 @@ public class CollationPart extends ModelPart implements ICalculable {
 
 	/**
 	 * Быстрое редактирование таблицы участников
-	 * @author nataly
+	 * @author Nataly Didenko
 	 *
 	 */
 	public class ParticipantEditingSupport extends EditingSupport {

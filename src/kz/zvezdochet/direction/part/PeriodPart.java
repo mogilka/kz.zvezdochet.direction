@@ -97,7 +97,7 @@ public class PeriodPart extends ModelListView {
 	}
 	
 	@Override
-	public void initFilter() {
+	public void initFilter(Composite parent) {
 		grFilter = new Group(container, SWT.NONE);
 		grFilter.setText("Период");
 

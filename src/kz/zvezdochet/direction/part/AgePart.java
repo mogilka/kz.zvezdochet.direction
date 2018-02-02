@@ -55,7 +55,7 @@ public class AgePart extends ModelListView {
 	}
 	
 	@Override
-	public void initFilter() {
+	public void initFilter(Composite parent) {
 		grFilter = new Group(container, SWT.NONE);
 		grFilter.setText("Поиск");
 
