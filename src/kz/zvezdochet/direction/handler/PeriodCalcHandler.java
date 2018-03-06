@@ -4,6 +4,7 @@ import java.io.FileOutputStream;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -157,7 +158,7 @@ public class PeriodCalcHandler extends Handler {
 			Map<Long, List<TimeSeriesDataItem>> series = new HashMap<Long, List<TimeSeriesDataItem>>();
 
 			chapter.add(new Paragraph("С помощью данного прогноза можно определить, какое время суток наиболее благоприятно для ваших планов.", font));
-			
+			chapter.add(Chunk.NEWLINE);
 			chapter.add(new Paragraph("Прогноз классифицирует события по 3 признакам:", font));
 
 			AspectTypeService service = new AspectTypeService();
@@ -178,7 +179,7 @@ public class PeriodCalcHandler extends Handler {
 			chapter.add(alist);
 
 			chapter.add(Chunk.NEWLINE);
-			chapter.add(new Paragraph("Примечание", bfont));
+			chapter.add(new Paragraph("Примечание", font));
 			alist = new com.itextpdf.text.List(false, false, 10);
 			ListItem li = new ListItem();
 	        li.add(new Chunk("Если сфера жизни повторно упоминается в течение дня, значит она будет насыщена событиями, действиями и мыслями.", font));
@@ -198,6 +199,7 @@ public class PeriodCalcHandler extends Handler {
 
 				Map<Long, Double> map = new HashMap<Long, Double>();
 				Map<Integer, Map<Long, Set<PeriodItem>>> times = new HashMap<Integer, Map<Long, Set<PeriodItem>>>();
+				Map<Integer, Set<PeriodItem>> ditems = new HashMap<Integer, Set<PeriodItem>>();
 
 				for (int i = 1; i < 5; i++) {
 					int h = i * 6;
@@ -261,12 +263,54 @@ public class PeriodCalcHandler extends Handler {
 
 							double val = map.containsKey(id) ? map.get(id) : 0;
 							map.put(id, val + 1);
+
+							//собираем отдельно список для последующего вычисления ключевых событий дня
+							list = ditems.get(i);
+							if (null == list)
+								list = new HashSet<PeriodItem>();
+							list.add(item);
+							ditems.put(i, list);
 						}
 					}
 					if (items != null && items.size() > 0)
 						times.put(i, items);
 				}
+
 				if (times.size() > 0) {
+					//определяем ключевые события
+					Set<PeriodItem> set0 = new HashSet<>();
+					Set<PeriodItem> allitems = new HashSet<>();
+					Collection<Set<PeriodItem>> allsets = ditems.values();
+					for (Set<PeriodItem> set : allsets)
+						for (PeriodItem item : set)
+							allitems.add(item);
+					allsets = null;
+
+					Set<PeriodItem> dItems1 = ditems.get(1);
+					Set<PeriodItem> dItems2 = ditems.get(2);
+					Set<PeriodItem> dItems3 = ditems.get(3);
+					Set<PeriodItem> dItems4 = ditems.get(4);
+					for (PeriodItem item : allitems) {
+						if (dItems1.contains(item)
+								&& dItems2.contains(item)
+								&& dItems3.contains(item)
+								&& dItems4.contains(item))
+							set0.add(item);
+					}
+					allitems = null; dItems1 = null; dItems2 = null; dItems3 = null; dItems4 = null;
+
+					Map<Long, Set<PeriodItem>> items0 = new HashMap<Long, Set<PeriodItem>>();
+					for (PeriodItem item : set0) {
+						long id = item.aspect.getTypeid();
+						Set<PeriodItem> list = items0.get(id);
+						if (null == list)
+							list = new HashSet<PeriodItem>();
+						list.add(item);
+						items0.put(id, list);
+					}
+					times.put(0, items0);
+
+					//формируем документ
 					String sdfdate = sdf.format(date);
 					chapter = new ChapterAutoNumber(PDFUtil.printHeader(new Paragraph(), sdfdate));
 					chapter.setNumberDepth(0);
@@ -277,13 +321,18 @@ public class PeriodCalcHandler extends Handler {
 							int i = entry.getKey();
 							String header = "";
 							switch (i) {
+								case 1: header = "Утро"; break;
 								case 2: header = "День"; break;
 								case 3: header = "Вечер"; break;
 								case 4: header = "Ночь"; break;
-								default: header = "Утро"; break;
+								default: header = "Ключевые события дня";
 							}
 							Section section = PDFUtil.printSection(chapter, header);
-		
+							if (0 == i) {
+								section.add(new Paragraph("Ключевые события могут произойти в любое время суток", font));
+								section.add(Chunk.NEWLINE);
+							}
+
 							Font fonth5 = PDFUtil.getHeaderFont();
 							for (Map.Entry<Long, Set<PeriodItem>> entry2 : items.entrySet()) {
 								Set<PeriodItem> list = entry2.getValue();
@@ -298,9 +347,20 @@ public class PeriodCalcHandler extends Handler {
 								String typeColor = type.getFontColor();
 								BaseColor color = PDFUtil.htmlColor2Base(typeColor);
 								alist = new com.itextpdf.text.List(false, false, 10);
-								for (PeriodItem item : list) {
+
+								if (i > 0) {
+									Set<PeriodItem> list2 = new HashSet<>();
+									for (PeriodItem item : list)
+										if (set0.contains(item))
+											continue;
+										else
+											list2.add(item);
+									list = new LinkedHashSet<PeriodItem>(list2);
+								}
+								if (0 == list.size())
+									section.add(new Paragraph("См. ключевые события", font));
+								else for (PeriodItem item : list) {
 									li = new ListItem();
-//									String pname = item.planet.getShortName();
 									text = "";
 									String tcode = type.getCode();
 									if (tcode.equals("NEGATIVE"))
