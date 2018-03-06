@@ -114,13 +114,9 @@ public class PeriodCalcHandler extends Handler {
 			Chapter chapter = new ChapterAutoNumber(PDFUtil.printHeader(new Paragraph(), "Общая информация"));
 			chapter.setNumberDepth(0);
 
-			//шапка
-			Paragraph p = new Paragraph();
-			PDFUtil.printHeader(p, "Прогноз событий");
-			chapter.add(p);
-
+			String text = "Посуточный прогноз на период:\n";
 			SimpleDateFormat sdf = new SimpleDateFormat("EEEE, d MMMM yyyy");
-			String text = sdf.format(initDate);
+			text += sdf.format(initDate);
 			boolean days = (DateUtil.getDateFromDate(initDate) != DateUtil.getDateFromDate(finalDate)
 					|| DateUtil.getMonthFromDate(initDate) != DateUtil.getMonthFromDate(finalDate)
 					|| DateUtil.getYearFromDate(initDate) != DateUtil.getYearFromDate(finalDate));
@@ -129,7 +125,7 @@ public class PeriodCalcHandler extends Handler {
 					DateUtil.getYearFromDate(initDate) + "-" + DateUtil.getYearFromDate(finalDate));
 			if (days)
 				text += " — " + sdf.format(finalDate);
-			p = new Paragraph(text, font);
+			Paragraph p = new Paragraph(text, font);
 	        p.setAlignment(Element.ALIGN_CENTER);
 			chapter.add(p);
 
@@ -160,14 +156,16 @@ public class PeriodCalcHandler extends Handler {
 
 			Map<Long, List<TimeSeriesDataItem>> series = new HashMap<Long, List<TimeSeriesDataItem>>();
 
-			chapter.add(new Paragraph("Прогноз классифицирует события по 5 признакам:", font));
+			chapter.add(new Paragraph("С помощью данного прогноза можно определить, какое время суток наиболее благоприятно для ваших планов.", font));
+			
+			chapter.add(new Paragraph("Прогноз классифицирует события по 3 признакам:", font));
 
 			AspectTypeService service = new AspectTypeService();
 			List<AspectType> types = service.getMainList();
 			Font bfont = new Font(baseFont, 12, Font.BOLD, PDFUtil.FONTCOLOR);
 			com.itextpdf.text.List alist = new com.itextpdf.text.List(false, false, 10);
 			for (AspectType aspectType : types) {
-				if (null == aspectType.getDescription())
+				if (aspectType.getId() > 3)
 					continue;
 				ListItem li = new ListItem();
 		        chunk = new Chunk(aspectType.getDescription(), bfont);
@@ -179,7 +177,18 @@ public class PeriodCalcHandler extends Handler {
 			}
 			chapter.add(alist);
 
-			chapter.add(new Paragraph("Если сфера жизни повторно упоминается в течение дня, значит она будет насыщена событиями и мыслями.", font));
+			chapter.add(Chunk.NEWLINE);
+			chapter.add(new Paragraph("Примечание", bfont));
+			alist = new com.itextpdf.text.List(false, false, 10);
+			ListItem li = new ListItem();
+	        li.add(new Chunk("Если сфера жизни повторно упоминается в течение дня, значит она будет насыщена событиями, действиями и мыслями.", font));
+	        alist.add(li);
+
+			li = new ListItem();
+	        li.add(new Chunk("Одна и та же сфера жизни в течение дня может проявиться и негативно и позитивно. "
+	        	+ "Поэтому при составлении плана и ожидании событий учитывайте плюсы, минусы и указанные в тексте факторы, которые на них влияют.", font));
+	        alist.add(li);
+	        chapter.add(alist);
 			doc.add(chapter);
 
 			DirectionAspectService servicea = new DirectionAspectService();
@@ -290,8 +299,18 @@ public class PeriodCalcHandler extends Handler {
 								BaseColor color = PDFUtil.htmlColor2Base(typeColor);
 								alist = new com.itextpdf.text.List(false, false, 10);
 								for (PeriodItem item : list) {
-									ListItem li = new ListItem();
-							        chunk = new Chunk(item.house.getDescription(), new Font(baseFont, 12, Font.NORMAL, color));
+									li = new ListItem();
+//									String pname = item.planet.getShortName();
+									text = "";
+									String tcode = type.getCode();
+									if (tcode.equals("NEGATIVE"))
+										text = item.house.getNegative() + ". Причина – " + item.planet.getNegative();
+									else if (tcode.equals("POSITIVE"))
+										text = item.house.getPositive() + ". Фактор успеха – " + item.planet.getPositive();
+									else
+										text = item.house.getDescription();
+							        chunk = new Chunk(text, new Font(baseFont, 12, Font.NORMAL, color));
+							        li.add(new Chunk(item.house.getName() + ": ", new Font(baseFont, 12, Font.BOLD, color)));
 							        li.add(chunk);
 							        alist.add(li);
 
@@ -372,7 +391,7 @@ public class PeriodCalcHandler extends Handler {
 			double res = CalcUtil.getDifference(point1.getCoord(), point2.getCoord());
 
 			//определяем, является ли аспект стандартным
-			List<Model> aspects = new AspectService().getList();
+			List<Model> aspects = new AspectService().getMajorList();
 			for (Model realasp : aspects) {
 				Aspect a = (Aspect)realasp;
 				if (a.isMain() && a.isExact(res)) {
@@ -382,11 +401,11 @@ public class PeriodCalcHandler extends Handler {
 					AspectType type = a.getType();
 					PeriodItem item = new PeriodItem();
 					item.aspect = a;
+					item.planet = (Planet)point1;
 
 					if (point2 instanceof House)
 						item.house = (House)point2;
 					else if (point2 instanceof Planet) {
-						item.planet = (Planet)point1;
 						Planet planet2 = (Planet)point2;
 						item.planet2 = planet2;
 						item.house = planet2.getHouse();
