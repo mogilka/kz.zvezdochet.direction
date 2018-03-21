@@ -52,6 +52,6 @@ public class TransitLabelProvider extends ArrayLabelProvider implements ITableLa
 			if (aspect.getAspect() != null)
 				return aspect.getAspect().getType().getColor();
 		}
-		return  Display.getDefault().getSystemColor(SWT.COLOR_BLACK);
+		return Display.getDefault().getSystemColor(SWT.COLOR_BLACK);
 	}
 }
