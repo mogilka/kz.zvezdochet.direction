@@ -291,10 +291,10 @@ public class PeriodCalcHandler extends Handler {
 					Set<PeriodItem> dItems3 = ditems.get(3);
 					Set<PeriodItem> dItems4 = ditems.get(4);
 					for (PeriodItem item : allitems) {
-						if (dItems1.contains(item)
-								&& dItems2.contains(item)
-								&& dItems3.contains(item)
-								&& dItems4.contains(item))
+						if (dItems1 != null && dItems1.contains(item)
+								&& dItems2 != null && dItems2.contains(item)
+								&& dItems3 != null && dItems3.contains(item)
+								&& dItems4 != null && dItems4.contains(item))
 							set0.add(item);
 					}
 					allitems = null; dItems1 = null; dItems2 = null; dItems3 = null; dItems4 = null;
@@ -367,8 +367,10 @@ public class PeriodCalcHandler extends Handler {
 										text = item.house.getNegative() + ". Причина – " + item.planet.getNegative();
 									else if (tcode.equals("POSITIVE"))
 										text = item.house.getPositive() + ". Фактор успеха – " + item.planet.getPositive();
-									else
-										text = item.house.getDescription();
+									else {
+										String s = "Контекст – " + (item.planet.isGood() ? item.planet.getPositive() : item.planet.getNegative());
+										text = item.house.getDescription() + ". " + s;
+									}
 							        chunk = new Chunk(text, new Font(baseFont, 12, Font.NORMAL, color));
 							        li.add(new Chunk(item.house.getName() + ": ", new Font(baseFont, 12, Font.BOLD, color)));
 							        li.add(chunk);
@@ -400,6 +402,8 @@ public class PeriodCalcHandler extends Handler {
 					doc.add(chapter);
 				}
 				for (Map.Entry<Long, Double> entry : map.entrySet()) {
+					if (1 == entry.getKey())
+						continue;
 					List<TimeSeriesDataItem> sitems = series.containsKey(entry.getKey()) ? series.get(entry.getKey()) : new ArrayList<TimeSeriesDataItem>();
 					TimeSeriesDataItem tsdi = new TimeSeriesDataItem(new Day(date), entry.getValue());
 					if (!sitems.contains(tsdi))
