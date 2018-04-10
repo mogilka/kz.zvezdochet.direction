@@ -326,7 +326,7 @@ public class PDFExporter {
 					bar.setCategory(age + "");
 					items[++i] = bar;
 				}
-				image = PDFUtil.printBars(writer, agestr, "Сферы жизни", "Баллы", items, 500, 300, false, false);
+				image = PDFUtil.printBars(writer, agestr, "Сферы жизни", "Баллы", items, 500, 300, false, false, false);
 				section.add(image);
 				doc.add(chapter);
 				doc.add(Chunk.NEXTPAGE);
@@ -381,11 +381,25 @@ public class PDFExporter {
 			chapter.setNumberDepth(0);
 
 			p = new Paragraph();
-			text = "Диаграммы обобщают приведённую выше информацию и наглядно отображают сферы жизни, которые будут занимать вас в каждом конкретном возрасте.";
+			text = "Диаграммы обобщают приведённую выше информацию и наглядно отображают сферы жизни, которые будут занимать вас в каждом конкретном возрасте:";
 			Anchor anchorTarget = new Anchor(text, font);
 			anchorTarget.setName("diagrams");
 		    p.add(anchorTarget);
 			chapter.add(p);
+
+			list = new com.itextpdf.text.List(false, false, 10);
+			li = new ListItem();
+	        li.add(new Chunk("Показатели выше нуля указывают на успех и лёгкость", font));
+	        list.add(li);
+
+			li = new ListItem();
+	        li.add(new Chunk("Показатели на нуле указывают на сбалансированность ситуации", font));
+	        list.add(li);
+
+			li = new ListItem();
+	        li.add(new Chunk("Показатели ниже нуля указывают на трудности и напряжение", font));
+	        list.add(li);
+	        chapter.add(list);
 	        chapter.add(Chunk.NEWLINE);
 
 	        HouseMap[] houseMap = HouseMap.getMap();
