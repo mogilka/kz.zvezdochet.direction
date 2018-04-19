@@ -12,18 +12,24 @@ import org.eclipse.jface.fieldassist.IContentProposalListener;
 import org.eclipse.jface.fieldassist.TextContentAdapter;
 import org.eclipse.jface.layout.GridDataFactory;
 import org.eclipse.jface.layout.GridLayoutFactory;
+import org.eclipse.jface.viewers.ArrayContentProvider;
+import org.eclipse.jface.viewers.CheckboxTableViewer;
 import org.eclipse.nebula.widgets.cdatetime.CDT;
 import org.eclipse.nebula.widgets.cdatetime.CDateTime;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.Text;
 
+import kz.zvezdochet.analytics.service.SphereService;
 import kz.zvezdochet.bean.Event;
 import kz.zvezdochet.bean.Place;
 import kz.zvezdochet.core.bean.Model;
+import kz.zvezdochet.core.service.DataAccessException;
 import kz.zvezdochet.core.ui.decoration.InfoDecoration;
+import kz.zvezdochet.core.ui.listener.ListSelectionListener;
 import kz.zvezdochet.core.ui.util.DialogUtil;
 import kz.zvezdochet.core.ui.view.ModelListView;
 import kz.zvezdochet.core.ui.view.View;
@@ -95,7 +101,10 @@ public class PeriodPart extends ModelListView {
 		GridLayoutFactory.swtDefaults().applyTo(container);
 		GridDataFactory.fillDefaults().align(SWT.FILL, SWT.FILL).grab(true, true).applyTo(table);
 	}
-	
+
+	private Table table2;
+	private CheckboxTableViewer tableViewer2;
+
 	@Override
 	public void initFilter(Composite parent) {
 		grFilter = new Group(container, SWT.NONE);
@@ -110,6 +119,18 @@ public class PeriodPart extends ModelListView {
 		lb.setText("Конец");
 		dt2 = new CDateTime(grFilter, CDT.BORDER | CDT.COMPACT | CDT.DROP_DOWN | CDT.DATE_LONG | CDT.DATE_MEDIUM);
 		dt2.setNullText(""); //$NON-NLS-1$
+
+		tableViewer2 = CheckboxTableViewer.newCheckList(grFilter, SWT.CHECK | SWT.BORDER | SWT.V_SCROLL | SWT.SINGLE);
+		table2 = tableViewer2.getTable();
+		table2.setHeaderVisible(true);
+		table2.setLinesVisible(true);
+
+		tableViewer2.setContentProvider(new ArrayContentProvider());
+		tableViewer2.setLabelProvider(getLabelProvider());
+		
+		ListSelectionListener listener = getSelectionListener();
+		tableViewer2.addSelectionChangedListener(listener);
+		tableViewer2.addDoubleClickListener(listener);
 
 		Group secPlace = new Group(grFilter, SWT.NONE);
 		secPlace.setText(Messages.getString("PersonView.Place")); //$NON-NLS-1$
@@ -153,8 +174,10 @@ public class PeriodPart extends ModelListView {
 			grab(true, false).applyTo(txZone);
 		GridDataFactory.fillDefaults().align(SWT.FILL, SWT.CENTER).
 			grab(true, false).applyTo(txGreenwich);
-	}
-	
+
+		GridDataFactory.fillDefaults().align(SWT.FILL, SWT.CENTER).grab(true, false).applyTo(table2);
+}
+
 	/**
 	 * Поиск персоны, для которой рассчитывается транзит
 	 * @return персона
@@ -230,6 +253,11 @@ public class PeriodPart extends ModelListView {
 	@Override
 	protected void initControls() {
 		setPlaces();
+		try {
+			tableViewer2.setInput(new SphereService().getList());
+		} catch (DataAccessException e) {
+			e.printStackTrace();
+		}
 	}
 
 	public Place getPlace() {
@@ -238,5 +266,9 @@ public class PeriodPart extends ModelListView {
 
 	public double getZone() {
 		return Double.parseDouble(txZone.getText());
+	}
+
+	public Object[] getSpheres() {
+		return tableViewer2.getCheckedElements();
 	}
 }
