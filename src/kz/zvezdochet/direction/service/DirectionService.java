@@ -54,7 +54,7 @@ public class DirectionService extends PlanetHouseService {
 			if (pcode.equals("Kethu") || pcode.equals("Lilith"))
 				aspectType = (AspectType)service.find("NEGATIVE");
 			else if (pcode.equals("Selena") || pcode.equals("Rakhu")
-					|| pcode.equals("Sun") || pcode.equals("Venus") || pcode.equals("Jupiter"))
+					|| pcode.equals("Sun") || pcode.equals("Jupiter"))
 				aspectType = (AspectType)service.find("POSITIVE");
 		}		
 		try {
