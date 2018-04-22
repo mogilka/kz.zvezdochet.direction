@@ -161,7 +161,12 @@ public class MonthHandler extends Handler {
 				+ "то они будут действовать независимо от вашего местонахождения", font));
 
 			chapter.add(Chunk.NEWLINE);
-			chapter.add(new Paragraph("Диаграммы показывают динамику событий в сферах жизни:", font));
+			chapter.add(new Paragraph("При этом, если ранее вы получали от меня прогноз по годам, индивидуальный гороскоп или гороскоп совместимости, "
+					+ "то они будут действовать независимо от вашего местонахождения", font));
+				chapter.add(Chunk.NEWLINE);
+
+			chapter.add(new Paragraph("Диаграммы показывают динамику событий в сферах жизни. "
+				+ "По ним можно смотреть, где всё сложится относительно ровно, а где ожидаются резкие перепады:", font));
 
 			com.itextpdf.text.List list = new com.itextpdf.text.List(false, false, 10);
 			ListItem li = new ListItem();
