@@ -44,6 +44,7 @@ import kz.zvezdochet.bean.House;
 import kz.zvezdochet.bean.Place;
 import kz.zvezdochet.bean.Planet;
 import kz.zvezdochet.bean.SkyPoint;
+import kz.zvezdochet.bean.SkyPointAspect;
 import kz.zvezdochet.core.bean.Model;
 import kz.zvezdochet.core.bean.TextGender;
 import kz.zvezdochet.core.handler.Handler;
@@ -192,7 +193,7 @@ public class PeriodCalcHandler extends Handler {
 			chapter.add(alist);
 
 			chapter.add(Chunk.NEWLINE);
-			chapter.add(new Paragraph("Примечание", font));
+			chapter.add(new Paragraph("Примечание", bfont));
 			alist = new com.itextpdf.text.List(false, false, 10);
 			ListItem li = new ListItem();
 	        li.add(new Chunk("Если сфера жизни повторно упоминается в течение дня, значит она будет насыщена событиями, действиями и мыслями.", font));
@@ -202,6 +203,21 @@ public class PeriodCalcHandler extends Handler {
 	        li.add(new Chunk("Одна и та же сфера жизни в течение дня может проявиться и негативно и позитивно. "
 	        	+ "Поэтому при составлении плана и ожидании событий учитывайте плюсы, минусы и указанные в тексте факторы, которые на них влияют.", font));
 	        alist.add(li);
+
+			li = new ListItem();
+	        li.add(new Chunk("Ключевые события указывают на сферы жизни, которые могут вас волновать весь день. "
+	        	+ "Если они повторяются изо дня в день, значит будут регулярно всплывать и потребуют не сиюминутного, а длительного разрешения.", font));
+	        alist.add(li);
+
+			li = new ListItem();
+	        li.add(new Chunk("Важные, не повторяющиеся события говорят о главной повестке дня и задают тон всему дню. "
+	        	+ "Они являются важным поводом, за которым уже следуют другие, второстепенные негативные и позитивные события.", font));
+	        alist.add(li);
+
+			li = new ListItem();
+	        li.add(new Chunk("Максимальная погрешность прогноза события ±18 часов.", font));
+	        alist.add(li);
+
 	        chapter.add(alist);
 			doc.add(chapter);
 
@@ -213,6 +229,7 @@ public class PeriodCalcHandler extends Handler {
 				Map<Long, Double> map = new HashMap<Long, Double>();
 				Map<Integer, Map<Long, Set<PeriodItem>>> times = new HashMap<Integer, Map<Long, Set<PeriodItem>>>();
 				Map<Integer, Set<PeriodItem>> ditems = new HashMap<Integer, Set<PeriodItem>>();
+				Map<Long, Set<PeriodItem>> atems = new HashMap<Long, Set<PeriodItem>>();
 
 				for (int i = 1; i < 5; i++) {
 					int h = i * 6;
@@ -236,40 +253,40 @@ public class PeriodCalcHandler extends Handler {
 					prev.setZone(zone);
 					prev.calc(true);
 
-					List<Planet> iplanets = new ArrayList<Planet>();
 					List<Model> eplanets = event.getConfiguration().getPlanets();
-					for (Model model : eplanets) {
-						Planet planet = (Planet)model;
-						List<Object> ingresses = planet.isIngressed(prev, event);
-						if (ingresses != null && ingresses.size() > 0)
-							iplanets.add(planet);
-					}
-
 					Map<Long, Set<PeriodItem>> items = new HashMap<Long, Set<PeriodItem>>();
-					for (Planet eplanet : iplanets) {
-						for (Model model : planets) {
-							Planet planet = (Planet)model;
-							PeriodItem item = calc(eplanet, planet);
-							if (null == item)
-								continue;
-							long id = item.aspect.getTypeid();
-							Set<PeriodItem> list = items.get(id);
-							if (null == list)
-								list = new HashSet<PeriodItem>();
-							list.add(item);
-							items.put(id, list);
+					for (Model emodel : eplanets) {
+						Planet eplanet = (Planet)emodel;
+						//аспекты считаем только для утра
+						if (1 == i)
+							for (Model model : planets) {
+								Planet planet = (Planet)model;
+								PeriodItem item = calc(eplanet, planet);
+								if (null == item)
+									continue;
+								long id = item.aspect.getTypeid();
+								Set<PeriodItem> list = atems.get(id);
+								if (null == list)
+									list = new HashSet<PeriodItem>();
+								list.add(item);
+								atems.put(id, list);
+	
+								double val = map.containsKey(id) ? map.get(id) : 0;
+								map.put(id, val + 1);
+							}
 
-							double val = map.containsKey(id) ? map.get(id) : 0;
-							map.put(id, val + 1);
-						}
 						for (Model model : houses) {
-							if (!selhouses.contains(model.getId()))
-								continue;
 							House house = (House)model;
 							PeriodItem item = calc(eplanet, house);
 							if (null == item)
 								continue;
 							long id = item.aspect.getTypeid();
+
+							//соблюдаем фильтр сфер жизни для аспектов кроме соединений
+							if (!item.aspect.getCode().equals("CONJUNCTION"))
+								if (!selhouses.contains(model.getId()))
+									continue;
+
 							Set<PeriodItem> list = items.get(id);
 							if (null == list)
 								list = new HashSet<PeriodItem>();
@@ -291,7 +308,7 @@ public class PeriodCalcHandler extends Handler {
 						times.put(i, items);
 				}
 
-				if (times.size() > 0) {
+				if (times.size() > 0 || atems.size() > 0) {
 					//определяем ключевые события
 					Set<PeriodItem> set0 = new HashSet<>();
 					Set<PeriodItem> allitems = new HashSet<>();
@@ -329,7 +346,54 @@ public class PeriodCalcHandler extends Handler {
 					String sdfdate = sdf.format(date);
 					chapter = new ChapterAutoNumber(PDFUtil.printHeader(new Paragraph(), sdfdate));
 					chapter.setNumberDepth(0);
-	
+					Font fonth5 = PDFUtil.getHeaderFont();
+
+					//аспекты
+					Section section = PDFUtil.printSection(chapter, "Настроение");
+					for (Map.Entry<Long, Set<PeriodItem>> entry : atems.entrySet()) {
+						Set<PeriodItem> list = entry.getValue();
+						if (null == list || 0 == list.size()) {
+							section.add(new Paragraph("Нет данных", font));
+							continue;
+						}
+						list = new LinkedHashSet<PeriodItem>(list);
+						AspectType type = (AspectType)service.find(entry.getKey());
+						section.add(new Paragraph(type.getDescription(), fonth5));
+
+						String typeColor = type.getFontColor();
+						BaseColor color = PDFUtil.htmlColor2Base(typeColor);
+						Font afont = new Font(baseFont, 12, Font.NORMAL, color);
+						Font abfont = new Font(baseFont, 12, Font.BOLD, color);
+
+						alist = new com.itextpdf.text.List(false, false, 10);
+						for (PeriodItem item : list) {
+							li = new ListItem();
+							List<Model> texts = servicea.finds(new SkyPointAspect(item.planet, item.planet2, item.aspect));
+							for (Model model : texts) {
+								PlanetAspectText dirText = (PlanetAspectText)model;
+								if (dirText != null) {
+									li = new ListItem();
+							        chunk = new Chunk(item.planet.getShortName() + " " + type.getSymbol() + " " + item.planet2.getShortName() + ": ", abfont);
+							        li.add(chunk);
+									li.add(new Chunk(StringUtil.removeTags(dirText.getText()), afont));
+									li.setSpacingAfter(10);
+							        alist.add(li);
+										
+									List<TextGender> genders = dirText.getGenderTexts(female, child);
+									for (TextGender gender : genders) {
+										li = new ListItem();
+								        li.add(new Chunk(PDFUtil.getGenderHeader(gender.getType()) + ": ", abfont));
+										li.add(new Chunk(StringUtil.removeTags(gender.getText()), afont));
+										li.setSpacingAfter(10);
+								        alist.add(li);
+									};
+								}
+							}
+						}
+						section.add(alist);
+					}
+
+					//дома
 					for (Map.Entry<Integer, Map<Long, Set<PeriodItem>>> entry : times.entrySet()) {
 						Map <Long, Set<PeriodItem>> items = entry.getValue();
 						if (items != null && items.size() > 0) {
@@ -342,13 +406,12 @@ public class PeriodCalcHandler extends Handler {
 								case 4: header = "Ночь"; break;
 								default: header = "Ключевые события дня";
 							}
-							Section section = PDFUtil.printSection(chapter, header);
+							section = PDFUtil.printSection(chapter, header);
 							if (0 == i) {
 								section.add(new Paragraph("Ключевые события могут произойти в любое время суток", font));
 								section.add(Chunk.NEWLINE);
 							}
 
-							Font fonth5 = PDFUtil.getHeaderFont();
 							for (Map.Entry<Long, Set<PeriodItem>> entry2 : items.entrySet()) {
 								Set<PeriodItem> list = entry2.getValue();
 								if (null == list || 0 == list.size()) {
@@ -390,25 +453,6 @@ public class PeriodCalcHandler extends Handler {
 							        li.add(new Chunk(item.house.getName() + ": ", new Font(baseFont, 12, Font.BOLD, color)));
 							        li.add(chunk);
 							        alist.add(li);
-
-									if (item.planet2 != null) {
-										PlanetAspectText dirText = (PlanetAspectText)servicea.find(item.planet, item.planet2, item.aspect);
-										if (dirText != null) {
-											li = new ListItem();
-									        chunk = new Chunk(item.planet.getShortName() + " " + type.getSymbol() + " " + item.planet2.getShortName() + ": ", bfont);
-									        li.add(chunk);
-											li.add(new Chunk(StringUtil.removeTags(dirText.getText()), font));
-									        alist.add(li);
-											
-											List<TextGender> genders = dirText.getGenderTexts(female, child);
-											for (TextGender gender : genders) {
-												li = new ListItem();
-										        li.add(new Chunk(PDFUtil.getGenderHeader(gender.getType()) + ": ", bfont));
-												li.add(new Chunk(StringUtil.removeTags(gender.getText()), font));
-										        alist.add(li);
-											};
-										}
-									}
 								}
 								section.add(alist);
 							}
@@ -417,8 +461,6 @@ public class PeriodCalcHandler extends Handler {
 					doc.add(chapter);
 				}
 				for (Map.Entry<Long, Double> entry : map.entrySet()) {
-					if (1 == entry.getKey())
-						continue;
 					List<TimeSeriesDataItem> sitems = series.containsKey(entry.getKey()) ? series.get(entry.getKey()) : new ArrayList<TimeSeriesDataItem>();
 					TimeSeriesDataItem tsdi = new TimeSeriesDataItem(new Day(date), entry.getValue());
 					if (!sitems.contains(tsdi))
