@@ -17,6 +17,7 @@ import org.eclipse.jface.viewers.CheckboxTableViewer;
 import org.eclipse.nebula.widgets.cdatetime.CDT;
 import org.eclipse.nebula.widgets.cdatetime.CDateTime;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Label;
@@ -58,6 +59,7 @@ public class PeriodPart extends ModelListView {
 	private Text txLongitude;
 	private Text txZone;
 	private Text txGreenwich;
+	private Button btPrint;
 
 	public void setPerson(Event person) {
 		this.person = person;
@@ -120,6 +122,10 @@ public class PeriodPart extends ModelListView {
 		dt2 = new CDateTime(grFilter, CDT.BORDER | CDT.COMPACT | CDT.DROP_DOWN | CDT.DATE_LONG | CDT.DATE_MEDIUM);
 		dt2.setNullText(""); //$NON-NLS-1$
 
+		lb = new Label(grFilter, SWT.NONE);
+		lb.setText("Печать в документ");
+		btPrint = new Button(grFilter, SWT.BORDER | SWT.CHECK);
+
 		tableViewer2 = CheckboxTableViewer.newCheckList(grFilter, SWT.CHECK | SWT.BORDER | SWT.V_SCROLL | SWT.SINGLE);
 		table2 = tableViewer2.getTable();
 		table2.setHeaderVisible(true);
@@ -174,6 +180,8 @@ public class PeriodPart extends ModelListView {
 			grab(true, false).applyTo(txZone);
 		GridDataFactory.fillDefaults().align(SWT.FILL, SWT.CENTER).
 			grab(true, false).applyTo(txGreenwich);
+		GridDataFactory.fillDefaults().align(SWT.FILL, SWT.CENTER).
+			grab(true, false).applyTo(btPrint);
 
 		GridDataFactory.fillDefaults().align(SWT.FILL, SWT.CENTER).grab(true, false).applyTo(table2);
 }
@@ -195,6 +203,7 @@ public class PeriodPart extends ModelListView {
 		txLongitude.setText(""); //$NON-NLS-1$
 		txZone.setText(""); //$NON-NLS-1$
 		txGreenwich.setText(""); //$NON-NLS-1$
+		btPrint.setSelection(false);
 	}
 
 	public Date getInitialDate() {
@@ -270,5 +279,9 @@ public class PeriodPart extends ModelListView {
 
 	public Object[] getSpheres() {
 		return tableViewer2.getCheckedElements();
+	}
+
+	public boolean isPrintable() {
+		return btPrint.getSelection();
 	}
 }

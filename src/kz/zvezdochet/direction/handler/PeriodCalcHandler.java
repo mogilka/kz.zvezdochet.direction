@@ -90,6 +90,7 @@ public class PeriodCalcHandler extends Handler {
 
 			Place place = periodPart.getPlace();
 			double zone = periodPart.getZone();
+			boolean printable = periodPart.isPrintable();
 
 			Object[] spheres = periodPart.getSpheres();
 			List<Long> selhouses = new ArrayList<>();
@@ -101,7 +102,7 @@ public class PeriodCalcHandler extends Handler {
 					if (!selhouses.contains(model.getId()))
 						selhouses.add(model.getId());
 			}
-	
+
 			Configuration conf = person.getConfiguration();
 			List<Model> planets = conf.getPlanets();
 			List<Model> houses = conf.getHouses();
@@ -115,112 +116,117 @@ public class PeriodCalcHandler extends Handler {
 			Calendar end = Calendar.getInstance();
 			end.setTime(finalDate);
 
-			String filename = PlatformUtil.getPath(Activator.PLUGIN_ID, "/out/period.pdf").getPath();
-			PdfWriter writer = PdfWriter.getInstance(doc, new FileOutputStream(filename));
-	        writer.setPageEvent(new PageEventHandler(doc));
-	        doc.open();
-
-	    	Font font = PDFUtil.getRegularFont();
-
-	        //metadata
-	        PDFUtil.getMetaData(doc, "Прогноз событий");
-
-	        //раздел
-			Chapter chapter = new ChapterAutoNumber(PDFUtil.printHeader(new Paragraph(), "Общая информация"));
-			chapter.setNumberDepth(0);
-
-			String text = "Посуточный прогноз на период:\n";
 			SimpleDateFormat sdf = new SimpleDateFormat("EEEE, d MMMM yyyy");
-			text += sdf.format(initDate);
-			boolean days = (DateUtil.getDateFromDate(initDate) != DateUtil.getDateFromDate(finalDate)
-					|| DateUtil.getMonthFromDate(initDate) != DateUtil.getMonthFromDate(finalDate)
-					|| DateUtil.getYearFromDate(initDate) != DateUtil.getYearFromDate(finalDate));
-			System.out.println(DateUtil.getDateFromDate(initDate) + "-" + DateUtil.getDateFromDate(finalDate) + "\t" + 
-					DateUtil.getMonthFromDate(initDate) + "-" + DateUtil.getMonthFromDate(finalDate) + "\t" +
-					DateUtil.getYearFromDate(initDate) + "-" + DateUtil.getYearFromDate(finalDate));
-			if (days)
-				text += " — " + sdf.format(finalDate);
-			Paragraph p = new Paragraph(text, font);
-	        p.setAlignment(Element.ALIGN_CENTER);
-			chapter.add(p);
-
-			if (null == place)
-				place = new Place().getDefault();
-			text = (zone >= 0 ? "UTC+" : "") + zone +
-				" " + place.getName() +
-				" " + place.getLatitude() + "°" +
-				", " + place.getLongitude() + "°";
-			p = new Paragraph(text, font);
-	        p.setAlignment(Element.ALIGN_CENTER);
-			chapter.add(p);
-
-			Font fontgray = new Font(baseFont, 10, Font.NORMAL, PDFUtil.FONTCOLORGRAY);
-			text = "Дата составления: " + DateUtil.fulldtf.format(new Date());
-			p = new Paragraph(text, fontgray);
-	        p.setAlignment(Element.ALIGN_CENTER);
-			chapter.add(p);
-
-			p = new Paragraph();
-	        p.setAlignment(Element.ALIGN_CENTER);
-			p.setSpacingAfter(20);
-	        p.add(new Chunk("Автор: ", fontgray));
-	        Chunk chunk = new Chunk(PDFUtil.AUTHOR, new Font(baseFont, 10, Font.UNDERLINE, PDFUtil.FONTCOLOR));
-	        chunk.setAnchor(PDFUtil.WEBSITE);
-	        p.add(chunk);
-	        chapter.add(p);
-
-			Map<Long, List<TimeSeriesDataItem>> series = new HashMap<Long, List<TimeSeriesDataItem>>();
-
-			chapter.add(new Paragraph("С помощью данного прогноза можно определить, какое время суток наиболее благоприятно для ваших планов.", font));
-			chapter.add(Chunk.NEWLINE);
-			chapter.add(new Paragraph("Прогноз классифицирует события по 3 признакам:", font));
-
+			PdfWriter writer = null;
+			Chapter chapter;
+			Font font = null;
 			AspectTypeService service = new AspectTypeService();
-			List<AspectType> types = service.getMainList();
-			Font bfont = new Font(baseFont, 12, Font.BOLD, PDFUtil.FONTCOLOR);
-			com.itextpdf.text.List alist = new com.itextpdf.text.List(false, false, 10);
-			for (AspectType aspectType : types) {
-				if (aspectType.getId() > 3)
-					continue;
+			Map<Long, List<TimeSeriesDataItem>> series = new HashMap<Long, List<TimeSeriesDataItem>>();
+			boolean days = false;
+
+			if (printable) {
+				String filename = PlatformUtil.getPath(Activator.PLUGIN_ID, "/out/period.pdf").getPath();
+				writer = PdfWriter.getInstance(doc, new FileOutputStream(filename));
+		        writer.setPageEvent(new PageEventHandler(doc));
+		        doc.open();
+
+				font = PDFUtil.getRegularFont();
+
+		        //metadata
+		        PDFUtil.getMetaData(doc, "Прогноз событий");
+	
+		        //раздел
+				chapter = new ChapterAutoNumber(PDFUtil.printHeader(new Paragraph(), "Общая информация"));
+				chapter.setNumberDepth(0);
+	
+				String text = "Посуточный прогноз на период:\n";
+				text += sdf.format(initDate);
+				days = (DateUtil.getDateFromDate(initDate) != DateUtil.getDateFromDate(finalDate)
+						|| DateUtil.getMonthFromDate(initDate) != DateUtil.getMonthFromDate(finalDate)
+						|| DateUtil.getYearFromDate(initDate) != DateUtil.getYearFromDate(finalDate));
+				System.out.println(DateUtil.getDateFromDate(initDate) + "-" + DateUtil.getDateFromDate(finalDate) + "\t" + 
+						DateUtil.getMonthFromDate(initDate) + "-" + DateUtil.getMonthFromDate(finalDate) + "\t" +
+						DateUtil.getYearFromDate(initDate) + "-" + DateUtil.getYearFromDate(finalDate));
+				if (days)
+					text += " — " + sdf.format(finalDate);
+				Paragraph p = new Paragraph(text, font);
+		        p.setAlignment(Element.ALIGN_CENTER);
+				chapter.add(p);
+	
+				if (null == place)
+					place = new Place().getDefault();
+				text = (zone >= 0 ? "UTC+" : "") + zone +
+					" " + place.getName() +
+					" " + place.getLatitude() + "°" +
+					", " + place.getLongitude() + "°";
+				p = new Paragraph(text, font);
+		        p.setAlignment(Element.ALIGN_CENTER);
+				chapter.add(p);
+	
+				Font fontgray = new Font(baseFont, 10, Font.NORMAL, PDFUtil.FONTCOLORGRAY);
+				text = "Дата составления: " + DateUtil.fulldtf.format(new Date());
+				p = new Paragraph(text, fontgray);
+		        p.setAlignment(Element.ALIGN_CENTER);
+				chapter.add(p);
+	
+				p = new Paragraph();
+		        p.setAlignment(Element.ALIGN_CENTER);
+				p.setSpacingAfter(20);
+		        p.add(new Chunk("Автор: ", fontgray));
+		        Chunk chunk = new Chunk(PDFUtil.AUTHOR, new Font(baseFont, 10, Font.UNDERLINE, PDFUtil.FONTCOLOR));
+		        chunk.setAnchor(PDFUtil.WEBSITE);
+		        p.add(chunk);
+		        chapter.add(p);
+	
+				chapter.add(new Paragraph("С помощью данного прогноза можно определить, какое время суток наиболее благоприятно для ваших планов.", font));
+				chapter.add(Chunk.NEWLINE);
+				chapter.add(new Paragraph("Прогноз классифицирует события по 3 признакам:", font));
+	
+				List<AspectType> types = service.getMainList();
+				Font bfont = new Font(baseFont, 12, Font.BOLD, PDFUtil.FONTCOLOR);
+				com.itextpdf.text.List alist = new com.itextpdf.text.List(false, false, 10);
+				for (AspectType aspectType : types) {
+					if (aspectType.getId() > 3)
+						continue;
+					ListItem li = new ListItem();
+			        chunk = new Chunk(aspectType.getDescription(), bfont);
+			        li.add(chunk);
+			        chunk = new Chunk(" — " + aspectType.getText(), font);
+			        li.add(chunk);
+			        alist.add(li);
+			        series.put(aspectType.getId(), new ArrayList<TimeSeriesDataItem>());
+				}
+				chapter.add(alist);
+	
+				chapter.add(Chunk.NEWLINE);
+				chapter.add(new Paragraph("Примечание", bfont));
+				alist = new com.itextpdf.text.List(false, false, 10);
 				ListItem li = new ListItem();
-		        chunk = new Chunk(aspectType.getDescription(), bfont);
-		        li.add(chunk);
-		        chunk = new Chunk(" — " + aspectType.getText(), font);
-		        li.add(chunk);
+		        li.add(new Chunk("Если сфера жизни повторно упоминается в течение дня, значит она будет насыщена событиями, действиями и мыслями.", font));
 		        alist.add(li);
-		        series.put(aspectType.getId(), new ArrayList<TimeSeriesDataItem>());
+	
+				li = new ListItem();
+		        li.add(new Chunk("Одна и та же сфера жизни в течение дня может проявиться и негативно и позитивно. "
+		        	+ "Поэтому при составлении плана и ожидании событий учитывайте плюсы, минусы и указанные в тексте факторы, которые на них влияют.", font));
+		        alist.add(li);
+	
+				li = new ListItem();
+		        li.add(new Chunk("Ключевые события указывают на сферы жизни, которые могут вас волновать весь день. "
+		        	+ "Если они повторяются изо дня в день, значит будут регулярно всплывать и потребуют не сиюминутного, а длительного разрешения.", font));
+		        alist.add(li);
+	
+				li = new ListItem();
+		        li.add(new Chunk("Важные, не повторяющиеся события говорят о главной повестке дня и задают тон всему дню. "
+		        	+ "Они являются важным поводом, за которым уже следуют другие, второстепенные негативные и позитивные события.", font));
+		        alist.add(li);
+	
+				li = new ListItem();
+		        li.add(new Chunk("Максимальная погрешность прогноза события ±18 часов.", font));
+		        alist.add(li);
+	
+		        chapter.add(alist);
+				doc.add(chapter);
 			}
-			chapter.add(alist);
-
-			chapter.add(Chunk.NEWLINE);
-			chapter.add(new Paragraph("Примечание", bfont));
-			alist = new com.itextpdf.text.List(false, false, 10);
-			ListItem li = new ListItem();
-	        li.add(new Chunk("Если сфера жизни повторно упоминается в течение дня, значит она будет насыщена событиями, действиями и мыслями.", font));
-	        alist.add(li);
-
-			li = new ListItem();
-	        li.add(new Chunk("Одна и та же сфера жизни в течение дня может проявиться и негативно и позитивно. "
-	        	+ "Поэтому при составлении плана и ожидании событий учитывайте плюсы, минусы и указанные в тексте факторы, которые на них влияют.", font));
-	        alist.add(li);
-
-			li = new ListItem();
-	        li.add(new Chunk("Ключевые события указывают на сферы жизни, которые могут вас волновать весь день. "
-	        	+ "Если они повторяются изо дня в день, значит будут регулярно всплывать и потребуют не сиюминутного, а длительного разрешения.", font));
-	        alist.add(li);
-
-			li = new ListItem();
-	        li.add(new Chunk("Важные, не повторяющиеся события говорят о главной повестке дня и задают тон всему дню. "
-	        	+ "Они являются важным поводом, за которым уже следуют другие, второстепенные негативные и позитивные события.", font));
-	        alist.add(li);
-
-			li = new ListItem();
-	        li.add(new Chunk("Максимальная погрешность прогноза события ±18 часов.", font));
-	        alist.add(li);
-
-	        chapter.add(alist);
-			doc.add(chapter);
-
 			DirectionAspectService servicea = new DirectionAspectService();
 
 			for (Date date = start.getTime(); start.before(end); start.add(Calendar.DATE, 1), date = start.getTime()) {
@@ -242,7 +248,7 @@ public class PeriodCalcHandler extends Handler {
 					event.setBirth(edate);
 					event.setPlace(place);
 					event.setZone(zone);
-					event.calc(true);
+					event.calc(false);
 
 					Event prev = new Event();
 					Calendar cal = Calendar.getInstance();
@@ -251,7 +257,7 @@ public class PeriodCalcHandler extends Handler {
 					prev.setBirth(cal.getTime());
 					prev.setPlace(place);
 					prev.setZone(zone);
-					prev.calc(true);
+					prev.calc(false);
 
 					List<Model> eplanets = event.getConfiguration().getPlanets();
 					Map<Long, Set<PeriodItem>> items = new HashMap<Long, Set<PeriodItem>>();
@@ -343,122 +349,124 @@ public class PeriodCalcHandler extends Handler {
 					times.put(0, items0);
 
 					//формируем документ
-					String sdfdate = sdf.format(date);
-					chapter = new ChapterAutoNumber(PDFUtil.printHeader(new Paragraph(), sdfdate));
-					chapter.setNumberDepth(0);
-					Font fonth5 = PDFUtil.getHeaderFont();
-
-					//аспекты
-					Section section = PDFUtil.printSection(chapter, "Настроение");
-					for (Map.Entry<Long, Set<PeriodItem>> entry : atems.entrySet()) {
-						Set<PeriodItem> list = entry.getValue();
-						if (null == list || 0 == list.size()) {
-							section.add(new Paragraph("Нет данных", font));
-							continue;
-						}
-						list = new LinkedHashSet<PeriodItem>(list);
-						AspectType type = (AspectType)service.find(entry.getKey());
-						section.add(new Paragraph(type.getDescription(), fonth5));
-
-						String typeColor = type.getFontColor();
-						BaseColor color = PDFUtil.htmlColor2Base(typeColor);
-						Font afont = new Font(baseFont, 12, Font.NORMAL, color);
-						Font abfont = new Font(baseFont, 12, Font.BOLD, color);
-
-						alist = new com.itextpdf.text.List(false, false, 10);
-						for (PeriodItem item : list) {
-							li = new ListItem();
-							List<Model> texts = servicea.finds(new SkyPointAspect(item.planet, item.planet2, item.aspect));
-							for (Model model : texts) {
-								PlanetAspectText dirText = (PlanetAspectText)model;
-								if (dirText != null) {
-									li = new ListItem();
-							        chunk = new Chunk(item.planet.getShortName() + " " + type.getSymbol() + " " + item.planet2.getShortName() + ": ", abfont);
-							        li.add(chunk);
-									li.add(new Chunk(StringUtil.removeTags(dirText.getText()), afont));
-									li.setSpacingAfter(10);
-							        alist.add(li);
-										
-									List<TextGender> genders = dirText.getGenderTexts(female, child);
-									for (TextGender gender : genders) {
+					if (printable) {
+						String sdfdate = sdf.format(date);
+						chapter = new ChapterAutoNumber(PDFUtil.printHeader(new Paragraph(), sdfdate));
+						chapter.setNumberDepth(0);
+						Font fonth5 = PDFUtil.getHeaderFont();
+	
+						//аспекты
+						Section section = PDFUtil.printSection(chapter, "Настроение");
+						for (Map.Entry<Long, Set<PeriodItem>> entry : atems.entrySet()) {
+							Set<PeriodItem> list = entry.getValue();
+							if (null == list || 0 == list.size()) {
+								section.add(new Paragraph("Нет данных", font));
+								continue;
+							}
+							list = new LinkedHashSet<PeriodItem>(list);
+							AspectType type = (AspectType)service.find(entry.getKey());
+							section.add(new Paragraph(type.getDescription(), fonth5));
+	
+							String typeColor = type.getFontColor();
+							BaseColor color = PDFUtil.htmlColor2Base(typeColor);
+							Font afont = new Font(baseFont, 12, Font.NORMAL, color);
+							Font abfont = new Font(baseFont, 12, Font.BOLD, color);
+	
+							com.itextpdf.text.List alist = new com.itextpdf.text.List(false, false, 10);
+							for (PeriodItem item : list) {
+								ListItem li = new ListItem();
+								List<Model> texts = servicea.finds(new SkyPointAspect(item.planet, item.planet2, item.aspect));
+								for (Model model : texts) {
+									PlanetAspectText dirText = (PlanetAspectText)model;
+									if (dirText != null) {
 										li = new ListItem();
-								        li.add(new Chunk(PDFUtil.getGenderHeader(gender.getType()) + ": ", abfont));
-										li.add(new Chunk(StringUtil.removeTags(gender.getText()), afont));
+										Chunk chunk = new Chunk(item.planet.getShortName() + " " + type.getSymbol() + " " + item.planet2.getShortName() + ": ", abfont);
+								        li.add(chunk);
+										li.add(new Chunk(StringUtil.removeTags(dirText.getText()), afont));
 										li.setSpacingAfter(10);
 								        alist.add(li);
-									};
-								}
-							}
-						}
-						section.add(alist);
-					}
-
-					//дома
-					for (Map.Entry<Integer, Map<Long, Set<PeriodItem>>> entry : times.entrySet()) {
-						Map <Long, Set<PeriodItem>> items = entry.getValue();
-						if (items != null && items.size() > 0) {
-							int i = entry.getKey();
-							String header = "";
-							switch (i) {
-								case 1: header = "Утро"; break;
-								case 2: header = "День"; break;
-								case 3: header = "Вечер"; break;
-								case 4: header = "Ночь"; break;
-								default: header = "Ключевые события дня";
-							}
-							section = PDFUtil.printSection(chapter, header);
-							if (0 == i) {
-								section.add(new Paragraph("Ключевые события могут произойти в любое время суток", font));
-								section.add(Chunk.NEWLINE);
-							}
-
-							for (Map.Entry<Long, Set<PeriodItem>> entry2 : items.entrySet()) {
-								Set<PeriodItem> list = entry2.getValue();
-								if (null == list || 0 == list.size()) {
-									section.add(new Paragraph("Нет данных", font));
-									continue;
-								}
-								list = new LinkedHashSet<PeriodItem>(list);
-								AspectType type = (AspectType)service.find(entry2.getKey());
-								section.add(new Paragraph(type.getDescription(), fonth5));
-		
-								String typeColor = type.getFontColor();
-								BaseColor color = PDFUtil.htmlColor2Base(typeColor);
-								alist = new com.itextpdf.text.List(false, false, 10);
-
-								if (i > 0) {
-									Set<PeriodItem> list2 = new HashSet<>();
-									for (PeriodItem item : list)
-										if (set0.contains(item))
-											continue;
-										else
-											list2.add(item);
-									list = new LinkedHashSet<PeriodItem>(list2);
-								}
-								if (0 == list.size())
-									section.add(new Paragraph("См. ключевые события", font));
-								else for (PeriodItem item : list) {
-									li = new ListItem();
-									text = "";
-									String tcode = type.getCode();
-									if (tcode.equals("NEGATIVE"))
-										text = item.house.getNegative() + ". Причина – " + item.planet.getNegative();
-									else if (tcode.equals("POSITIVE"))
-										text = item.house.getPositive() + ". Фактор успеха – " + item.planet.getPositive();
-									else {
-										String s = "Контекст – " + (item.planet.isGood() ? item.planet.getPositive() : item.planet.getNegative());
-										text = item.house.getDescription() + ". " + s;
+										
+										List<TextGender> genders = dirText.getGenderTexts(female, child);
+										for (TextGender gender : genders) {
+											li = new ListItem();
+									        li.add(new Chunk(PDFUtil.getGenderHeader(gender.getType()) + ": ", abfont));
+											li.add(new Chunk(StringUtil.removeTags(gender.getText()), afont));
+											li.setSpacingAfter(10);
+									        alist.add(li);
+										};
 									}
-							        chunk = new Chunk(text, new Font(baseFont, 12, Font.NORMAL, color));
-							        li.add(new Chunk(item.house.getName() + ": ", new Font(baseFont, 12, Font.BOLD, color)));
-							        li.add(chunk);
-							        alist.add(li);
 								}
-								section.add(alist);
+							}
+							section.add(alist);
+						}
+	
+						//дома
+						for (Map.Entry<Integer, Map<Long, Set<PeriodItem>>> entry : times.entrySet()) {
+							Map <Long, Set<PeriodItem>> items = entry.getValue();
+							if (items != null && items.size() > 0) {
+								int i = entry.getKey();
+								String header = "";
+								switch (i) {
+									case 1: header = "Утро"; break;
+									case 2: header = "День"; break;
+									case 3: header = "Вечер"; break;
+									case 4: header = "Ночь"; break;
+									default: header = "Ключевые события дня";
+								}
+								section = PDFUtil.printSection(chapter, header);
+								if (0 == i) {
+									section.add(new Paragraph("Ключевые события могут произойти в любое время суток", font));
+									section.add(Chunk.NEWLINE);
+								}
+
+								for (Map.Entry<Long, Set<PeriodItem>> entry2 : items.entrySet()) {
+									Set<PeriodItem> list = entry2.getValue();
+									if (null == list || 0 == list.size()) {
+										section.add(new Paragraph("Нет данных", font));
+										continue;
+									}
+									list = new LinkedHashSet<PeriodItem>(list);
+									AspectType type = (AspectType)service.find(entry2.getKey());
+									section.add(new Paragraph(type.getDescription(), fonth5));
+			
+									String typeColor = type.getFontColor();
+									BaseColor color = PDFUtil.htmlColor2Base(typeColor);
+									com.itextpdf.text.List alist = new com.itextpdf.text.List(false, false, 10);
+	
+									if (i > 0) {
+										Set<PeriodItem> list2 = new HashSet<>();
+										for (PeriodItem item : list)
+											if (set0.contains(item))
+												continue;
+											else
+												list2.add(item);
+										list = new LinkedHashSet<PeriodItem>(list2);
+									}
+									if (0 == list.size())
+										section.add(new Paragraph("См. ключевые события", font));
+									else for (PeriodItem item : list) {
+										ListItem li = new ListItem();
+										String text = "";
+										String tcode = type.getCode();
+										if (tcode.equals("NEGATIVE"))
+											text = item.house.getNegative() + ". Причина – " + item.planet.getNegative();
+										else if (tcode.equals("POSITIVE"))
+											text = item.house.getPositive() + ". Фактор успеха – " + item.planet.getPositive();
+										else {
+											String s = "Контекст – " + (item.planet.isGood() ? item.planet.getPositive() : item.planet.getNegative());
+											text = item.house.getDescription() + ". " + s;
+										}
+										Chunk chunk = new Chunk(text, new Font(baseFont, 12, Font.NORMAL, color));
+								        li.add(new Chunk(item.house.getName() + ": ", new Font(baseFont, 12, Font.BOLD, color)));
+								        li.add(chunk);
+								        alist.add(li);
+									}
+									section.add(alist);
+								}
 							}
 						}
+						doc.add(chapter);
 					}
-					doc.add(chapter);
 				}
 				for (Map.Entry<Long, Double> entry : map.entrySet()) {
 					List<TimeSeriesDataItem> sitems = series.containsKey(entry.getKey()) ? series.get(entry.getKey()) : new ArrayList<TimeSeriesDataItem>();
@@ -470,34 +478,37 @@ public class PeriodCalcHandler extends Handler {
 				System.out.println();
 			}
 
-			if (days) {
-				chapter = new ChapterAutoNumber(PDFUtil.printHeader(new Paragraph(), "Диаграммы"));
-				chapter.setNumberDepth(0);
-
-				//общая диаграмма
-				TimeSeriesCollection dataset = new TimeSeriesCollection();
-				for (Map.Entry<Long, List<TimeSeriesDataItem>> entry : series.entrySet()) {
-					List<TimeSeriesDataItem> sitems = entry.getValue();
-					if (null == sitems || 0 == sitems.size())
-						continue;
-					AspectType asptype = (AspectType)service.find(entry.getKey());
-					if (null == asptype.getDescription())
-						continue;
-					TimeSeries timeSeries = new TimeSeries(asptype.getDescription());
-					for (TimeSeriesDataItem tsdi : sitems)
-						timeSeries.add(tsdi);
-					dataset.addSeries(timeSeries);
-				}
-			    com.itextpdf.text.Image image = PDFUtil.printTimeChart(writer, "Прогноз периода", "Даты", "Баллы", dataset, 500, 0, true);
-				chapter.add(image);
-				doc.add(chapter);
-			}			
-			doc.add(Chunk.NEWLINE);
-	        doc.add(PDFUtil.printCopyright());
+			if (printable) {
+				if (days) {
+					chapter = new ChapterAutoNumber(PDFUtil.printHeader(new Paragraph(), "Диаграммы"));
+					chapter.setNumberDepth(0);
+	
+					//общая диаграмма
+					TimeSeriesCollection dataset = new TimeSeriesCollection();
+					for (Map.Entry<Long, List<TimeSeriesDataItem>> entry : series.entrySet()) {
+						List<TimeSeriesDataItem> sitems = entry.getValue();
+						if (null == sitems || 0 == sitems.size())
+							continue;
+						AspectType asptype = (AspectType)service.find(entry.getKey());
+						if (null == asptype.getDescription())
+							continue;
+						TimeSeries timeSeries = new TimeSeries(asptype.getDescription());
+						for (TimeSeriesDataItem tsdi : sitems)
+							timeSeries.add(tsdi);
+						dataset.addSeries(timeSeries);
+					}
+				    com.itextpdf.text.Image image = PDFUtil.printTimeChart(writer, "Прогноз периода", "Даты", "Баллы", dataset, 500, 0, true);
+					chapter.add(image);
+					doc.add(chapter);
+				}			
+				doc.add(Chunk.NEWLINE);
+		        doc.add(PDFUtil.printCopyright());
+			}
 		} catch(Exception e) {
 			e.printStackTrace();
 		} finally {
-	        doc.close();
+			if (doc != null)
+				doc.close();
 		}
 	}
 
