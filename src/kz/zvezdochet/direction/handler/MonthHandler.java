@@ -135,7 +135,7 @@ public class MonthHandler extends Handler {
 	        p.setAlignment(Element.ALIGN_CENTER);
 			chapter.add(p);
 
-			Font fontgray = new Font(baseFont, 10, Font.NORMAL, PDFUtil.FONTCOLORGRAY);
+			Font fontgray = PDFUtil.getAnnotationFont(false);
 			text = "Дата составления: " + DateUtil.fulldtf.format(new Date());
 			p = new Paragraph(text, fontgray);
 	        p.setAlignment(Element.ALIGN_CENTER);
