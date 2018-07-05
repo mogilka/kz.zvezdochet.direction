@@ -206,7 +206,20 @@ public class PeriodCalcHandler extends Handler {
 				chapter.add(Chunk.NEWLINE);
 				chapter.add(new Paragraph("Примечание", bfont));
 				alist = new com.itextpdf.text.List(false, false, 10);
+				alist.setNumbered(true);
+
 				ListItem li = new ListItem();
+		        li.add(new Chunk("Самые судьбоносные факторы, на которые стоит обратить внимание, перечислены в разделе «Важное». "
+		        	+ "Если в числе важных указаны негативные события, необходимо откорректировать свои планы в указанных сферах жизни и не испытывать судьбу. "
+			        + "Остальные события, даже из раздела «Напряжение», носят временный и не особо глубокий характер.", font));
+		        alist.add(li);
+
+		        li = new ListItem();
+		        li.add(new Chunk("Важные, не повторяющиеся события говорят о главной повестке дня и задают тон всему дню. "
+		        	+ "Они являются важным поводом, за которым уже следуют другие, второстепенные негативные и позитивные события.", font));
+		        alist.add(li);
+
+				li = new ListItem();
 		        li.add(new Chunk("Если сфера жизни повторно упоминается в течение дня, значит она будет насыщена событиями, действиями и мыслями.", font));
 		        alist.add(li);
 	
@@ -218,11 +231,6 @@ public class PeriodCalcHandler extends Handler {
 				li = new ListItem();
 		        li.add(new Chunk("Ключевые события указывают на сферы жизни, которые могут вас волновать весь день. "
 		        	+ "Если они повторяются изо дня в день, значит будут регулярно всплывать и потребуют не сиюминутного, а длительного разрешения.", font));
-		        alist.add(li);
-	
-				li = new ListItem();
-		        li.add(new Chunk("Важные, не повторяющиеся события говорят о главной повестке дня и задают тон всему дню. "
-		        	+ "Они являются важным поводом, за которым уже следуют другие, второстепенные негативные и позитивные события.", font));
 		        alist.add(li);
 	
 				li = new ListItem();
@@ -426,17 +434,19 @@ public class PeriodCalcHandler extends Handler {
 						}
 	
 						//дома
+						SimpleDateFormat sdfshort = new SimpleDateFormat("d MMMM");5
+						String shortdate = sdfshort.format(date);
 						for (Map.Entry<Integer, Map<Long, Set<PeriodItem>>> entry : times.entrySet()) {
 							Map <Long, Set<PeriodItem>> items = entry.getValue();
 							if (items != null && items.size() > 0) {
 								int i = entry.getKey();
 								String header = "";
 								switch (i) {
-									case 1: header = "Утро"; break;
-									case 2: header = "День"; break;
-									case 3: header = "Вечер"; break;
-									case 4: header = "Ночь"; break;
-									default: header = "Ключевые события дня";
+									case 1: header = "Утро " + shortdate; break;
+									case 2: header = "День " + shortdate; break;
+									case 3: header = "Вечер " + shortdate; break;
+									case 4: header = "Ночь " + shortdate; break;
+									default: header = "Ключевые события дня " + shortdate;
 								}
 								section = PDFUtil.printSection(chapter, header);
 								if (0 == i) {
