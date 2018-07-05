@@ -140,15 +140,17 @@ public class PDFExporter {
 	        p.add(chunk);
 	        chapter.add(p);
 
-	        p = new Paragraph("Прогноз содержит как позитивные, так и негативные события. "
-				+ "Негатив - признак того, что вам необходим отдых, переосмысление и мобилизация ресурсов для решения проблемы. "
+	        int ages = finalage - initage + 1;
+	        p = new Paragraph("Прогноз описывает общие тенденции развития событий вашей жизни в ближайшие " + CoreUtil.getAgeString(ages) + ". "
+	        	+ "Перечислены как позитивные, так и негативные события. "
+				+ "Негатив – признак того, что вам необходим отдых, переосмысление и мобилизация ресурсов для решения проблемы. "
 				+ "А также это возможность смягчить напряжение, ведь вы будете знать о нём заранее. "
 				+ "Не зацикливайтесь на негативе, используйте свои сильные стороны и благоприятные события.", font);
 	        p.setSpacingAfter(10);
 			chapter.add(p);
 
 			chapter.add(new Paragraph("Если из возраста в возраст событие повторяется, значит оно создаст большой резонанс.", font));
-			chapter.add(new Paragraph("Максимальная погрешность прогноза события ±1 год.", font));
+			chapter.add(new Paragraph("Максимальная погрешность прогноза события ±6 месяцев.", font));
 
 			p = new Paragraph("Если в прогнозе упомянуты люди, которых уже нет в живых (родители, супруги, родственники), "
 				+ "значит речь идёт о людях, их заменяющих или похожих на них по характеру.", font);
@@ -159,7 +161,6 @@ public class PDFExporter {
 			Map<Integer,Integer> positive = new HashMap<Integer,Integer>();
 			Map<Integer,Integer> negative = new HashMap<Integer,Integer>();
 
-			int ages = finalage - initage + 1;
 			for (int i = 0; i < ages; i++) {
 				int nextage = initage + i;
 				positive.put(nextage, 0);
@@ -488,6 +489,7 @@ public class PDFExporter {
 				SkyPoint skyPoint = spa.getSkyPoint2();
 				if (skyPoint instanceof House) {
 					House house = (House)skyPoint;
+					DirectionText dirText = (DirectionText)service.find(planet, house, type);
 					if (term) {
 						p = new Paragraph();
 	    				p.add(new Chunk(planet.getMark("house"), fonth5));
@@ -495,11 +497,12 @@ public class PDFExporter {
 	    				p.add(new Chunk(" " + planet.getName() + " (", fonth5));
 
 	    				if (planet.getSign().getCode().equals("Ophiuchus"))
-	    					p.add(new Chunk("\u221E", fonth5));
-	    				else
+	    					p.add(new Chunk("\u221E" + " " + planet.getSign().getName(), fonth5));
+	    				else {
 	    					p.add(new Chunk(planet.getSign().getSymbol(), PDFUtil.getHeaderAstroFont()));
-
-	    				p.add(new Chunk(", " + planet.getHouse().getDesignation() + ") ", fonth5));
+	    					p.add(new Chunk(" " + planet.getSign().getName(), fonth5));
+	    				}
+	    				p.add(new Chunk(", " + planet.getHouse().getDesignation() + " дом) ", fonth5));
 	    				
 	    				if (spa.getAspect().getCode().equals("CONJUNCTION") || spa.getAspect().getCode().equals("OPPOSITION"))
 	    					p.add(new Chunk(spa.getAspect().getSymbol(), PDFUtil.getHeaderAstroFont()));
@@ -507,12 +510,13 @@ public class PDFExporter {
 	    					p.add(new Chunk(type.getSymbol(), fonth5));
 
 	    				p.add(new Chunk(" " + house.getDesignation() + " дом", fonth5));
+	    				if (null == dirText)
+	    					p.add(new Chunk(", " + house.getName(), fonth5));
 	    				section.addSection(p);
 	    				section.add(Chunk.NEWLINE);
 					} else
 						section.addSection(new Paragraph(planet.getShortName() + " " + type.getSymbol() + " " + house.getName(), fonth5));
 
-					DirectionText dirText = (DirectionText)service.find(planet, house, type);
 					if (dirText != null) {
 						String typeColor = type.getFontColor();
 						BaseColor color = PDFUtil.htmlColor2Base(typeColor);
@@ -534,16 +538,18 @@ public class PDFExporter {
 	    				int pindex = planets.indexOf(planet2);
 	    				Planet aspl2 = (Planet)planets.get(pindex);
 
-	    				section.add(new Chunk(dirText.getMark(planet, aspl2), fonth5));
+	    				if (dirText != null)
+	    					section.add(new Chunk(dirText.getMark(planet, aspl2), fonth5));
 	    				section.add(new Chunk(planet.getSymbol(), PDFUtil.getHeaderAstroFont()));
 	    				section.add(new Chunk(" " + planet.getName() + " (", fonth5));
 
 	    				if (planet.getSign().getCode().equals("Ophiuchus"))
-	    					section.add(new Chunk("\u221E", fonth5));
-	    				else
+	    					section.add(new Chunk("\u221E" + " " + planet.getSign().getName(), fonth5));
+	    				else {
 	    					section.add(new Chunk(planet.getSign().getSymbol(), PDFUtil.getHeaderAstroFont()));
-
-	    				section.add(new Chunk(", " + planet.getHouse().getDesignation() + ") ", PDFUtil.getHeaderAstroFont()));
+	    					section.add(new Chunk(" " + planet.getSign().getName(), fonth5));
+	    				}
+	    				section.add(new Chunk(", " + planet.getHouse().getDesignation() + " дом) ", fonth5));
 		    				
 	    				if (spa.getAspect().getCode().equals("CONJUNCTION") || spa.getAspect().getCode().equals("OPPOSITION"))
 	    					section.add(new Chunk(spa.getAspect().getSymbol(), PDFUtil.getHeaderAstroFont()));
@@ -553,10 +559,12 @@ public class PDFExporter {
 	    				section.add(new Chunk(" " + planet2.getSymbol(), PDFUtil.getHeaderAstroFont()));
 	    				section.add(new Chunk(" " + planet2.getName() + " (", fonth5));
 	    				if (planet2.getSign().getCode().equals("Ophiuchus"))
-	    					section.add(new Chunk("\u221E", fonth5));
-	    				else
+	    					section.add(new Chunk("\u221E" + " " + planet2.getSign().getName(), fonth5));
+	    				else {
 	    					section.add(new Chunk(planet2.getSign().getSymbol(), PDFUtil.getHeaderAstroFont()));
-	    				section.add(new Chunk(", " + planet2.getHouse().getDesignation() + ")", PDFUtil.getHeaderAstroFont()));
+	    					section.add(new Chunk(" " + planet2.getSign().getName(), fonth5));
+	    				}
+	    				section.add(new Chunk(", " + planet2.getHouse().getDesignation() + " дом)", fonth5));
 	    				section.add(Chunk.NEWLINE);
 	    			} else
 	    				section.add(new Paragraph(planet.getShortName() + " " + type.getSymbol() + " " + planet2.getShortName(), fonth5));
