@@ -370,7 +370,7 @@ public class PeriodCalcHandler extends Handler {
 								String a = "";
 								if (item.aspect.getType().getCode().equals("NEUTRAL"))
 									a = item.planet.isGood() ? item.planet.getShortName() : item.planet.getNegative();
-								else if (item.aspect.getType().getCode().equals("NEGATIVE") || !item.planet.isGood())
+								else if (item.aspect.getType().getCode().equals("NEGATIVE"))
 									a = item.planet.getNegative();
 								else
 									a = item.planet.getPositive();
@@ -422,8 +422,7 @@ public class PeriodCalcHandler extends Handler {
 						items0.put(id, list);
 
 						//собираем данные для диаграммы Гантта
-						String p = item.aspect.getType().getCode().equals("NEGATIVE") || !item.planet.isGood()
-							? item.planet.getNegative() : item.planet.getPositive();
+						String p = item.aspect.getType().getCode().equals("NEGATIVE") ? item.planet.getNegative() : item.planet.getPositive();
 						Map<String, Map<Long, TreeSet<Long>>> hcats = gitems.get(p);
 						if (null == hcats)
 							hcats = new HashMap<>();
@@ -661,12 +660,7 @@ public class PeriodCalcHandler extends Handler {
 						if (cnt > 0) {
 							String title = pgentry.getKey();
 							section = PDFUtil.printSection(chapter, title);
-							int width = 700;
-							if (cnt < 10)
-								width = 500;
-							else if (cnt < 5)
-								width = 250;
-						    image = PDFUtil.printGanttChart(writer, title, "", "", collectiona, 0, width, false);
+						    image = PDFUtil.printGanttChart(writer, title, "", "", collectiona, 0, 0, false);
 						    section.add(image);
 						}
 					}
@@ -701,7 +695,7 @@ public class PeriodCalcHandler extends Handler {
 						}
 						if (collectionh.getSeriesCount() > 0) {
 							section = PDFUtil.printSection(chapter, hgentry.getKey());
-						    image = PDFUtil.printGanttChart(writer, hgentry.getKey(), "", "", collectionh, 0, 700, true);
+						    image = PDFUtil.printGanttChart(writer, hgentry.getKey(), "", "", collectionh, 0, 0, true);
 						    section.add(image);
 						}
 					}
