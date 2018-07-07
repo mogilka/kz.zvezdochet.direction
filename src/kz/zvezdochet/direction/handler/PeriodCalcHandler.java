@@ -243,6 +243,8 @@ public class PeriodCalcHandler extends Handler {
 			DirectionAspectService servicea = new DirectionAspectService();
 
 			Map<String, Map<String, Map<Long, TreeSet<Long>>>> gitems = new HashMap<String, Map<String, Map<Long, TreeSet<Long>>>>();
+			Map<String, Map<String, Map<String, TreeSet<Long>>>> hitems = new HashMap<String, Map<String, Map<String, TreeSet<Long>>>>();
+			Map<String, Map<String, Map<String, TreeSet<Long>>>> pitems = new HashMap<String, Map<String, Map<String, TreeSet<Long>>>>();
 
 			for (Date date = start.getTime(); start.before(end); start.add(Calendar.DATE, 1), date = start.getTime()) {
 //				System.out.println(date);
@@ -280,7 +282,7 @@ public class PeriodCalcHandler extends Handler {
 					for (Model emodel : eplanets) {
 						Planet eplanet = (Planet)emodel;
 						//аспекты считаем только для утра
-						if (1 == i)
+						if (1 == i) {
 							for (Model model : planets) {
 								Planet planet = (Planet)model;
 								PeriodItem item = calc(eplanet, planet);
@@ -295,8 +297,36 @@ public class PeriodCalcHandler extends Handler {
 	
 								double val = map.containsKey(id) ? map.get(id) : 0;
 								map.put(id, val + 1);
-							}
 
+								//собираем аспекты для диаграммы Гантта
+								String pg = eplanet.getShortName();
+								Map<String, Map<String, TreeSet<Long>>> pcats = pitems.get(pg);
+								if (null == pcats)
+									pcats = new HashMap<>();
+
+								String p = planet.getShortName();
+								Map<String, TreeSet<Long>> asps = pcats.get(p);
+								if (null == asps)
+									asps = new HashMap<>();
+
+								String sign = " ";
+								if (item.aspect.getType().getCode().equals("NEUTRAL"))
+									sign = " × ";
+								else if (item.aspect.getType().getCode().equals("NEGATIVE"))
+									sign = " - ";
+								else
+									sign = " + ";
+								String a = pg + sign + p;
+
+								TreeSet<Long> dates = asps.get(a);
+								if (null == dates)
+									dates = new TreeSet<>();
+								dates.add(time);
+								asps.put(a, dates);
+								pcats.put(p, asps);
+								pitems.put(pg, pcats);
+							}
+						}
 						for (Model model : houses) {
 							House house = (House)model;
 							PeriodItem item = calc(eplanet, house);
@@ -324,6 +354,35 @@ public class PeriodCalcHandler extends Handler {
 								list = new HashSet<PeriodItem>();
 							list.add(item);
 							ditems.put(i, list);
+
+							//дома для диаграммы Гантта собираем только для утра
+							if (1 == i) {
+								String hg = house.getName();
+								Map<String, Map<String, TreeSet<Long>>> pcats = hitems.get(hg);
+								if (null == pcats)
+									pcats = new HashMap<>();
+
+								String p = item.planet.getName();
+								Map<String, TreeSet<Long>> asps = pcats.get(p);
+								if (null == asps)
+									asps = new HashMap<>();
+
+								String a = "";
+								if (item.aspect.getType().getCode().equals("NEUTRAL"))
+									a = item.planet.isGood() ? item.planet.getShortName() : item.planet.getNegative();
+								else if (item.aspect.getType().getCode().equals("NEGATIVE") || !item.planet.isGood())
+									a = item.planet.getNegative();
+								else
+									a = item.planet.getPositive();
+
+								TreeSet<Long> dates = asps.get(a);
+								if (null == dates)
+									dates = new TreeSet<>();
+								dates.add(time);
+								asps.put(a, dates);
+								pcats.put(p, asps);
+								hitems.put(hg, pcats);
+							}
 						}
 					}
 					if (items != null && items.size() > 0)
@@ -331,7 +390,7 @@ public class PeriodCalcHandler extends Handler {
 				}
 
 				if (times.size() > 0 || atems.size() > 0) {
-					//определяем ключевые события (которые повторяеются с утра до вечера)
+					//определяем ключевые события (которые повторяются с утра до вечера)
 					Set<PeriodItem> set0 = new HashSet<>();
 					Set<PeriodItem> allitems = new HashSet<>();
 					Collection<Set<PeriodItem>> allsets = ditems.values();
@@ -434,7 +493,7 @@ public class PeriodCalcHandler extends Handler {
 						}
 	
 						//дома
-						SimpleDateFormat sdfshort = new SimpleDateFormat("d MMMM");5
+						SimpleDateFormat sdfshort = new SimpleDateFormat("d MMMM");
 						String shortdate = sdfshort.format(date);
 						for (Map.Entry<Integer, Map<Long, Set<PeriodItem>>> entry : times.entrySet()) {
 							Map <Long, Set<PeriodItem>> items = entry.getValue();
@@ -537,8 +596,8 @@ public class PeriodCalcHandler extends Handler {
 				    section.add(image);
 				    chapter.add(Chunk.NEXTPAGE);
 
-					//диаграмма Гантта
-					section = PDFUtil.printSection(chapter, "Активные периоды");
+					//общая диаграмма Гантта
+					section = PDFUtil.printSection(chapter, "Ключевые периоды");
 			        final TaskSeriesCollection collection = new TaskSeriesCollection();
 					for (Map.Entry<String, Map<String, Map<Long, TreeSet<Long>>>> pentry : gitems.entrySet()) {
 						Map<String, Map<Long, TreeSet<Long>>> hcats = pentry.getValue();
@@ -567,8 +626,85 @@ public class PeriodCalcHandler extends Handler {
 						if (!s.isEmpty())
 							collection.add(s);
 					}
-				    image = PDFUtil.printGanttChart(writer, "Активные периоды", "", "", collection, 0, 700, true);
+				    image = PDFUtil.printGanttChart(writer, "Ключевые периоды", "", "", collection, 0, 700, true);
 				    section.add(image);
+				    chapter.add(Chunk.NEXTPAGE);
+
+					//диаграммы Гантта по аспектам
+					for (Map.Entry<String, Map<String, Map<String, TreeSet<Long>>>> pgentry : pitems.entrySet()) {
+				        final TaskSeriesCollection collectiona = new TaskSeriesCollection();
+				        Map<String, Map<String, TreeSet<Long>>> pcats = pgentry.getValue();
+				        if (null == pcats || 0 == pcats.size())
+				        	continue;
+						for (Map.Entry<String, Map<String, TreeSet<Long>>> pentry : pcats.entrySet()) {
+							Map<String, TreeSet<Long>> asps = pentry.getValue();
+							if (null == asps || 0 == asps.size())
+								continue;
+
+							//с учётом того, что в диаграмме Гантта может иметь место только один отрезок времени
+							//данной категории в серии, то рассматриваем только первое вхождение планеты-дома в общий период
+							TaskSeries s = null;
+							for (Map.Entry<String, TreeSet<Long>> aentry : asps.entrySet()) {
+								s = new TaskSeries(aentry.getKey());
+								TreeSet<Long> dates = aentry.getValue();
+								if (null == dates)
+									continue;
+
+								long initdate = dates.first();
+								long finaldate = (1 == dates.size()) ? initdate + 86400000 : dates.last();
+								s.add(new Task(aentry.getKey(), new SimpleTimePeriod(new Date(initdate), new Date(finaldate))));
+							}
+							if (s != null && !s.isEmpty())
+								collectiona.add(s);
+						}
+						int cnt = collectiona.getSeriesCount();
+						if (cnt > 0) {
+							String title = pgentry.getKey();
+							section = PDFUtil.printSection(chapter, title);
+							int width = 700;
+							if (cnt < 10)
+								width = 500;
+							else if (cnt < 5)
+								width = 250;
+						    image = PDFUtil.printGanttChart(writer, title, "", "", collectiona, 0, width, false);
+						    section.add(image);
+						}
+					}
+				    chapter.add(Chunk.NEXTPAGE);
+
+					//диаграммы Гантта по домам
+					for (Map.Entry<String, Map<String, Map<String, TreeSet<Long>>>> hgentry : hitems.entrySet()) {
+				        final TaskSeriesCollection collectionh = new TaskSeriesCollection();
+				        Map<String, Map<String, TreeSet<Long>>> pcats = hgentry.getValue();
+				        if (null == pcats || 0 == pcats.size())
+				        	continue;
+						for (Map.Entry<String, Map<String, TreeSet<Long>>> pentry : pcats.entrySet()) {
+							Map<String, TreeSet<Long>> asps = pentry.getValue();
+							if (null == asps || 0 == asps.size())
+								continue;
+
+							//с учётом того, что в диаграмме Гантта может иметь место только один отрезок времени
+							//данной категории в серии, то рассматриваем только первое вхождение планеты-дома в общий период
+							TaskSeries s = null;
+							for (Map.Entry<String, TreeSet<Long>> aentry : asps.entrySet()) {
+								s = new TaskSeries(aentry.getKey());
+								TreeSet<Long> dates = aentry.getValue();
+								if (null == dates)
+									continue;
+
+								long initdate = dates.first();
+								long finaldate = (1 == dates.size()) ? initdate + 86400000 : dates.last();
+								s.add(new Task(aentry.getKey(), new SimpleTimePeriod(new Date(initdate), new Date(finaldate))));
+							}
+							if (s != null && !s.isEmpty())
+								collectionh.add(s);
+						}
+						if (collectionh.getSeriesCount() > 0) {
+							section = PDFUtil.printSection(chapter, hgentry.getKey());
+						    image = PDFUtil.printGanttChart(writer, hgentry.getKey(), "", "", collectionh, 0, 700, true);
+						    section.add(image);
+						}
+					}
 					doc.add(chapter);
 				}			
 				doc.add(Chunk.NEWLINE);
