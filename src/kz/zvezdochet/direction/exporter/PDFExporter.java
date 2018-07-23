@@ -108,7 +108,8 @@ public class PDFExporter {
 			chapter.setNumberDepth(0);
 
 			//шапка
-			String text = DateUtil.fulldtf.format(event.getBirth());
+			String text = event.getCallname();
+			text += " - " + DateUtil.fulldtf.format(event.getBirth());
 			Paragraph p = new Paragraph(text, font);
 	        p.setAlignment(Element.ALIGN_CENTER);
 			chapter.add(p);
@@ -514,10 +515,9 @@ public class PDFExporter {
 	    					p.add(new Chunk(", " + house.getName(), fonth5));
 	    				section.addSection(p);
 	    				section.add(Chunk.NEWLINE);
-					} else {
-						String ptext = planet.isPositive() ? planet.getPositive() : planet.getNegative();
-						section.addSection(new Paragraph(house.getName() + " " + ptext, fonth5));
-					}
+					} else
+						section.addSection(new Paragraph(planet.getShortName() + " " + type.getSymbol() + " " + house.getName(), fonth5));
+
 					if (dirText != null) {
 						String typeColor = type.getFontColor();
 						BaseColor color = PDFUtil.htmlColor2Base(typeColor);
