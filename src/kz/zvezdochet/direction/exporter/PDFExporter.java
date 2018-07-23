@@ -193,10 +193,7 @@ public class PDFExporter {
 
 				String code = spa.getAspect().getType().getCode();
 				if (code.equals("NEUTRAL") || code.equals("NEGATIVE") || code.equals("POSITIVE")) {
-					if (!isHouse) {
-						List<SkyPointAspect> list = agemap.get("inner");
-						list.add(spa);
-					} else {
+					if (isHouse) {
 						if (code.equals("NEUTRAL")) {
 							List<SkyPointAspect> list = agemap.get("main");
 							list.add(spa);
@@ -204,6 +201,9 @@ public class PDFExporter {
 							List<SkyPointAspect> list = agemap.get("strong");
 							list.add(spa);
 						}
+					} else {
+						List<SkyPointAspect> list = agemap.get("inner");
+						list.add(spa);
 					}
 					double point = 0;
 					if (code.equals("NEUTRAL")) {
@@ -514,9 +514,10 @@ public class PDFExporter {
 	    					p.add(new Chunk(", " + house.getName(), fonth5));
 	    				section.addSection(p);
 	    				section.add(Chunk.NEWLINE);
-					} else
-						section.addSection(new Paragraph(planet.getShortName() + " " + type.getSymbol() + " " + house.getName(), fonth5));
-
+					} else {
+						String ptext = planet.isPositive() ? planet.getPositive() : planet.getNegative();
+						section.addSection(new Paragraph(house.getName() + " " + ptext, fonth5));
+					}
 					if (dirText != null) {
 						String typeColor = type.getFontColor();
 						BaseColor color = PDFUtil.htmlColor2Base(typeColor);
