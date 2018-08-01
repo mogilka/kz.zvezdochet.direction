@@ -141,7 +141,7 @@ public class PeriodCalcHandler extends Handler {
 		        PDFUtil.getMetaData(doc, "Прогноз событий");
 	
 		        //раздел
-				chapter = new ChapterAutoNumber(PDFUtil.printHeader(new Paragraph(), "Общая информация"));
+				chapter = new ChapterAutoNumber(PDFUtil.printHeader(new Paragraph(), "Общая информация", null));
 				chapter.setNumberDepth(0);
 	
 				String text = "Посуточный прогноз на период:\n";
@@ -442,7 +442,7 @@ public class PeriodCalcHandler extends Handler {
 					//формируем документ
 					if (printable) {
 						String sdfdate = sdf.format(date);
-						chapter = new ChapterAutoNumber(PDFUtil.printHeader(new Paragraph(), sdfdate));
+						chapter = new ChapterAutoNumber(PDFUtil.printHeader(new Paragraph(), sdfdate, null));
 						chapter.setNumberDepth(0);
 						Font fonth5 = PDFUtil.getHeaderFont();
 	
@@ -573,7 +573,7 @@ public class PeriodCalcHandler extends Handler {
 
 			if (printable) {
 				if (days) {
-					chapter = new ChapterAutoNumber(PDFUtil.printHeader(new Paragraph(), "Диаграммы"));
+					chapter = new ChapterAutoNumber(PDFUtil.printHeader(new Paragraph(), "Диаграммы", null));
 					chapter.setNumberDepth(0);
 	
 					//общая диаграмма

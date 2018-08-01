@@ -111,7 +111,7 @@ public class MonthHandler extends Handler {
 
 			//шапка
 			Paragraph p = new Paragraph();
-			PDFUtil.printHeader(p, "Прогноз событий по месяцам");
+			PDFUtil.printHeader(p, "Прогноз событий по месяцам", null);
 			chapter.add(p);
 
 			SimpleDateFormat sdf = new SimpleDateFormat("EEEE, d MMMM yyyy");
@@ -283,7 +283,7 @@ public class MonthHandler extends Handler {
 			for (Map.Entry<Integer, Map<Integer, Map<Long, List<TimeSeriesDataItem>>>> entry : years2.entrySet()) {
 				int y = entry.getKey();
 				String syear = String.valueOf(y);
-				chapter = new ChapterAutoNumber(PDFUtil.printHeader(new Paragraph(), syear));
+				chapter = new ChapterAutoNumber(PDFUtil.printHeader(new Paragraph(), syear, null));
 				chapter.setNumberDepth(0);
 
 				Map<Integer, Map<Long, List<TimeSeriesDataItem>>> months2 = years2.get(y);

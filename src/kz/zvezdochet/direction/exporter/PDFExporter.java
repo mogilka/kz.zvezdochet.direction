@@ -104,7 +104,7 @@ public class PDFExporter {
 	        PDFUtil.getMetaData(doc, "Прогноз событий");
 
 	        //раздел
-			Chapter chapter = new ChapterAutoNumber(PDFUtil.printHeader(new Paragraph(), "Прогноз событий"));
+			Chapter chapter = new ChapterAutoNumber(PDFUtil.printHeader(new Paragraph(), "Прогноз событий", null));
 			chapter.setNumberDepth(0);
 
 			//шапка
@@ -306,7 +306,7 @@ public class PDFExporter {
 			for (Map.Entry<Integer, Map<String, List<SkyPointAspect>>> entry : treeMap.entrySet()) {
 			    int age = entry.getKey();
 			    String agestr = CoreUtil.getAgeString(age);
-				chapter = new ChapterAutoNumber(PDFUtil.printHeader(new Paragraph(), agestr));
+				chapter = new ChapterAutoNumber(PDFUtil.printHeader(new Paragraph(), agestr, null));
 				chapter.setNumberDepth(0);
 
 			    Map<String, List<SkyPointAspect>> agemap = entry.getValue();
@@ -335,7 +335,7 @@ public class PDFExporter {
 			}
 			
 			if (term) {
-				chapter = new ChapterAutoNumber(PDFUtil.printHeader(new Paragraph(), "Сокращения"));
+				chapter = new ChapterAutoNumber(PDFUtil.printHeader(new Paragraph(), "Сокращения", null));
 				chapter.setNumberDepth(0);
 
 				chapter.add(new Paragraph("Раздел событий:", font));
@@ -379,7 +379,7 @@ public class PDFExporter {
 				doc.add(chapter);
 			}
 
-			chapter = new ChapterAutoNumber(PDFUtil.printHeader(new Paragraph(), "Диаграммы"));
+			chapter = new ChapterAutoNumber(PDFUtil.printHeader(new Paragraph(), "Диаграммы", null));
 			chapter.setNumberDepth(0);
 
 			p = new Paragraph();
