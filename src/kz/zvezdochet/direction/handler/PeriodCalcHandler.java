@@ -35,6 +35,7 @@ import com.itextpdf.text.Element;
 import com.itextpdf.text.Font;
 import com.itextpdf.text.ListItem;
 import com.itextpdf.text.Paragraph;
+import com.itextpdf.text.Phrase;
 import com.itextpdf.text.Section;
 import com.itextpdf.text.pdf.BaseFont;
 import com.itextpdf.text.pdf.PdfWriter;
@@ -57,7 +58,6 @@ import kz.zvezdochet.core.service.DataAccessException;
 import kz.zvezdochet.core.util.CalcUtil;
 import kz.zvezdochet.core.util.DateUtil;
 import kz.zvezdochet.core.util.PlatformUtil;
-import kz.zvezdochet.core.util.StringUtil;
 import kz.zvezdochet.direction.Activator;
 import kz.zvezdochet.direction.bean.PeriodItem;
 import kz.zvezdochet.direction.part.PeriodPart;
@@ -88,7 +88,7 @@ public class PeriodCalcHandler extends Handler {
 		Document doc = new Document();
 		try {
 			PeriodPart periodPart = (PeriodPart)activePart.getObject();
-				if (!periodPart.check(0)) return;
+			if (!periodPart.check(0)) return;
 			Event person = periodPart.getPerson();
 			boolean female = person.isFemale();
 			boolean child = person.isChild();
@@ -473,7 +473,7 @@ public class PeriodCalcHandler extends Handler {
 										li = new ListItem();
 										Chunk chunk = new Chunk(item.planet.getShortName() + " " + type.getSymbol() + " " + item.planet2.getShortName() + ": ", abfont);
 								        li.add(chunk);
-										li.add(new Chunk(StringUtil.removeTags(dirText.getText()), afont));
+										li.add(new Phrase(PDFUtil.removeTags(dirText.getText(), afont)));
 										li.setSpacingAfter(10);
 								        alist.add(li);
 										
@@ -481,7 +481,7 @@ public class PeriodCalcHandler extends Handler {
 										for (TextGender gender : genders) {
 											li = new ListItem();
 									        li.add(new Chunk(PDFUtil.getGenderHeader(gender.getType()) + ": ", abfont));
-											li.add(new Chunk(StringUtil.removeTags(gender.getText()), afont));
+											li.add(new Phrase(PDFUtil.removeTags(gender.getText(), afont)));
 											li.setSpacingAfter(10);
 									        alist.add(li);
 										};

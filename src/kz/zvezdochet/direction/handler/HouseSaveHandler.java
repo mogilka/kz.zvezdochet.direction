@@ -23,12 +23,12 @@ import kz.zvezdochet.core.handler.Handler;
 import kz.zvezdochet.core.ui.util.DialogUtil;
 import kz.zvezdochet.core.util.CoreUtil;
 import kz.zvezdochet.core.util.PlatformUtil;
-import kz.zvezdochet.core.util.StringUtil;
 import kz.zvezdochet.direction.Activator;
 import kz.zvezdochet.direction.bean.DirectionText;
 import kz.zvezdochet.direction.bean.PrintDirection;
 import kz.zvezdochet.direction.part.HousePart;
 import kz.zvezdochet.direction.service.DirectionService;
+import kz.zvezdochet.export.util.PDFUtil;
 import kz.zvezdochet.util.Configuration;
 
 /**
@@ -98,10 +98,10 @@ public class HouseSaveHandler extends Handler {
 					if (null == dirText)
 						row += "\n\n";
 					else {
-						row += StringUtil.removeTags(dirText.getText()) + "\n\n";
+						row += PDFUtil.removeTags(dirText.getText(), null) + "\n\n";
 						List<TextGender> genders = dirText.getGenderTexts(event.isFemale(), child);
 						for (TextGender gender : genders)
-							row += StringUtil.removeTags(gender.getText()) + "\n\n";
+							row += PDFUtil.removeTags(gender.getText(), null) + "\n\n";
 					}
 					data.append(row);
 				}

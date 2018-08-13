@@ -46,7 +46,6 @@ import kz.zvezdochet.core.util.CalcUtil;
 import kz.zvezdochet.core.util.CoreUtil;
 import kz.zvezdochet.core.util.DateUtil;
 import kz.zvezdochet.core.util.PlatformUtil;
-import kz.zvezdochet.core.util.StringUtil;
 import kz.zvezdochet.direction.Activator;
 import kz.zvezdochet.direction.bean.DirectionText;
 import kz.zvezdochet.direction.service.DirectionAspectService;
@@ -515,18 +514,20 @@ public class PDFExporter {
 	    					p.add(new Chunk(", " + house.getName(), fonth5));
 	    				section.addSection(p);
 	    				section.add(Chunk.NEWLINE);
-					} else
-						section.addSection(new Paragraph(planet.getShortName() + " " + type.getSymbol() + " " + house.getName(), fonth5));
-
+					} else {
+						boolean negative = type.getPoints() < 0;
+	    				String pname = negative ? planet.getNegative() : planet.getPositive();
+						section.addSection(new Paragraph(pname + " " + type.getSymbol() + " " + house.getName(), fonth5));
+					}
 					if (dirText != null) {
 						String typeColor = type.getFontColor();
 						BaseColor color = PDFUtil.htmlColor2Base(typeColor);
-						section.add(new Paragraph(StringUtil.removeTags(dirText.getText()), new Font(baseFont, 12, Font.NORMAL, color)));
+						section.add(new Paragraph(PDFUtil.removeTags(dirText.getText(), new Font(baseFont, 12, Font.NORMAL, color))));
 						PDFUtil.printGender(section, dirText, female, child, true);
 					}
 					Rule rule = EventRules.ruleHouseDirection(spa, female);
 					if (rule != null)
-						section.add(new Paragraph(StringUtil.removeTags(rule.getText()), font));
+						section.add(new Paragraph(PDFUtil.removeTags(rule.getText(), font)));
 
 				} else if (skyPoint instanceof Planet) {
 					Planet planet2 = (Planet)skyPoint;
@@ -573,7 +574,7 @@ public class PDFExporter {
 					if (dirText != null) {
 		    			String typeColor = type.getFontColor();
 						BaseColor color = PDFUtil.htmlColor2Base(typeColor);
-						section.add(new Paragraph(StringUtil.removeTags(dirText.getText()), new Font(baseFont, 12, Font.NORMAL, color)));
+						section.add(new Paragraph(PDFUtil.removeTags(dirText.getText(), new Font(baseFont, 12, Font.NORMAL, color))));
 						PDFUtil.printGender(section, dirText, female, child, true);
 					}
 				}
