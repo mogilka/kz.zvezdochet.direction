@@ -31,6 +31,8 @@ import com.itextpdf.text.Section;
 import com.itextpdf.text.pdf.BaseFont;
 import com.itextpdf.text.pdf.PdfWriter;
 
+import kz.zvezdochet.analytics.bean.Sphere;
+import kz.zvezdochet.analytics.service.SphereService;
 import kz.zvezdochet.bean.Aspect;
 import kz.zvezdochet.bean.Event;
 import kz.zvezdochet.bean.House;
@@ -79,7 +81,18 @@ public class MonthHandler extends Handler {
 
 			Place place = periodPart.getPlace();
 			double zone = periodPart.getZone();
-	
+
+			Object[] spheres = periodPart.getSpheres();
+			List<Long> selhouses = new ArrayList<>();
+			SphereService sphereService = new SphereService();
+			for (Object item : spheres) {
+				Sphere sphere = (Sphere)item;
+				List<Model> houses = sphereService.getHouses(sphere.getId());
+				for (Model model : houses)
+					if (!selhouses.contains(model.getId()))
+						selhouses.add(model.getId());
+			}
+
 			Configuration conf = person.getConfiguration();
 			List<Model> houses = conf.getHouses();
 	
@@ -249,6 +262,9 @@ public class MonthHandler extends Handler {
 						Map<Long, Integer> hitems = new HashMap<Long, Integer>();
 						for (Planet eplanet : iplanets) {
 							for (Model model : houses) {
+								if (!selhouses.contains(model.getId()))
+									continue;
+
 								House house = (House)model;
 								PeriodItem item = calc(eplanet, house, aspects);
 								if (null == item)
