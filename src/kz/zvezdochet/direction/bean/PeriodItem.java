@@ -3,6 +3,7 @@ package kz.zvezdochet.direction.bean;
 import kz.zvezdochet.bean.Aspect;
 import kz.zvezdochet.bean.House;
 import kz.zvezdochet.bean.Planet;
+import kz.zvezdochet.bean.SkyPointAspect;
 
 /**
  * Вспомогательный класс для отчётов
@@ -26,5 +27,17 @@ public class PeriodItem {
 	public int hashCode() {
 		Integer i = new Integer(house.getId().toString() + aspect.getId().toString());
 		return i.hashCode();
+	}
+
+	/**
+	 * Возвращает аналогичный аспект планет
+	 * @return аспект планет
+	 */
+	public SkyPointAspect getPlanetAspect() {
+		SkyPointAspect spa = new SkyPointAspect();
+		spa.setAspect(aspect);
+		spa.setSkyPoint1(planet);
+		spa.setSkyPoint2(planet2);
+		return spa;
 	}
 }
