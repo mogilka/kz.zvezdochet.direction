@@ -141,7 +141,7 @@ public class PDFExporter {
 	        chapter.add(p);
 
 	        int ages = finalage - initage + 1;
-	        p = new Paragraph("Прогноз описывает общие тенденции развития событий вашей жизни в ближайшие " + CoreUtil.getAgeString(ages) + ". "
+	        p = new Paragraph("Прогноз описывает самые значительные тенденции развития вашей жизни в ближайшие " + CoreUtil.getAgeString(ages) + ". "
 	        	+ "Перечислены как позитивные, так и негативные события. "
 				+ "Негатив – признак того, что вам необходим отдых, переосмысление и мобилизация ресурсов для решения проблемы. "
 				+ "А также это возможность смягчить напряжение, ведь вы будете знать о нём заранее. "
@@ -209,14 +209,14 @@ public class PDFExporter {
 					if (code.equals("NEUTRAL")) {
 						if (pcode.equals("Lilith") || pcode.equals("Kethu")) {
 							negative.put(age, negative.get(age) + 1);
-							point -= 2;
+							--point;
 						} else {
 							positive.put(age, positive.get(age) + 1);
-							point += 2;
+							++point;
 						}
 					} else if (code.equals("POSITIVE")) {
 						positive.put(age, positive.get(age) + 1);
-						++point;
+						point += 2;
 					} else if (code.equals("NEGATIVE")) {
 						negative.put(age, negative.get(age) + 1);
 						--point;
@@ -273,7 +273,7 @@ public class PDFExporter {
 
 	        //
 			chapter.add(Chunk.NEWLINE);
-			p = new Paragraph("Как найти событие?", fonth5);
+			p = new Paragraph("Как найти конкретное событие?", fonth5);
 			p.setSpacingAfter(10);
 			chapter.add(p);
 			com.itextpdf.text.List ilist = new com.itextpdf.text.List(false, false, 10);
@@ -394,7 +394,7 @@ public class PDFExporter {
 	        list.add(li);
 
 			li = new ListItem();
-	        li.add(new Chunk("Показатели на нуле указывают на сбалансированность ситуации", font));
+	        li.add(new Chunk("Показатели на нуле указывают на нейтральность ситуации", font));
 	        list.add(li);
 
 			li = new ListItem();
@@ -534,48 +534,51 @@ public class PDFExporter {
 					if (planet.getNumber() > planet2.getNumber())
 						continue;
 
-					PlanetAspectText dirText = (PlanetAspectText)servicea.find(spa, true);
-	    			if (term) {
-	    				List<Model> planets = event.getConfiguration().getPlanets();
-	    				int pindex = planets.indexOf(planet2);
-	    				Planet aspl2 = (Planet)planets.get(pindex);
-
-	    				if (dirText != null)
-	    					section.add(new Chunk(dirText.getMark(planet, aspl2), fonth5));
-	    				section.add(new Chunk(planet.getSymbol(), PDFUtil.getHeaderAstroFont()));
-	    				section.add(new Chunk(" " + planet.getName() + " (", fonth5));
-
-	    				if (planet.getSign().getCode().equals("Ophiuchus"))
-	    					section.add(new Chunk("\u221E" + " " + planet.getSign().getName(), fonth5));
-	    				else {
-	    					section.add(new Chunk(planet.getSign().getSymbol(), PDFUtil.getHeaderAstroFont()));
-	    					section.add(new Chunk(" " + planet.getSign().getName(), fonth5));
-	    				}
-	    				section.add(new Chunk(", " + planet.getHouse().getDesignation() + " дом) ", fonth5));
-		    				
-	    				if (spa.getAspect().getCode().equals("CONJUNCTION") || spa.getAspect().getCode().equals("OPPOSITION"))
-	    					section.add(new Chunk(spa.getAspect().getSymbol(), PDFUtil.getHeaderAstroFont()));
-	    				else
-	    					section.add(new Chunk(type.getSymbol(), fonth5));
-
-	    				section.add(new Chunk(" " + planet2.getSymbol(), PDFUtil.getHeaderAstroFont()));
-	    				section.add(new Chunk(" " + planet2.getName() + " (", fonth5));
-	    				if (planet2.getSign().getCode().equals("Ophiuchus"))
-	    					section.add(new Chunk("\u221E" + " " + planet2.getSign().getName(), fonth5));
-	    				else {
-	    					section.add(new Chunk(planet2.getSign().getSymbol(), PDFUtil.getHeaderAstroFont()));
-	    					section.add(new Chunk(" " + planet2.getSign().getName(), fonth5));
-	    				}
-	    				section.add(new Chunk(", " + planet2.getHouse().getDesignation() + " дом)", fonth5));
-	    				section.add(Chunk.NEWLINE);
-	    			} else
-	    				section.add(new Paragraph(planet.getShortName() + " " + type.getSymbol() + " " + planet2.getShortName(), fonth5));
-
-					if (dirText != null) {
-		    			String typeColor = type.getFontColor();
-						BaseColor color = PDFUtil.htmlColor2Base(typeColor);
-						section.add(new Paragraph(PDFUtil.removeTags(dirText.getText(), new Font(baseFont, 12, Font.NORMAL, color))));
-						PDFUtil.printGender(section, dirText, female, child, true);
+					List<Model> texts = servicea.finds(spa);
+					for (Model model : texts) {
+						PlanetAspectText dirText = (PlanetAspectText)model;
+		    			if (term) {
+		    				List<Model> planets = event.getConfiguration().getPlanets();
+		    				int pindex = planets.indexOf(planet2);
+		    				Planet aspl2 = (Planet)planets.get(pindex);
+	
+		    				if (dirText != null)
+		    					section.add(new Chunk(dirText.getMark(planet, aspl2), fonth5));
+		    				section.add(new Chunk(planet.getSymbol(), PDFUtil.getHeaderAstroFont()));
+		    				section.add(new Chunk(" " + planet.getName() + " (", fonth5));
+	
+		    				if (planet.getSign().getCode().equals("Ophiuchus"))
+		    					section.add(new Chunk("\u221E" + " " + planet.getSign().getName(), fonth5));
+		    				else {
+		    					section.add(new Chunk(planet.getSign().getSymbol(), PDFUtil.getHeaderAstroFont()));
+		    					section.add(new Chunk(" " + planet.getSign().getName(), fonth5));
+		    				}
+		    				section.add(new Chunk(", " + planet.getHouse().getDesignation() + " дом) ", fonth5));
+			    				
+		    				if (spa.getAspect().getCode().equals("CONJUNCTION") || spa.getAspect().getCode().equals("OPPOSITION"))
+		    					section.add(new Chunk(spa.getAspect().getSymbol(), PDFUtil.getHeaderAstroFont()));
+		    				else
+		    					section.add(new Chunk(type.getSymbol(), fonth5));
+	
+		    				section.add(new Chunk(" " + planet2.getSymbol(), PDFUtil.getHeaderAstroFont()));
+		    				section.add(new Chunk(" " + planet2.getName() + " (", fonth5));
+		    				if (planet2.getSign().getCode().equals("Ophiuchus"))
+		    					section.add(new Chunk("\u221E" + " " + planet2.getSign().getName(), fonth5));
+		    				else {
+		    					section.add(new Chunk(planet2.getSign().getSymbol(), PDFUtil.getHeaderAstroFont()));
+		    					section.add(new Chunk(" " + planet2.getSign().getName(), fonth5));
+		    				}
+		    				section.add(new Chunk(", " + planet2.getHouse().getDesignation() + " дом)", fonth5));
+		    				section.add(Chunk.NEWLINE);
+		    			} else
+		    				section.add(new Paragraph(planet.getShortName() + " " + type.getSymbol() + " " + planet2.getShortName(), fonth5));
+	
+						if (dirText != null) {
+			    			String typeColor = type.getFontColor();
+							BaseColor color = PDFUtil.htmlColor2Base(typeColor);
+							section.add(new Paragraph(PDFUtil.removeTags(dirText.getText(), new Font(baseFont, 12, Font.NORMAL, color))));
+							PDFUtil.printGender(section, dirText, female, child, true);
+						}
 					}
 				}
 			}
@@ -657,7 +660,7 @@ public class PDFExporter {
         list.add(li);
 
 		li = new ListItem();
-        li.add(new Chunk("Показатели на нуле указывают на сбалансированность ситуации", font));
+        li.add(new Chunk("Показатели на нуле указывают на нейтральность ситуации", font));
         list.add(li);
 
 		li = new ListItem();
