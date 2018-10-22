@@ -125,8 +125,12 @@ public class AgePart extends ModelListView {
 	 */
 	public void setEvent(Event event) {
 		this.event = event;
-		spFrom.setSelection(0);
-		spTo.setSelection(event.getAge());
+		int age = spFrom.getSelection();
+		if (age < 1)
+			spFrom.setSelection(0);
+		age = spTo.getSelection();
+		if (age < 1)
+			spTo.setSelection(event.getAge());
 	}
 
 	@Override
