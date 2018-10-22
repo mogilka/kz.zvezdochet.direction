@@ -104,10 +104,10 @@ public class AgeCalcHandler extends Handler {
 				}
 				//дирекции планеты к куспидам домов
 				if (houses != null) {
-					for (Model model : selplanets) {
-						Planet selp = (Planet)model;
-						for (Model model2 : selhouses) {
-							House selp2 = (House)model2;
+					for (Model model2 : selhouses) {
+						House selp2 = (House)model2;
+						for (Model model : selplanets) {
+							Planet selp = (Planet)model;
 							manageCalc(selp, selp2, age);
 						}
 					}
@@ -163,12 +163,16 @@ public class AgeCalcHandler extends Handler {
 			double one = makeAge(point1.getCoord(), age, !retro);
 			double two = point2.getCoord();
 			double res = CalcUtil.getDifference(one, two);
-	
+
 			//определяем, является ли аспект стандартным
 			for (Model realasp : aspects) {
 				Aspect a = (Aspect)realasp;
 				if (aspectype != null && !aspectype.equals(a.getType().getCode()))
 					continue;
+
+				if (a.getPlanetid() > 0 && a.getPlanetid() != point1.getId())
+					continue;
+
 				if (a.isExact(res)) {
 					SkyPointAspect aspect = new SkyPointAspect();
 					point1.setCoord(one);
