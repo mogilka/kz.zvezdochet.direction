@@ -100,10 +100,10 @@ public class PDFExporter {
 	        doc.open();
 
 	        //metadata
-	        PDFUtil.getMetaData(doc, "Прогноз событий");
+	        PDFUtil.getMetaData(doc, "Долгосрочный прогноз");
 
 	        //раздел
-			Chapter chapter = new ChapterAutoNumber(PDFUtil.printHeader(new Paragraph(), "Прогноз событий", null));
+			Chapter chapter = new ChapterAutoNumber(PDFUtil.printHeader(new Paragraph(), "Долгосрочный прогноз", null));
 			chapter.setNumberDepth(0);
 
 			//шапка
@@ -153,7 +153,7 @@ public class PDFExporter {
 			chapter.add(new Paragraph("Максимальная погрешность прогноза события ±6 месяцев.", font));
 
 			p = new Paragraph("Если в прогнозе упомянуты люди, которых уже нет в живых (родители, супруги, родственники), "
-				+ "значит речь идёт о людях, их заменяющих или похожих на них по характеру.", font);
+				+ "значит речь идёт о людях, их заменяющих (опекуны, крёстные родители) или похожих на них по характеру.", font);
 			p.setSpacingBefore(10);
 			chapter.add(p);
 
@@ -174,35 +174,46 @@ public class PDFExporter {
 			Map<Integer, Map<Long, Double>> seriesa = new HashMap<Integer, Map<Long, Double>>();
 
 			//события
-			Map<Integer, Map<String, List<SkyPointAspect>>> map = new HashMap<Integer, Map<String, List<SkyPointAspect>>>();
+			Map<Integer, TreeMap<Integer, List<SkyPointAspect>>> map = new HashMap<Integer, TreeMap<Integer, List<SkyPointAspect>>>();
 			for (SkyPointAspect spa : spas) {
 				Planet planet = (Planet)spa.getSkyPoint1();
 				String pcode = planet.getCode();
-				if (pcode.equals("Kethu") && spa.getAspect().getCode().equals("OPPOSITION"))
-					continue;
+				boolean isHouse = spa.getSkyPoint2() instanceof House;
+
+				if (spa.getAspect().getCode().equals("OPPOSITION")) {
+					if (isHouse) {
+						if	(pcode.equals("Kethu") || pcode.equals("Rakhu"))
+							continue;
+					} else {
+						Planet planet2 = (Planet)spa.getSkyPoint2();
+						String pcode2 = planet2.getCode();
+						if	(pcode.equals("Kethu") || pcode.equals("Rakhu")
+								|| pcode2.equals("Kethu") || pcode2.equals("Rakhu"))
+							continue;
+					}
+				}
 
 				int age = (int)spa.getAge();
-				Map<String, List<SkyPointAspect>> agemap = map.get(age);
+				TreeMap<Integer, List<SkyPointAspect>> agemap = map.get(age);
 				if (null == agemap) {
-					agemap = new HashMap<String, List<SkyPointAspect>>();
-					agemap.put("main", new ArrayList<SkyPointAspect>());
-					agemap.put("strong", new ArrayList<SkyPointAspect>());
-					agemap.put("inner", new ArrayList<SkyPointAspect>());
+					agemap = new TreeMap<Integer, List<SkyPointAspect>>();
+					agemap.put(0, new ArrayList<SkyPointAspect>());
+					agemap.put(1, new ArrayList<SkyPointAspect>());
+					agemap.put(2, new ArrayList<SkyPointAspect>());
 				}
-				boolean isHouse = spa.getSkyPoint2() instanceof House;
 
 				String code = spa.getAspect().getType().getCode();
 				if (code.equals("NEUTRAL") || code.equals("NEGATIVE") || code.equals("POSITIVE")) {
 					if (isHouse) {
 						if (code.equals("NEUTRAL")) {
-							List<SkyPointAspect> list = agemap.get("main");
+							List<SkyPointAspect> list = agemap.get(0);
 							list.add(spa);
 						} else {
-							List<SkyPointAspect> list = agemap.get("strong");
+							List<SkyPointAspect> list = agemap.get(1);
 							list.add(spa);
 						}
 					} else {
-						List<SkyPointAspect> list = agemap.get("inner");
+						List<SkyPointAspect> list = agemap.get(2);
 						list.add(spa);
 					}
 					double point = 0;
@@ -301,15 +312,18 @@ public class PDFExporter {
 	        doc.add(chapter);
 
 			HouseService serviceh = new HouseService();
-			Map<Integer, Map<String, List<SkyPointAspect>>> treeMap = new TreeMap<Integer, Map<String, List<SkyPointAspect>>>(map);
-			for (Map.Entry<Integer, Map<String, List<SkyPointAspect>>> entry : treeMap.entrySet()) {
+			Map<Integer, TreeMap<Integer, List<SkyPointAspect>>> treeMap = new TreeMap<Integer, TreeMap<Integer, List<SkyPointAspect>>>(map);
+			for (Map.Entry<Integer, TreeMap<Integer, List<SkyPointAspect>>> entry : treeMap.entrySet()) {
+				TreeMap<Integer, List<SkyPointAspect>> agemap = entry.getValue();
+				if (agemap.isEmpty())
+					continue;
+
 			    int age = entry.getKey();
 			    String agestr = CoreUtil.getAgeString(age);
 				chapter = new ChapterAutoNumber(PDFUtil.printHeader(new Paragraph(), agestr, null));
 				chapter.setNumberDepth(0);
 
-			    Map<String, List<SkyPointAspect>> agemap = entry.getValue();
-				for (Map.Entry<String, List<SkyPointAspect>> subentry : agemap.entrySet())
+				for (Map.Entry<Integer, List<SkyPointAspect>> subentry : agemap.entrySet())
 					printEvents(event, chapter, age, subentry.getKey(), subentry.getValue());
 
 				//диаграмма возраста
@@ -390,7 +404,7 @@ public class PDFExporter {
 
 			list = new com.itextpdf.text.List(false, false, 10);
 			li = new ListItem();
-	        li.add(new Chunk("Показатели выше нуля указывают на успех и лёгкость", font));
+	        li.add(new Chunk("Показатели выше нуля указывают на успех и лёгкость", new Font(baseFont, 12, Font.NORMAL, new BaseColor(0, 102, 102))));
 	        list.add(li);
 
 			li = new ListItem();
@@ -398,7 +412,7 @@ public class PDFExporter {
 	        list.add(li);
 
 			li = new ListItem();
-	        li.add(new Chunk("Показатели ниже нуля указывают на трудности и напряжение", font));
+	        li.add(new Chunk("Показатели ниже нуля указывают на трудности и напряжение", new Font(baseFont, 12, Font.NORMAL, new BaseColor(102, 0, 51))));
 	        list.add(li);
 	        chapter.add(list);
 	        chapter.add(Chunk.NEWLINE);
@@ -450,20 +464,23 @@ public class PDFExporter {
 	/**
 	 * Генерация событий по категориям
 	 */
-	private Section printEvents(Event event, Chapter chapter, int age, String code, List<SkyPointAspect> spas) {
+	private Section printEvents(Event event, Chapter chapter, int age, int code, List<SkyPointAspect> spas) {
 		try {
+			if (spas.isEmpty())
+				return null;
+
 			String header = "";
 			Paragraph p = null;
 			String agestr = CoreUtil.getAgeString(age);
-			if (code.equals("main")) {
+			if (0 == code) {
 				header += "Значимые события";
 				p = new Paragraph("В данном разделе описаны жизненноважные, долгожданные, переломные события, "
 					+ "которые произойдут в возрасте " + agestr + ", надолго запомнятся и повлекут за собой перемены", font);
-			} else if (code.equals("strong")) {
+			} else if (1 == code) {
 				header += "Менее значимые события";
 				p = new Paragraph("В данном разделе описаны краткосрочные события, "
 					+ "которые произойдут в возрасте " + agestr + " и не будут иметь больших последствий", font);
-			} else if (code.equals("inner")) {
+			} else if (2 == code) {
 				header += "Проявления личности";
 				p = new Paragraph("В данном разделе описаны черты вашей личности, которые станут особенно яркими в возрасте " + agestr, font);
 			}
@@ -517,7 +534,7 @@ public class PDFExporter {
 					} else {
 						boolean negative = type.getPoints() < 0;
 	    				String pname = negative ? planet.getNegative() : planet.getPositive();
-						section.addSection(new Paragraph(pname + " " + type.getSymbol() + " " + house.getName(), fonth5));
+						section.addSection(new Paragraph(house.getName() + " " + type.getSymbol() + " " + pname, fonth5));
 					}
 					if (dirText != null) {
 						String typeColor = type.getFontColor();
@@ -531,9 +548,6 @@ public class PDFExporter {
 
 				} else if (skyPoint instanceof Planet) {
 					Planet planet2 = (Planet)skyPoint;
-					if (planet.getNumber() > planet2.getNumber())
-						continue;
-
 					List<Model> texts = servicea.finds(spa);
 					for (Model model : texts) {
 						PlanetAspectText dirText = (PlanetAspectText)model;
@@ -541,37 +555,39 @@ public class PDFExporter {
 		    				List<Model> planets = event.getConfiguration().getPlanets();
 		    				int pindex = planets.indexOf(planet2);
 		    				Planet aspl2 = (Planet)planets.get(pindex);
-	
+
+		    				p = new Paragraph();
 		    				if (dirText != null)
-		    					section.add(new Chunk(dirText.getMark(planet, aspl2), fonth5));
-		    				section.add(new Chunk(planet.getSymbol(), PDFUtil.getHeaderAstroFont()));
-		    				section.add(new Chunk(" " + planet.getName() + " (", fonth5));
+		    					p.add(new Chunk(dirText.getMark(planet, aspl2), fonth5));
+		    				p.add(new Chunk(planet.getSymbol(), PDFUtil.getHeaderAstroFont()));
+		    				p.add(new Chunk(" " + planet.getName() + " (", fonth5));
 	
 		    				if (planet.getSign().getCode().equals("Ophiuchus"))
-		    					section.add(new Chunk("\u221E" + " " + planet.getSign().getName(), fonth5));
+		    					p.add(new Chunk("\u221E" + " " + planet.getSign().getName(), fonth5));
 		    				else {
-		    					section.add(new Chunk(planet.getSign().getSymbol(), PDFUtil.getHeaderAstroFont()));
-		    					section.add(new Chunk(" " + planet.getSign().getName(), fonth5));
+		    					p.add(new Chunk(planet.getSign().getSymbol(), PDFUtil.getHeaderAstroFont()));
+		    					p.add(new Chunk(" " + planet.getSign().getName(), fonth5));
 		    				}
-		    				section.add(new Chunk(", " + planet.getHouse().getDesignation() + " дом) ", fonth5));
+		    				p.add(new Chunk(", " + planet.getHouse().getDesignation() + " дом) ", fonth5));
 			    				
 		    				if (spa.getAspect().getCode().equals("CONJUNCTION") || spa.getAspect().getCode().equals("OPPOSITION"))
-		    					section.add(new Chunk(spa.getAspect().getSymbol(), PDFUtil.getHeaderAstroFont()));
+		    					p.add(new Chunk(spa.getAspect().getSymbol(), PDFUtil.getHeaderAstroFont()));
 		    				else
-		    					section.add(new Chunk(type.getSymbol(), fonth5));
+		    					p.add(new Chunk(type.getSymbol(), fonth5));
 	
-		    				section.add(new Chunk(" " + planet2.getSymbol(), PDFUtil.getHeaderAstroFont()));
-		    				section.add(new Chunk(" " + planet2.getName() + " (", fonth5));
+		    				p.add(new Chunk(" " + planet2.getSymbol(), PDFUtil.getHeaderAstroFont()));
+		    				p.add(new Chunk(" " + planet2.getName() + " (", fonth5));
 		    				if (planet2.getSign().getCode().equals("Ophiuchus"))
-		    					section.add(new Chunk("\u221E" + " " + planet2.getSign().getName(), fonth5));
+		    					p.add(new Chunk("\u221E" + " " + planet2.getSign().getName(), fonth5));
 		    				else {
-		    					section.add(new Chunk(planet2.getSign().getSymbol(), PDFUtil.getHeaderAstroFont()));
-		    					section.add(new Chunk(" " + planet2.getSign().getName(), fonth5));
+		    					p.add(new Chunk(planet2.getSign().getSymbol(), PDFUtil.getHeaderAstroFont()));
+		    					p.add(new Chunk(" " + planet2.getSign().getName(), fonth5));
 		    				}
-		    				section.add(new Chunk(", " + planet2.getHouse().getDesignation() + " дом)", fonth5));
+		    				p.add(new Chunk(", " + planet2.getHouse().getDesignation() + " дом)", fonth5));
+		    				section.addSection(p);
 		    				section.add(Chunk.NEWLINE);
 		    			} else
-		    				section.add(new Paragraph(planet.getShortName() + " " + type.getSymbol() + " " + planet2.getShortName(), fonth5));
+		    				section.addSection(new Paragraph(planet.getShortName() + " " + type.getSymbol() + " " + planet2.getShortName(), fonth5));
 	
 						if (dirText != null) {
 			    			String typeColor = type.getFontColor();
@@ -656,7 +672,7 @@ public class PDFExporter {
 
 		com.itextpdf.text.List list = new com.itextpdf.text.List(false, false, 10);
 		ListItem li = new ListItem();
-        li.add(new Chunk("Показатели выше нуля указывают на успех и лёгкость", font));
+        li.add(new Chunk("Показатели выше нуля указывают на успех и лёгкость", new Font(baseFont, 12, Font.NORMAL, new BaseColor(0, 102, 102))));
         list.add(li);
 
 		li = new ListItem();
@@ -664,7 +680,7 @@ public class PDFExporter {
         list.add(li);
 
 		li = new ListItem();
-        li.add(new Chunk("Показатели ниже нуля указывают на трудности и напряжение", font));
+        li.add(new Chunk("Показатели ниже нуля указывают на трудности и напряжение", new Font(baseFont, 12, Font.NORMAL, new BaseColor(102, 0, 51))));
         list.add(li);
         section.add(list);
 	}
