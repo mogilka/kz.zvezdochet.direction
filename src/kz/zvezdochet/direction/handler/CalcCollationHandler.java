@@ -122,7 +122,7 @@ public class CalcCollationHandler extends Handler {
 			//определяем, является ли аспект стандартным
 			for (Model realasp : aspects) {
 				Aspect a = (Aspect)realasp;
-				if (a.isExact(res)) {
+				if (a.isAspect(res)) {
 					SkyPointAspect spa = new SkyPointAspect();
 					spa.setScore(res);
 					spa.setAspect(a);
