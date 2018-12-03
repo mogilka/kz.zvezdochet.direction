@@ -503,6 +503,8 @@ public class PDFExporter {
 				if (planet.isLilithed() && type.getCode().equals("NEUTRAL"))
 					continue;
 
+				String acode = spa.getAspect().getCode();
+
 				SkyPoint skyPoint = spa.getSkyPoint2();
 				if (skyPoint instanceof House) {
 					House house = (House)skyPoint;
@@ -536,6 +538,16 @@ public class PDFExporter {
 	    				String pname = negative ? planet.getNegative() : planet.getPositive();
 						section.addSection(new Paragraph(house.getName() + " " + type.getSymbol() + " " + pname, fonth5));
 					}
+
+					if (acode.equals("QUADRATURE"))
+						section.add(new Paragraph("Уровень критичности: высокий", PDFUtil.getDangerFont()));
+					else if (acode.equals("OPPOSITION"))
+						section.add(new Paragraph("Уровень критичности: средний", PDFUtil.getWarningFont()));
+					else if (acode.equals("TRIN"))
+						section.add(new Paragraph("Уровень успеха: высокий", PDFUtil.getSuccessFont()));
+					else if (acode.equals("SEXTILE"))
+						section.add(new Paragraph("Уровень успеха: средний", PDFUtil.getNeutralFont()));
+
 					if (dirText != null) {
 						String typeColor = type.getFontColor();
 						BaseColor color = PDFUtil.htmlColor2Base(typeColor);
@@ -588,7 +600,16 @@ public class PDFExporter {
 		    				section.add(Chunk.NEWLINE);
 		    			} else
 		    				section.addSection(new Paragraph(planet.getShortName() + " " + type.getSymbol() + " " + planet2.getShortName(), fonth5));
-	
+
+						if (acode.equals("QUADRATURE"))
+							section.add(new Paragraph("Уровень критичности: высокий", PDFUtil.getDangerFont()));
+						else if (acode.equals("OPPOSITION"))
+							section.add(new Paragraph("Уровень критичности: средний", PDFUtil.getWarningFont()));
+						else if (acode.equals("TRIN"))
+							section.add(new Paragraph("Уровень успеха: высокий", PDFUtil.getSuccessFont()));
+						else if (acode.equals("SEXTILE"))
+							section.add(new Paragraph("Уровень успеха: средний", PDFUtil.getNeutralFont()));
+
 						if (dirText != null) {
 			    			String typeColor = type.getFontColor();
 							BaseColor color = PDFUtil.htmlColor2Base(typeColor);
