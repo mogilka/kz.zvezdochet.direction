@@ -94,7 +94,7 @@ public class PDFExporter {
 	public void generate(Event event, List<SkyPointAspect> spas, int initage, int finalage) {
 		Document doc = new Document();
 		try {
-			String filename = PlatformUtil.getPath(Activator.PLUGIN_ID, "/out/events.pdf").getPath();
+			String filename = PlatformUtil.getPath(Activator.PLUGIN_ID, "/out/trends.pdf").getPath();
 			PdfWriter writer = PdfWriter.getInstance(doc, new FileOutputStream(filename));
 	        writer.setPageEvent(new PageEventHandler(doc));
 	        doc.open();
@@ -142,7 +142,7 @@ public class PDFExporter {
 
 	        int ages = finalage - initage + 1;
 	        p = new Paragraph("Прогноз описывает самые значительные тенденции развития вашей жизни в ближайшие " + CoreUtil.getAgeString(ages) + ". "
-	        	+ "Перечислены как позитивные, так и негативные события. "
+	        	+ "Перечислены как позитивные, так и негативные тенденции. "
 				+ "Негатив – признак того, что вам необходим отдых, переосмысление и мобилизация ресурсов для решения проблемы. "
 				+ "А также это возможность смягчить напряжение, ведь вы будете знать о нём заранее. "
 				+ "Не зацикливайтесь на негативе, используйте свои сильные стороны и благоприятные события.", font);
@@ -150,7 +150,7 @@ public class PDFExporter {
 			chapter.add(p);
 
 			chapter.add(new Paragraph("Если из возраста в возраст событие повторяется, значит оно создаст большой резонанс.", font));
-			chapter.add(new Paragraph("Максимальная погрешность прогноза события ±6 месяцев.", font));
+			chapter.add(new Paragraph("Максимальная погрешность прогноза ±6 месяцев.", font));
 
 			p = new Paragraph("Если в прогнозе упомянуты люди, которых уже нет в живых (родители, супруги, родственники), "
 				+ "значит речь идёт о людях, их заменяющих (опекуны, крёстные родители) или похожих на них по характеру.", font);
@@ -266,15 +266,15 @@ public class PDFExporter {
 			chapter.add(new Paragraph("Примечание:", font));
 			com.itextpdf.text.List list = new com.itextpdf.text.List(false, false, 10);
 			ListItem li = new ListItem();
-	        li.add(new Chunk("Зелёным цветом выделены позитивные события", new Font(baseFont, 12, Font.NORMAL, new BaseColor(0, 102, 102))));
+	        li.add(new Chunk("Зелёным цветом выделены позитивные тенденции", new Font(baseFont, 12, Font.NORMAL, new BaseColor(0, 102, 102))));
 	        list.add(li);
 
 			li = new ListItem();
-	        li.add(new Chunk("Красным цветом выделены негативные события", new Font(baseFont, 12, Font.NORMAL, new BaseColor(102, 0, 51))));
+	        li.add(new Chunk("Красным цветом выделены негативные тенденции", new Font(baseFont, 12, Font.NORMAL, new BaseColor(102, 0, 51))));
 	        list.add(li);
 
 			li = new ListItem();
-	        li.add(new Chunk("Чёрным цветом выделены важные события", font));
+	        li.add(new Chunk("Чёрным цветом выделены важные тенденции", font));
 	        list.add(li);
 	        chapter.add(list);
 
@@ -544,9 +544,9 @@ public class PDFExporter {
 					else if (acode.equals("OPPOSITION"))
 						section.add(new Paragraph("Уровень критичности: средний", PDFUtil.getWarningFont()));
 					else if (acode.equals("TRIN"))
-						section.add(new Paragraph("Уровень успеха: высокий", PDFUtil.getSuccessFont()));
+						section.add(new Paragraph("Уровень успеха: высокий", PDFUtil.getDangerFont()));
 					else if (acode.equals("SEXTILE"))
-						section.add(new Paragraph("Уровень успеха: средний", PDFUtil.getNeutralFont()));
+						section.add(new Paragraph("Уровень успеха: средний", PDFUtil.getWarningFont()));
 
 					if (dirText != null) {
 						String typeColor = type.getFontColor();
@@ -606,9 +606,9 @@ public class PDFExporter {
 						else if (acode.equals("OPPOSITION"))
 							section.add(new Paragraph("Уровень критичности: средний", PDFUtil.getWarningFont()));
 						else if (acode.equals("TRIN"))
-							section.add(new Paragraph("Уровень успеха: высокий", PDFUtil.getSuccessFont()));
+							section.add(new Paragraph("Уровень успеха: высокий", PDFUtil.getDangerFont()));
 						else if (acode.equals("SEXTILE"))
-							section.add(new Paragraph("Уровень успеха: средний", PDFUtil.getNeutralFont()));
+							section.add(new Paragraph("Уровень успеха: средний", PDFUtil.getWarningFont()));
 
 						if (dirText != null) {
 			    			String typeColor = type.getFontColor();
