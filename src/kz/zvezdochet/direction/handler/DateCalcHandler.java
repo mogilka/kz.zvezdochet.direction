@@ -2,9 +2,12 @@ package kz.zvezdochet.direction.handler;
 
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collection;
 import java.util.Date;
 import java.util.GregorianCalendar;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import org.eclipse.e4.core.contexts.Active;
@@ -47,7 +50,7 @@ public class DateCalcHandler extends Handler {
 			Event person = transitPart.getPerson();
 
 			Configuration conf = person.getConfiguration();
-			List<Model> planets = conf.getPlanets();
+			Collection<Planet> planets = conf.getPlanets().values();
 			List<Model> houses = conf.getHouses();
 			
 			updateStatus("Расчёт транзитов на указанную дату", false);
@@ -83,12 +86,12 @@ public class DateCalcHandler extends Handler {
 			double age = days / 365.25;
 
 			//увеличиваем координаты планет и домов персоны на значение возраста
-			List<Model> trplanets = new ArrayList<Model>();
-			for (Model model: planets) {
-				Planet planet = new Planet((Planet)model);
+			Map<Long, Planet> trplanets = new HashMap<>();
+			for (Planet p: planets) {
+				Planet planet = new Planet((Planet)p);
 				double coord = CalcUtil.getAgedCoord(Math.abs(planet.getCoord()), age);
 				planet.setCoord(coord);
-				trplanets.add(planet);
+				trplanets.put(planet.getId(), planet);
 			}
 			person.getConfiguration().setPlanets(trplanets);
 
@@ -113,12 +116,9 @@ public class DateCalcHandler extends Handler {
 			}
 
 			//дирекции планеты к другим планетам и куспидам домов
-			for (Model model : trplanets) {
-				Planet trplanet = (Planet)model;
-				for (Model model2 : event.getConfiguration().getPlanets()) {
-					Planet planet = (Planet)model2;
+			for (Planet trplanet : trplanets.values()) {
+				for (Planet planet : event.getConfiguration().getPlanets().values())
 					calc(trplanet, planet);
-				}
 				for (Model model2 : event.getConfiguration().getHouses()) {
 					House house = (House)model2;
 					calc(trplanet, house);
@@ -175,18 +175,13 @@ public class DateCalcHandler extends Handler {
 	 */
 	protected void makeTransits(Event person, Event event) {
 		//дирекции планеты к другим планетам
-		List<Model> trplanets = event.getConfiguration().getPlanets();
-		for (Model model : trplanets) {
-			Planet trplanet = (Planet)model;
-			for (Model model2 : person.getConfiguration().getPlanets()) {
-				Planet planet = (Planet)model2;
+		Collection<Planet> trplanets = event.getConfiguration().getPlanets().values();
+		for (Planet trplanet : trplanets)
+			for (Planet planet : person.getConfiguration().getPlanets().values())
 				calc(trplanet, planet);
-			}
-		}
 
 		//дирекции планеты к куспидам домов
-		for (Model model : trplanets) {
-			Planet trplanet = (Planet)model;
+		for (Planet trplanet : trplanets) {
 			for (Model model2 : person.getConfiguration().getHouses()) {
 				House house = (House)model2;
 				calc(trplanet, house);

@@ -1,6 +1,7 @@
 package kz.zvezdochet.direction.handler;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 import org.eclipse.e4.core.contexts.Active;
@@ -46,7 +47,7 @@ public class AgeCalcHandler extends Handler {
 			event = agePart.getEvent();
 
 			Configuration conf = event.getConfiguration();
-			List<Model> planets = conf.getPlanets();
+			Collection<Planet> planets = conf.getPlanets().values();
 			List<Model> houses = conf.getHouses();
 			
 			updateStatus("Расчёт дирекций на возраст", false);

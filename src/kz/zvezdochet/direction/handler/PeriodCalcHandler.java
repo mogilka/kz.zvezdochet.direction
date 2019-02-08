@@ -112,7 +112,7 @@ public class PeriodCalcHandler extends Handler {
 			}
 
 			Configuration conf = person.getConfiguration();
-			List<Model> planets = conf.getPlanets();
+			Collection<Planet> planets = conf.getPlanets().values();
 			List<Model> houses = conf.getHouses();
 	
 			updateStatus("Расчёт транзитов на период", false);
@@ -298,7 +298,7 @@ public class PeriodCalcHandler extends Handler {
 					prev.setZone(zone);
 					prev.calc(false);
 
-					List<Model> eplanets = event.getConfiguration().getPlanets();
+					Collection<Planet> eplanets = event.getConfiguration().getPlanets().values();
 					Map<Long, Set<PeriodItem>> items = new HashMap<Long, Set<PeriodItem>>();
 					for (Model emodel : eplanets) {
 						Planet eplanet = (Planet)emodel;

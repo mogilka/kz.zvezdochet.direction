@@ -1,5 +1,6 @@
 package kz.zvezdochet.direction.handler;
 
+import java.util.Collection;
 import java.util.List;
 
 import javax.inject.Inject;
@@ -40,7 +41,7 @@ public class HouseHandler extends Handler {
 			if (null == conf.getHouses()) return; //TODO выдавать сообщение
 			updateStatus("Расчёт дирекций планет по домам", false);
 
-			List<Model> planets = conf.getPlanets();
+			Collection<Planet> planets = conf.getPlanets().values();
 			List<Model> houses = conf.getHouses();
 			int hcount = houses.size();
 			int pcount = planets.size();
@@ -52,8 +53,7 @@ public class HouseHandler extends Handler {
 			}
 
 			//формируем массив дирекций планет по домам
-			for (int c = 0; c < pcount; c++) {
-				Planet planet = (Planet)planets.get(c);
+			for (Planet planet : planets) {
 				double one = Math.abs(planet.getCoord());
 				for (int r = 0; r < hcount; r++) {
 					House house = (House)houses.get(r);
@@ -75,7 +75,7 @@ public class HouseHandler extends Handler {
 					if (retro)
 						res *= -1;
 					if (Math.abs(res) < 100) //TODO корректировать лимит возраста по дате смерти? =)
-						data[r][c + 1] = String.valueOf(CalcUtil.roundTo(res, 2));
+						data[r][planet.getId().intValue()] = String.valueOf(CalcUtil.roundTo(res, 2));
 				}
 			}
 			updateStatus("Расчёт дирекций завершён", false);

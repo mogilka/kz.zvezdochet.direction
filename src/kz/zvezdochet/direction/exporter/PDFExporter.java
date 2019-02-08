@@ -142,7 +142,7 @@ public class PDFExporter {
 
 	        int ages = finalage - initage + 1;
 	        p = new Paragraph("Прогноз описывает самые значительные тенденции развития вашей жизни в ближайшие " + CoreUtil.getAgeString(ages) + ". "
-	        	+ "Перечислены как позитивные, так и негативные тенденции. "
+	        	+ "Перечислены как позитивные, так и негативные тенденции, которые будут действовать независимо от переездов и местоположения. "
 				+ "Негатив – признак того, что вам необходим отдых, переосмысление и мобилизация ресурсов для решения проблемы. "
 				+ "А также это возможность смягчить напряжение, ведь вы будете знать о нём заранее. "
 				+ "Не зацикливайтесь на негативе, используйте свои сильные стороны и благоприятные события.", font);
@@ -309,6 +309,15 @@ public class PDFExporter {
 	        li.add(new Chunk("Перейдите в раздел данного возраста и прочтите толкование события", font));
 	        ilist.add(li);
 	        chapter.add(ilist);
+
+	        //
+			chapter.add(Chunk.NEWLINE);
+			p = new Paragraph("Основные вехи периода", fonth5);
+			p.setSpacingAfter(10);
+			chapter.add(p);
+			p = new Paragraph("Чтобы увидеть самые важные моменты вашего дальнейшего развития, "
+				+ "почитайте разделы «Значимые события» каждого года периода", font);
+			chapter.add(p);
 	        doc.add(chapter);
 
 			HouseService serviceh = new HouseService();
@@ -416,6 +425,10 @@ public class PDFExporter {
 	        list.add(li);
 	        chapter.add(list);
 	        chapter.add(Chunk.NEWLINE);
+
+			p = new Paragraph("Если график представляет собой точку, значит актуальность данной сферы жизни будет ограничена одним годом. " +
+				"Если график изображён в виде линии, значит в течение нескольких лет произойдёт череда событий в данной сфере", font);
+			chapter.add(p);
 
 	        HouseMap[] houseMap = HouseMap.getMap();
 	        for (HouseMap hmap : houseMap) {
@@ -564,9 +577,8 @@ public class PDFExporter {
 					for (Model model : texts) {
 						PlanetAspectText dirText = (PlanetAspectText)model;
 		    			if (term) {
-		    				List<Model> planets = event.getConfiguration().getPlanets();
-		    				int pindex = planets.indexOf(planet2);
-		    				Planet aspl2 = (Planet)planets.get(pindex);
+		    				Map<Long, Planet> planets = event.getConfiguration().getPlanets();
+		    				Planet aspl2 = (Planet)planets.get(planet2.getId());
 
 		    				p = new Paragraph();
 		    				if (dirText != null)

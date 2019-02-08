@@ -4,6 +4,7 @@ import java.io.FileOutputStream;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
@@ -251,7 +252,7 @@ public class MonthHandler extends Handler {
 						prev.getConfiguration().initPlanetAspects();
 
 						List<Planet> iplanets = new ArrayList<Planet>();
-						List<Model> eplanets = event.getConfiguration().getPlanets();
+						Collection<Planet> eplanets = event.getConfiguration().getPlanets().values();
 						for (Model model : eplanets) {
 							Planet planet = (Planet)model;
 							List<Object> ingresses = planet.isIngressed(prev, event);

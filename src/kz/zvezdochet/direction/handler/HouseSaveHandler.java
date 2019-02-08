@@ -4,6 +4,7 @@ import java.io.BufferedWriter;
 import java.io.FileOutputStream;
 import java.io.OutputStreamWriter;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -49,15 +50,13 @@ public class HouseSaveHandler extends Handler {
 			int age = event.getAge();
 			updateStatus("Сохранение дирекций в файл", false);
 
-			List<Model> planets = conf.getPlanets();
+			Collection<Planet> planets = conf.getPlanets().values();
 			List<Model> houses = conf.getHouses();
 			int hcount = houses.size();
-			int pcount = planets.size();
 
 			//формируем списки дирекций по возрасту
 			Map<Integer, List<PrintDirection>> map = new HashMap<Integer, List<PrintDirection>>();
-			for (int c = 0; c < pcount; c++) {
-				Planet planet = (Planet)planets.get(c);
+			for (Planet planet : planets) {
 				if (planet.getCode().equals("Kethu")) continue;
 				double one = Math.abs(planet.getCoord());
 				for (int r = 0; r < hcount; r++) {

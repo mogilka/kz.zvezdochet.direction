@@ -1,5 +1,6 @@
 package kz.zvezdochet.direction.handler;
 
+import java.util.Collection;
 import java.util.List;
 
 import javax.inject.Inject;
@@ -50,22 +51,18 @@ public class AspectHandler extends Handler {
 			if (null == conf2.getPlanets()) return; //TODO выдавать сообщение
 			updateStatus("Инициализация транзитного события", false);
 
-			List<Model> planets = conf.getPlanets();
-			List<Model> planets2 = conf2.getPlanets();
+			Collection<Planet> planets = conf.getPlanets().values();
+			Collection<Planet> planets2 = conf2.getPlanets().values();
 			int pcount = planets.size();
 			Object[][] data = new Object[pcount][pcount + 1];
 			//заполняем заголовки строк названиями планет и их координатами
-			for (int i = 0; i < pcount; i++) {
-				Planet planet = (Planet)planets2.get(i);
-				data[i][0] = planet.getName() + " (" + CalcUtil.roundTo(planet.getCoord(), 1) + ")";
-			}
+			for (Planet planet : planets2)
+				data[planet.getId().intValue()][0] = planet.getName() + " (" + CalcUtil.roundTo(planet.getCoord(), 1) + ")";
 
 			//формируем массив аспектов планет
 			List<Model> aspects = new AspectService().getList();
-			for (int c = 0; c < pcount; c++) {
-				Planet planet = (Planet)planets.get(c);
-				for (int r = 0; r < pcount; r++) {
-					Planet planet2 = (Planet)planets2.get(r);
+			for (Planet planet : planets) {
+				for (Planet planet2 : planets) {
 					double res = CalcUtil.getDifference(planet.getCoord(), planet2.getCoord());
 					SkyPointAspect aspect = new SkyPointAspect();
 					aspect.setSkyPoint1(planet);
@@ -78,7 +75,7 @@ public class AspectHandler extends Handler {
 							continue;
 						}
 					}
-					data[r][c + 1] = aspect;
+					data[planet.getId().intValue()][planet2.getId().intValue()] = aspect;
 				}
 			}
 			updateStatus("Расчёт аспектов завершён", false);

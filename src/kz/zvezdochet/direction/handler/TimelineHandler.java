@@ -1,6 +1,7 @@
 package kz.zvezdochet.direction.handler;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 import javax.inject.Inject;
@@ -49,7 +50,7 @@ public class TimelineHandler extends Handler {
 			TransitPart transitPart = (TransitPart)activePart.getObject();
 			Event person = transitPart.getPerson();
 			Configuration conf = person.getConfiguration();
-			List<Model> planets = conf.getPlanets();
+			Collection<Planet> planets = conf.getPlanets().values();
 
 			Event event = transitPart.getModel();
 			if (null == event.getDeath()) {
@@ -61,7 +62,7 @@ public class TimelineHandler extends Handler {
 				minutes = time / 60;
 			}
 			Configuration conf2 = event.getConfiguration();
-			List<Model> planets2 = conf2.getPlanets();
+			Collection<Planet> planets2 = conf2.getPlanets().values();
 			List<Model> houses2 = conf2.getHouses();
 
 			//инициализируем список аспектов

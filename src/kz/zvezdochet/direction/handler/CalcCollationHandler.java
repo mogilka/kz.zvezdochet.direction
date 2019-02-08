@@ -2,6 +2,7 @@ package kz.zvezdochet.direction.handler;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -155,8 +156,8 @@ public class CalcCollationHandler extends Handler {
 			person.init(false);
 		if (null == event.getConfiguration())
 			event.init(false);
-		List<Model> planets = person.getConfiguration().getPlanets();
-		List<Model> planets2 = event.getConfiguration().getPlanets();
+		Collection<Planet> planets = person.getConfiguration().getPlanets().values();
+		Collection<Planet> planets2 = event.getConfiguration().getPlanets().values();
 		List<Model> houses = event.getConfiguration().getHouses();
 
 		for (Model model : planets) {
