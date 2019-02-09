@@ -5,9 +5,8 @@ import java.util.Calendar;
 import java.util.Collection;
 import java.util.Date;
 import java.util.GregorianCalendar;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
+import java.util.TreeMap;
 import java.util.concurrent.TimeUnit;
 
 import org.eclipse.e4.core.contexts.Active;
@@ -86,7 +85,7 @@ public class DateCalcHandler extends Handler {
 			double age = days / 365.25;
 
 			//увеличиваем координаты планет и домов персоны на значение возраста
-			Map<Long, Planet> trplanets = new HashMap<>();
+			TreeMap<Long, Planet> trplanets = new TreeMap<>();
 			for (Planet p: planets) {
 				Planet planet = new Planet((Planet)p);
 				double coord = CalcUtil.getAgedCoord(Math.abs(planet.getCoord()), age);

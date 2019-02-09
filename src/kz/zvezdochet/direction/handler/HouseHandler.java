@@ -75,7 +75,7 @@ public class HouseHandler extends Handler {
 					if (retro)
 						res *= -1;
 					if (Math.abs(res) < 100) //TODO корректировать лимит возраста по дате смерти? =)
-						data[r][planet.getId().intValue()] = String.valueOf(CalcUtil.roundTo(res, 2));
+						data[r][planet.getId().intValue() - 18] = String.valueOf(CalcUtil.roundTo(res, 2));
 				}
 			}
 			updateStatus("Расчёт дирекций завершён", false);
