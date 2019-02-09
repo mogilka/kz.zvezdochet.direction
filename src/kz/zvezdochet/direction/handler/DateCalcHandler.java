@@ -176,13 +176,15 @@ public class DateCalcHandler extends Handler {
 	protected void makeTransits(Event person, Event event) {
 		//дирекции планеты к другим планетам
 		Collection<Planet> trplanets = event.getConfiguration().getPlanets().values();
+		Collection<Planet> pplanets = person.getConfiguration().getPlanets().values();
 		for (Planet trplanet : trplanets)
-			for (Planet planet : person.getConfiguration().getPlanets().values())
+			for (Planet planet : pplanets)
 				calc(trplanet, planet);
 
 		//дирекции планеты к куспидам домов
+		List<Model> phouses = person.getConfiguration().getHouses();
 		for (Planet trplanet : trplanets) {
-			for (Model model2 : person.getConfiguration().getHouses()) {
+			for (Model model2 : phouses) {
 				House house = (House)model2;
 				calc(trplanet, house);
 			}

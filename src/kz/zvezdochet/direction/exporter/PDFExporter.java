@@ -574,10 +574,10 @@ public class PDFExporter {
 				} else if (skyPoint instanceof Planet) {
 					Planet planet2 = (Planet)skyPoint;
 					List<Model> texts = servicea.finds(spa);
+    				Map<Long, Planet> planets = event.getConfiguration().getPlanets();
 					for (Model model : texts) {
 						PlanetAspectText dirText = (PlanetAspectText)model;
 		    			if (term) {
-		    				Map<Long, Planet> planets = event.getConfiguration().getPlanets();
 		    				Planet aspl2 = (Planet)planets.get(planet2.getId());
 
 		    				p = new Paragraph();

@@ -1,5 +1,7 @@
 package kz.zvezdochet.direction.part;
 
+import java.util.Collection;
+
 import javax.annotation.PostConstruct;
 import javax.inject.Inject;
 
@@ -55,9 +57,9 @@ public class HousePart extends ListView {
 	protected void addColumns() {
 		if (conf != null) {
 			TableColumn tableColumn = new TableColumn(table, SWT.NONE);
-			tableColumn.setText("Астрологический дом");		
-			for (int i = 0; i < conf.getPlanets().size(); i++) {
-				Planet planet = (Planet)conf.getPlanets().get(i);
+			tableColumn.setText("Астрологический дом");
+			Collection<Planet> planets = conf.getPlanets().values();		
+			for (Planet planet : planets) {
 				tableColumn = new TableColumn(table, SWT.NONE);
 				tableColumn.setText(CalcUtil.roundTo(planet.getCoord(), 1) + "");
 				tableColumn.setImage(planet.getImage());

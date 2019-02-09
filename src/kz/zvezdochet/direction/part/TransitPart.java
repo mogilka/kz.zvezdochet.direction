@@ -333,9 +333,10 @@ public class TransitPart extends ModelListView implements ICalculable {
 		table.removeAll();
 		Configuration conf = partner.getConfiguration();
 		Configuration conf2 = partner2.getConfiguration();
+		Collection<Planet> planets = conf.getPlanets().values();
 		if (conf != null) {
 			folder.setSelection(1);
-			for (Planet planet : conf.getPlanets().values()) {
+			for (Planet planet : planets) {
 				TableItem item = new TableItem(table, SWT.NONE);
 				item.setText(0, planet.getName());
 				item.setText(1, String.valueOf(planet.getCoord()));
@@ -775,12 +776,14 @@ public class TransitPart extends ModelListView implements ICalculable {
 	 */
 	private void makeTransits(Event first, Event second) {
 		Collection<Planet> trplanets = first.getConfiguration().getPlanets().values();
+		Collection<Planet> splanets = second.getConfiguration().getPlanets().values();
+		List<Model> shouses = second.getConfiguration().getHouses();
 		for (Planet trplanet : trplanets) {
 			//дирекции планеты к планетам партнёра
-			for (Planet planet : second.getConfiguration().getPlanets().values())
+			for (Planet planet : splanets)
 				calc(trplanet, planet);
 			//дирекции планеты к куспидам домов
-			for (Model model2 : second.getConfiguration().getHouses()) {
+			for (Model model2 : shouses) {
 				House house = (House)model2;
 				calc(trplanet, house);
 			}
