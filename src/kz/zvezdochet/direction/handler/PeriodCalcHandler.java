@@ -752,36 +752,43 @@ public class PeriodCalcHandler extends Handler {
 		try {
 			//находим угол между точками космограммы
 			double res = CalcUtil.getDifference(point1.getCoord(), point2.getCoord());
+			AspectService service = new AspectService();
 
-			//определяем, является ли аспект стандартным
-			List<Model> aspects = new AspectService().getMajorList();
-			for (Model realasp : aspects) {
-				Aspect a = (Aspect)realasp;
-				if (a.isMain() && a.isExact(res)) {
-					if (a.getPlanetid() > 0)
-						continue;
-
-					if (point1.getCode().equals(point2.getCode()))
-						continue;
-
-					if (a.getCode().equals("OPPOSITION") &&
-							(point2.getCode().equals("Kethu") || point2.getCode().equals("Rakhu")))
-						continue;
-
-//					AspectType type = a.getType();
+			//для домов считаем только соединения
+			if (point2 instanceof House) {
+				if (res < 1) {
+					Aspect a = (Aspect)service.find(1L);
 					PeriodItem item = new PeriodItem();
 					item.aspect = a;
 					item.planet = (Planet)point1;
-
-					if (point2 instanceof House)
-						item.house = (House)point2;
-					else if (point2 instanceof Planet) {
+					item.house = (House)point2;
+					return item;
+				}
+			} else {
+				//для планет определяем, является ли аспект стандартным
+				List<Model> aspects = service.getMajorList();
+				for (Model realasp : aspects) {
+					Aspect a = (Aspect)realasp;
+					if (a.isMain() && a.isExact(res)) {
+						if (a.getPlanetid() > 0)
+							continue;
+	
+						if (point1.getCode().equals(point2.getCode()))
+							continue;
+	
+						if (a.getCode().equals("OPPOSITION") &&
+								(point2.getCode().equals("Kethu") || point2.getCode().equals("Rakhu")))
+							continue;
+	
+						PeriodItem item = new PeriodItem();
+						item.aspect = a;
+						item.planet = (Planet)point1;
 						Planet planet2 = (Planet)point2;
 						item.planet2 = planet2;
 						item.house = planet2.getHouse();
+	//					System.out.println(point1.getName() + " " + type.getSymbol() + " " + point2.getName());
+						return item;
 					}
-//					System.out.println(point1.getName() + " " + type.getSymbol() + " " + point2.getName());
-					return item;
 				}
 			}
 		} catch (DataAccessException e) {
