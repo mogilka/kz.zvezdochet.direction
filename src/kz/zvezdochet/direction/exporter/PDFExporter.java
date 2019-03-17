@@ -258,9 +258,12 @@ public class PDFExporter {
 				bars[i] = new Bar(strage, positive.get(nextage), null, "Позитивные события");
 				bars[i + ages] = new Bar(strage, negative.get(nextage) * (-1), null, "Негативные события");
 			}
-			Image image = PDFUtil.printStackChart(writer, "Соотношение категорий событий", "Возраст", "Количество", bars, 500, 400, true);
+			Image image = PDFUtil.printStackChart(writer, "Соотношение категорий событий", "Возраст", "Количество", bars, 500, ages > 2 ? 400 : 100, true);
 			chapter.add(image);
-			chapter.add(Chunk.NEXTPAGE);
+			if (ages > 2)
+				chapter.add(Chunk.NEXTPAGE);
+			else
+				chapter.add(Chunk.NEWLINE);
 
 			//примечание
 			chapter.add(new Paragraph("Примечание:", font));
@@ -282,33 +285,35 @@ public class PDFExporter {
 	        chapter.add(new Paragraph("Заголовки абзацев (например, «Добро + Прибыль») используются для структурирования текста и "
 	        	+ "указывают на сферу жизни, к которой относится описываемое событие", font));
 
-	        //
-			chapter.add(Chunk.NEWLINE);
-			p = new Paragraph("Как найти конкретное событие?", fonth5);
-			p.setSpacingAfter(10);
-			chapter.add(p);
-			com.itextpdf.text.List ilist = new com.itextpdf.text.List(false, false, 10);
-			li = new ListItem();
-			Font fonta = PDFUtil.getLinkFont();
-			Anchor anchor = new Anchor("Диаграммы", fonta);
-            anchor.setReference("#diagrams");
-			li.add(new Chunk("Перейдите в раздел ", font));
-	        li.add(anchor);
-	        li.add(new Chunk(" в конце документа", font));
-	        ilist.add(li);
-
-			li = new ListItem();
-	        li.add(new Chunk("Найдите диаграмму нужной вам категории событий", font));
-	        ilist.add(li);
-
-			li = new ListItem();
-	        li.add(new Chunk("Посмотрите возраст на вершине графика. Указанное событие должно произойти в этом возрасте", font));
-	        ilist.add(li);
-
-			li = new ListItem();
-	        li.add(new Chunk("Перейдите в раздел данного возраста и прочтите толкование события", font));
-	        ilist.add(li);
-	        chapter.add(ilist);
+	        //инструкция по поиску события
+	        if (ages > 2) {
+				chapter.add(Chunk.NEWLINE);
+				p = new Paragraph("Как найти конкретное событие?", fonth5);
+				p.setSpacingAfter(10);
+				chapter.add(p);
+				com.itextpdf.text.List ilist = new com.itextpdf.text.List(false, false, 10);
+				li = new ListItem();
+				Font fonta = PDFUtil.getLinkFont();
+				Anchor anchor = new Anchor("Диаграммы", fonta);
+	            anchor.setReference("#diagrams");
+				li.add(new Chunk("Перейдите в раздел ", font));
+		        li.add(anchor);
+		        li.add(new Chunk(" в конце документа", font));
+		        ilist.add(li);
+	
+				li = new ListItem();
+		        li.add(new Chunk("Найдите диаграмму нужной вам категории событий", font));
+		        ilist.add(li);
+	
+				li = new ListItem();
+		        li.add(new Chunk("Посмотрите возраст на вершине графика. Указанное событие должно произойти в этом возрасте", font));
+		        ilist.add(li);
+	
+				li = new ListItem();
+		        li.add(new Chunk("Перейдите в раздел данного возраста и прочтите толкование события", font));
+		        ilist.add(li);
+		        chapter.add(ilist);
+	        }
 
 	        //
 			chapter.add(Chunk.NEWLINE);
@@ -401,71 +406,73 @@ public class PDFExporter {
 				doc.add(chapter);
 			}
 
-			chapter = new ChapterAutoNumber(PDFUtil.printHeader(new Paragraph(), "Диаграммы", null));
-			chapter.setNumberDepth(0);
-
-			p = new Paragraph();
-			text = "Диаграммы обобщают приведённую выше информацию и наглядно отображают сферы жизни, которые будут занимать вас в каждом конкретном возрасте:";
-			Anchor anchorTarget = new Anchor(text, font);
-			anchorTarget.setName("diagrams");
-		    p.add(anchorTarget);
-			chapter.add(p);
-
-			list = new com.itextpdf.text.List(false, false, 10);
-			li = new ListItem();
-	        li.add(new Chunk("Показатели выше нуля указывают на успех и лёгкость", new Font(baseFont, 12, Font.NORMAL, new BaseColor(0, 102, 102))));
-	        list.add(li);
-
-			li = new ListItem();
-	        li.add(new Chunk("Показатели на нуле указывают на нейтральность ситуации", font));
-	        list.add(li);
-
-			li = new ListItem();
-	        li.add(new Chunk("Показатели ниже нуля указывают на трудности и напряжение", new Font(baseFont, 12, Font.NORMAL, new BaseColor(102, 0, 51))));
-	        list.add(li);
-	        chapter.add(list);
-	        chapter.add(Chunk.NEWLINE);
-
-			p = new Paragraph("Если график представляет собой точку, значит актуальность данной сферы жизни будет ограничена одним годом. " +
-				"Если график изображён в виде линии, значит в течение нескольких лет произойдёт череда событий в данной сфере", font);
-			chapter.add(p);
-
-	        HouseMap[] houseMap = HouseMap.getMap();
-	        for (HouseMap hmap : houseMap) {
-	        	Section section = PDFUtil.printSection(chapter, hmap.name);
-				XYSeriesCollection items = new XYSeriesCollection();
-				List<String> descrs = new ArrayList<String>();
-	        	for (int i = 0; i < 3; i++) {
-	        		long houseid = hmap.houseids[i];
-	        		Map<Integer, Double> hdata = seriesh.get(houseid);
-					House house = (House)serviceh.find(houseid);
-			        XYSeries series = new XYSeries(house.getName());
-	        		if (null == hdata || 0 == hdata.size()) {
-//	        			if (i > 0) {
-//							series.add(initage, 0);
-//					        items.addSeries(series);
-//	        			}
-	        			continue;
-	        		}
-					descrs.add(house.getName() + ": " + house.getDescription());
-	        		SortedSet<Integer> keys = new TreeSet<Integer>(hdata.keySet());
-	        		for (Integer key : keys)
-						series.add(key, hdata.get(key));
-			        items.addSeries(series);
-	        	}	        	
-				image = PDFUtil.printGraphics(writer, "", "Возраст", "Баллы", items, 500, 300, true);
-				section.add(image);
-
+	        if (ages > 2) {
+				chapter = new ChapterAutoNumber(PDFUtil.printHeader(new Paragraph(), "Диаграммы", null));
+				chapter.setNumberDepth(0);
+	
+				p = new Paragraph();
+				text = "Диаграммы обобщают приведённую выше информацию и наглядно отображают сферы жизни, которые будут занимать вас в каждом конкретном возрасте:";
+				Anchor anchorTarget = new Anchor(text, font);
+				anchorTarget.setName("diagrams");
+			    p.add(anchorTarget);
+				chapter.add(p);
+	
 				list = new com.itextpdf.text.List(false, false, 10);
-				for (String descr : descrs) {
-					li = new ListItem();
-					li.add(new Chunk(descr, font));
-					list.add(li);
-				}
-				section.add(list);
-				chapter.add(Chunk.NEXTPAGE);
+				li = new ListItem();
+		        li.add(new Chunk("Показатели выше нуля указывают на успех и лёгкость", new Font(baseFont, 12, Font.NORMAL, new BaseColor(0, 102, 102))));
+		        list.add(li);
+	
+				li = new ListItem();
+		        li.add(new Chunk("Показатели на нуле указывают на нейтральность ситуации", font));
+		        list.add(li);
+	
+				li = new ListItem();
+		        li.add(new Chunk("Показатели ниже нуля указывают на трудности и напряжение", new Font(baseFont, 12, Font.NORMAL, new BaseColor(102, 0, 51))));
+		        list.add(li);
+		        chapter.add(list);
+		        chapter.add(Chunk.NEWLINE);
+	
+				p = new Paragraph("Если график представляет собой точку, значит актуальность данной сферы жизни будет ограничена одним годом. " +
+					"Если график изображён в виде линии, значит в течение нескольких лет произойдёт череда событий в данной сфере", font);
+				chapter.add(p);
+	
+		        HouseMap[] houseMap = HouseMap.getMap();
+		        for (HouseMap hmap : houseMap) {
+		        	Section section = PDFUtil.printSection(chapter, hmap.name);
+					XYSeriesCollection items = new XYSeriesCollection();
+					List<String> descrs = new ArrayList<String>();
+		        	for (int i = 0; i < 3; i++) {
+		        		long houseid = hmap.houseids[i];
+		        		Map<Integer, Double> hdata = seriesh.get(houseid);
+						House house = (House)serviceh.find(houseid);
+				        XYSeries series = new XYSeries(house.getName());
+		        		if (null == hdata || 0 == hdata.size()) {
+	//	        			if (i > 0) {
+	//							series.add(initage, 0);
+	//					        items.addSeries(series);
+	//	        			}
+		        			continue;
+		        		}
+						descrs.add(house.getName() + ": " + house.getDescription());
+		        		SortedSet<Integer> keys = new TreeSet<Integer>(hdata.keySet());
+		        		for (Integer key : keys)
+							series.add(key, hdata.get(key));
+				        items.addSeries(series);
+		        	}	        	
+					image = PDFUtil.printGraphics(writer, "", "Возраст", "Баллы", items, 500, 300, true);
+					section.add(image);
+	
+					list = new com.itextpdf.text.List(false, false, 10);
+					for (String descr : descrs) {
+						li = new ListItem();
+						li.add(new Chunk(descr, font));
+						list.add(li);
+					}
+					section.add(list);
+					chapter.add(Chunk.NEXTPAGE);
+		        }
+				doc.add(chapter);
 	        }
-			doc.add(chapter);
 	        doc.add(PDFUtil.printCopyright());
 		} catch(Exception e) {
 			e.printStackTrace();
