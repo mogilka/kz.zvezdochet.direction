@@ -45,9 +45,9 @@ import kz.zvezdochet.provider.PlaceProposalProvider.PlaceContentProposal;
  * @author Nataly Didenko
  *
  */
-public class PeriodPart extends ModelListView {
+public class TransitPart extends ModelListView {
 	@Inject
-	public PeriodPart() {}
+	public TransitPart() {}
 
 	private Event person;
 	private Place trplace;

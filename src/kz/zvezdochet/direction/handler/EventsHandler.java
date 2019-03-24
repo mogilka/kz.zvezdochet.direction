@@ -16,11 +16,11 @@ import kz.zvezdochet.util.Configuration;
 import kz.zvezdochet.part.EventPart;
 
 /**
- * Обработчик открытия транзитов персоны
+ * Обработчик открытия событий персоны
  * @author Nataly Didenko
  *
  */
-public class TransitHandler extends Handler {
+public class EventsHandler extends Handler {
 	@Inject
 	private EPartService partService;
 

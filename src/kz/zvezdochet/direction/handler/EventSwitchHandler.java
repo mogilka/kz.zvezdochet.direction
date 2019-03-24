@@ -14,7 +14,7 @@ import kz.zvezdochet.direction.part.EventPart;
  * Можно переключиться в режим планет события в карте персоны
  * @author Nataly Didenko
  */
-public class TransitSwitchHandler extends Handler {
+public class EventSwitchHandler extends Handler {
 	@Execute
 	public void execute(@Active MPart activePart) {
 		try {

@@ -11,7 +11,7 @@ import org.eclipse.e4.ui.workbench.modeling.EPartService.PartState;
 import kz.zvezdochet.bean.Event;
 import kz.zvezdochet.core.handler.Handler;
 import kz.zvezdochet.core.ui.util.DialogUtil;
-import kz.zvezdochet.direction.part.PeriodPart;
+import kz.zvezdochet.direction.part.TransitPart;
 import kz.zvezdochet.part.EventPart;
 import kz.zvezdochet.util.Configuration;
 
@@ -37,7 +37,7 @@ public class PeriodHandler extends Handler {
 			MPart part = partService.findPart("kz.zvezdochet.direction.part.period");
 		    part.setVisible(true);
 		    partService.showPart(part, PartState.VISIBLE);
-		    PeriodPart periodPart = (PeriodPart)part.getObject();
+		    TransitPart periodPart = (TransitPart)part.getObject();
 		    periodPart.setPerson(person);
 			updateStatus("Транзитный период открыт", false);
 		} catch (Exception e) {

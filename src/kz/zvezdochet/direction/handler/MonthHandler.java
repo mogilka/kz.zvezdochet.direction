@@ -47,7 +47,7 @@ import kz.zvezdochet.core.util.DateUtil;
 import kz.zvezdochet.core.util.PlatformUtil;
 import kz.zvezdochet.direction.Activator;
 import kz.zvezdochet.direction.bean.PeriodItem;
-import kz.zvezdochet.direction.part.PeriodPart;
+import kz.zvezdochet.direction.part.TransitPart;
 import kz.zvezdochet.export.handler.PageEventHandler;
 import kz.zvezdochet.export.util.PDFUtil;
 import kz.zvezdochet.service.AspectService;
@@ -76,7 +76,7 @@ public class MonthHandler extends Handler {
 		try {
 			long duration = System.currentTimeMillis();
 			long run = duration;
-			PeriodPart periodPart = (PeriodPart)activePart.getObject();
+			TransitPart periodPart = (TransitPart)activePart.getObject();
 				if (!periodPart.check(0)) return;
 			Event person = periodPart.getPerson();
 

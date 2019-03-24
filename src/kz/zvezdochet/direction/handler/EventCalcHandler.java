@@ -14,7 +14,7 @@ import kz.zvezdochet.direction.part.EventPart;
  * Обработчик расчёта транзитов события персоны
  * @author Nataly Didenko
  */
-public class TransitCalcHandler extends Handler {
+public class EventCalcHandler extends Handler {
 
 	@Execute
 	public void execute(@Active MPart activePart, @Named("kz.zvezdochet.direction.commandparameter.today") String today) {

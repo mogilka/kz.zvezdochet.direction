@@ -63,7 +63,7 @@ import kz.zvezdochet.core.util.DateUtil;
 import kz.zvezdochet.core.util.PlatformUtil;
 import kz.zvezdochet.direction.Activator;
 import kz.zvezdochet.direction.bean.PeriodItem;
-import kz.zvezdochet.direction.part.PeriodPart;
+import kz.zvezdochet.direction.part.TransitPart;
 import kz.zvezdochet.direction.service.DirectionAspectService;
 import kz.zvezdochet.export.handler.PageEventHandler;
 import kz.zvezdochet.export.util.PDFUtil;
@@ -90,7 +90,7 @@ public class PeriodCalcHandler extends Handler {
 	public void execute(@Active MPart activePart) {
 		Document doc = new Document();
 		try {
-			PeriodPart periodPart = (PeriodPart)activePart.getObject();
+			TransitPart periodPart = (TransitPart)activePart.getObject();
 			if (!periodPart.check(0)) return;
 			Event person = periodPart.getPerson();
 			boolean female = person.isFemale();
