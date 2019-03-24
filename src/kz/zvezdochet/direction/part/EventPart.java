@@ -83,9 +83,9 @@ import kz.zvezdochet.util.Configuration;
  * @author Nataly Didenko
  *
  */
-public class TransitPart extends ModelListView implements ICalculable {
+public class EventPart extends ModelListView implements ICalculable {
 	@Inject
-	public TransitPart() {}
+	public EventPart() {}
 
 	private Event person;
 	private Event trevent;

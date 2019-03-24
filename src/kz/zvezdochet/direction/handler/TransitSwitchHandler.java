@@ -6,7 +6,7 @@ import org.eclipse.e4.ui.model.application.ui.basic.MPart;
 
 import kz.zvezdochet.core.handler.Handler;
 import kz.zvezdochet.core.ui.util.DialogUtil;
-import kz.zvezdochet.direction.part.TransitPart;
+import kz.zvezdochet.direction.part.EventPart;
 
 /**
  * Обработчик переключения карты транзитов.
@@ -19,7 +19,7 @@ public class TransitSwitchHandler extends Handler {
 	public void execute(@Active MPart activePart) {
 		try {
 			updateStatus("Переключение карты транзитов", false);
-			TransitPart transitPart = (TransitPart)activePart.getObject();
+			EventPart transitPart = (EventPart)activePart.getObject();
 			int mode = transitPart.getModeCalc();
 			mode = (mode != 1) ? 1 : 2;
 			System.out.println("mode" + mode);

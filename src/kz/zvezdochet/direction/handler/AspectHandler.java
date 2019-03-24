@@ -19,7 +19,7 @@ import kz.zvezdochet.core.bean.Model;
 import kz.zvezdochet.core.handler.Handler;
 import kz.zvezdochet.core.ui.util.DialogUtil;
 import kz.zvezdochet.core.util.CalcUtil;
-import kz.zvezdochet.direction.part.TransitPart;
+import kz.zvezdochet.direction.part.EventPart;
 import kz.zvezdochet.part.AspectPart;
 import kz.zvezdochet.service.AspectService;
 import kz.zvezdochet.util.Configuration;
@@ -36,7 +36,7 @@ public class AspectHandler extends Handler {
 	@Execute
 	public void execute(@Active MPart activePart) {
 		try {
-			TransitPart synPart = (TransitPart)activePart.getObject();
+			EventPart synPart = (EventPart)activePart.getObject();
 			Event person = synPart.getPerson();
 			if (null == person) return;
 			Configuration conf = person.getConfiguration();

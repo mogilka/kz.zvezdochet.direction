@@ -34,7 +34,7 @@ import kz.zvezdochet.service.HouseService;
 import kz.zvezdochet.service.PlanetService;
 
 /**
- * Поиск событий на указанный возраст
+ * Поиск аспектов на указанный возраст
  * @author Nataly Didenko
  */
 public class AgePart extends ModelListView {
@@ -101,7 +101,7 @@ public class AgePart extends ModelListView {
 
 	@Override
 	protected String[] initTableColumns() {
-		return TransitPart.getTableColumns();
+		return EventPart.getTableColumns();
 	}
 
 	@Override

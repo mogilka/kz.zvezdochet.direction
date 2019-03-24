@@ -41,7 +41,7 @@ import kz.zvezdochet.provider.PlaceProposalProvider;
 import kz.zvezdochet.provider.PlaceProposalProvider.PlaceContentProposal;
 
 /**
- * Представление транзитного периода
+ * Представление транзитов
  * @author Nataly Didenko
  *
  */

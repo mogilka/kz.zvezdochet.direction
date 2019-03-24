@@ -11,9 +11,9 @@ import org.eclipse.e4.ui.workbench.modeling.EPartService.PartState;
 import kz.zvezdochet.bean.Event;
 import kz.zvezdochet.core.handler.Handler;
 import kz.zvezdochet.core.ui.util.DialogUtil;
-import kz.zvezdochet.direction.part.TransitPart;
-import kz.zvezdochet.part.EventPart;
 import kz.zvezdochet.util.Configuration;
+
+import kz.zvezdochet.part.EventPart;
 
 /**
  * Обработчик открытия транзитов персоны
@@ -37,7 +37,7 @@ public class TransitHandler extends Handler {
 			MPart part = partService.findPart("kz.zvezdochet.direction.part.transit");
 		    part.setVisible(true);
 		    partService.showPart(part, PartState.VISIBLE);
-		    TransitPart transitPart = (TransitPart)part.getObject();
+		    kz.zvezdochet.direction.part.EventPart transitPart = (kz.zvezdochet.direction.part.EventPart)part.getObject();
 		    transitPart.setPerson(event);
 			updateStatus("Таблица транзитов сформирована", false);
 		} catch (Exception e) {

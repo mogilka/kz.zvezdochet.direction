@@ -25,7 +25,7 @@ import kz.zvezdochet.core.service.DataAccessException;
 import kz.zvezdochet.core.ui.util.DialogUtil;
 import kz.zvezdochet.core.util.CalcUtil;
 import kz.zvezdochet.core.util.DateUtil;
-import kz.zvezdochet.direction.part.TransitPart;
+import kz.zvezdochet.direction.part.EventPart;
 import kz.zvezdochet.service.AspectService;
 import kz.zvezdochet.util.Configuration;
 
@@ -44,7 +44,7 @@ public class DateCalcHandler extends Handler {
 	public void execute(@Active MPart activePart) {
 		try {
 			aged = new ArrayList<SkyPointAspect>();
-			TransitPart transitPart = (TransitPart)activePart.getObject();
+			EventPart transitPart = (EventPart)activePart.getObject();
 			if (!transitPart.check(1)) return;
 			Event person = transitPart.getPerson();
 

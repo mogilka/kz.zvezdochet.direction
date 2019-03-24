@@ -25,7 +25,7 @@ import kz.zvezdochet.core.ui.util.DialogUtil;
 import kz.zvezdochet.core.util.CalcUtil;
 import kz.zvezdochet.core.util.DateUtil;
 import kz.zvezdochet.direction.part.TimelinePart;
-import kz.zvezdochet.direction.part.TransitPart;
+import kz.zvezdochet.direction.part.EventPart;
 import kz.zvezdochet.service.AspectService;
 import kz.zvezdochet.util.Configuration;
 
@@ -47,7 +47,7 @@ public class TimelineHandler extends Handler {
 			updateStatus("Расчёт таймлайна", false);
 			aged = new ArrayList<SkyPointAspect>();
 			long minutes = 360;
-			TransitPart transitPart = (TransitPart)activePart.getObject();
+			EventPart transitPart = (EventPart)activePart.getObject();
 			Event person = transitPart.getPerson();
 			Configuration conf = person.getConfiguration();
 			Collection<Planet> planets = conf.getPlanets().values();

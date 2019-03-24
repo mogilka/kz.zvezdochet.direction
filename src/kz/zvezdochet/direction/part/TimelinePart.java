@@ -28,7 +28,7 @@ public class TimelinePart extends ModelListView {
 
 	@Override
 	protected String[] initTableColumns() {
-		return TransitPart.getTableColumns();
+		return EventPart.getTableColumns();
 	}
 
 	@Override

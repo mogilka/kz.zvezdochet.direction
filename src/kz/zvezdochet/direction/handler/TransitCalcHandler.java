@@ -8,7 +8,7 @@ import org.eclipse.e4.ui.model.application.ui.basic.MPart;
 
 import kz.zvezdochet.core.handler.Handler;
 import kz.zvezdochet.core.ui.util.DialogUtil;
-import kz.zvezdochet.direction.part.TransitPart;
+import kz.zvezdochet.direction.part.EventPart;
 
 /**
  * Обработчик расчёта транзитов события персоны
@@ -20,7 +20,7 @@ public class TransitCalcHandler extends Handler {
 	public void execute(@Active MPart activePart, @Named("kz.zvezdochet.direction.commandparameter.today") String today) {
 		try {
 			updateStatus("Расчёт транзитов", false);
-			TransitPart transitPart = (TransitPart)activePart.getObject();
+			EventPart transitPart = (EventPart)activePart.getObject();
 			int itoday = Integer.parseInt(today);
 			if (1 == itoday)
 				transitPart.initDate();
