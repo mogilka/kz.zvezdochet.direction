@@ -654,7 +654,8 @@ public class EventPart extends ModelListView implements ICalculable {
 			"Направление",
 			"Величина аспекта",
 			"Знак Зодиака",
-			"Дом"
+			"Дом",
+			"Описание"
 		};
 	}
 

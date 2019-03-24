@@ -18,7 +18,7 @@ import kz.zvezdochet.core.bean.Model;
 import kz.zvezdochet.core.handler.Handler;
 import kz.zvezdochet.core.ui.util.DialogUtil;
 import kz.zvezdochet.core.util.CalcUtil;
-import kz.zvezdochet.direction.part.HousePart;
+import kz.zvezdochet.direction.part.DirectionsPart;
 import kz.zvezdochet.part.EventPart;
 import kz.zvezdochet.util.Configuration;
 
@@ -26,7 +26,7 @@ import kz.zvezdochet.util.Configuration;
  * Расчёт дирекций планет по домам
  * @author Nataly Didenko
  */
-public class HouseHandler extends Handler {
+public class DirectionsHandler extends Handler {
 	@Inject
 	private EPartService partService;
 
@@ -79,10 +79,10 @@ public class HouseHandler extends Handler {
 				}
 			}
 			updateStatus("Расчёт дирекций завершён", false);
-			MPart part = partService.findPart("kz.zvezdochet.direction.part.houses");
+			MPart part = partService.findPart("kz.zvezdochet.direction.part.directions");
 		    part.setVisible(true);
 		    partService.showPart(part, PartState.VISIBLE);
-		    HousePart housePart = (HousePart)part.getObject();
+		    DirectionsPart housePart = (DirectionsPart)part.getObject();
 		    housePart.setConfiguration(conf);
 		    housePart.setData(data);
 			updateStatus("Таблица дирекций сформирована", false);

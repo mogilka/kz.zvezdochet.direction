@@ -14,6 +14,7 @@ import org.eclipse.jface.layout.GridDataFactory;
 import org.eclipse.jface.layout.GridLayoutFactory;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.CheckboxTableViewer;
+import org.eclipse.jface.viewers.IBaseLabelProvider;
 import org.eclipse.nebula.widgets.cdatetime.CDT;
 import org.eclipse.nebula.widgets.cdatetime.CDateTime;
 import org.eclipse.swt.SWT;
@@ -32,16 +33,18 @@ import kz.zvezdochet.core.service.DataAccessException;
 import kz.zvezdochet.core.ui.decoration.InfoDecoration;
 import kz.zvezdochet.core.ui.listener.ListSelectionListener;
 import kz.zvezdochet.core.ui.util.DialogUtil;
+import kz.zvezdochet.core.ui.view.ModelLabelProvider;
 import kz.zvezdochet.core.ui.view.ModelListView;
 import kz.zvezdochet.core.ui.view.View;
 import kz.zvezdochet.core.util.CalcUtil;
 import kz.zvezdochet.core.util.DateUtil;
+import kz.zvezdochet.direction.provider.TransitLabelProvider;
 import kz.zvezdochet.part.Messages;
 import kz.zvezdochet.provider.PlaceProposalProvider;
 import kz.zvezdochet.provider.PlaceProposalProvider.PlaceContentProposal;
 
 /**
- * Представление транзитов
+ * Представление транзитов события
  * @author Nataly Didenko
  *
  */
@@ -128,11 +131,11 @@ public class TransitPart extends ModelListView {
 
 		tableViewer2 = CheckboxTableViewer.newCheckList(grFilter, SWT.CHECK | SWT.BORDER | SWT.V_SCROLL | SWT.SINGLE);
 		table2 = tableViewer2.getTable();
-		table2.setHeaderVisible(true);
+		table2.setHeaderVisible(false);
 		table2.setLinesVisible(true);
 
 		tableViewer2.setContentProvider(new ArrayContentProvider());
-		tableViewer2.setLabelProvider(getLabelProvider());
+		tableViewer2.setLabelProvider(new ModelLabelProvider());
 		
 		ListSelectionListener listener = getSelectionListener();
 		tableViewer2.addSelectionChangedListener(listener);
@@ -183,7 +186,7 @@ public class TransitPart extends ModelListView {
 		GridDataFactory.fillDefaults().align(SWT.FILL, SWT.CENTER).
 			grab(true, false).applyTo(btPrint);
 
-		GridDataFactory.fillDefaults().align(SWT.FILL, SWT.CENTER).grab(true, false).applyTo(table2);
+		GridDataFactory.fillDefaults().align(SWT.FILL, SWT.CENTER).grab(true, true).applyTo(table2);
 }
 
 	/**
@@ -221,7 +224,17 @@ public class TransitPart extends ModelListView {
 
 	@Override
 	protected String[] initTableColumns() {
-		return null;
+		return new String[] {
+			"Возраст",
+			"Точка 1",
+			"Аспект",
+			"Точка 2",
+			"Направление",
+			"Величина аспекта",
+			"Знак Зодиака",
+			"Дом",
+			"Описание"
+		};
 	}
 
 	/**
@@ -283,5 +296,10 @@ public class TransitPart extends ModelListView {
 
 	public boolean isPrintable() {
 		return btPrint.getSelection();
+	}
+
+	@Override
+	protected IBaseLabelProvider getLabelProvider() {
+		return new TransitLabelProvider();
 	}
 }

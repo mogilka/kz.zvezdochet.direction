@@ -27,7 +27,7 @@ import kz.zvezdochet.core.util.PlatformUtil;
 import kz.zvezdochet.direction.Activator;
 import kz.zvezdochet.direction.bean.DirectionText;
 import kz.zvezdochet.direction.bean.PrintDirection;
-import kz.zvezdochet.direction.part.HousePart;
+import kz.zvezdochet.direction.part.DirectionsPart;
 import kz.zvezdochet.direction.service.DirectionService;
 import kz.zvezdochet.export.util.PDFUtil;
 import kz.zvezdochet.util.Configuration;
@@ -37,12 +37,12 @@ import kz.zvezdochet.util.Configuration;
  * Производится для составления вопросов в рамках ректификации
  * @author Nataly Didenko
  */
-public class HouseSaveHandler extends Handler {
+public class DirectionsSaveHandler extends Handler {
 
 	@Execute
 	public void execute(@Active MPart activePart) {
 		try {
-			HousePart eventPart = (HousePart)activePart.getObject();
+			DirectionsPart eventPart = (DirectionsPart)activePart.getObject();
 			Configuration conf = eventPart.getConfiguration();
 			if (null == conf) return; //TODO выдавать сообщение
 			if (null == conf.getHouses()) return; //TODO выдавать сообщение

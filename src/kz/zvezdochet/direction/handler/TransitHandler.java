@@ -34,7 +34,7 @@ public class TransitHandler extends Handler {
 			if (null == conf) return; //TODO выдавать сообщение
 
 			updateStatus("Открытие транзитного периода", false);
-			MPart part = partService.findPart("kz.zvezdochet.direction.part.period");
+			MPart part = partService.findPart("kz.zvezdochet.direction.part.transit");
 		    part.setVisible(true);
 		    partService.showPart(part, PartState.VISIBLE);
 		    TransitPart periodPart = (TransitPart)part.getObject();

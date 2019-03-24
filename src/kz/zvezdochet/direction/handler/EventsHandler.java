@@ -34,7 +34,7 @@ public class EventsHandler extends Handler {
 			if (null == conf) return; //TODO выдавать сообщение
 
 			updateStatus("Открытие списка транзитов", false);
-			MPart part = partService.findPart("kz.zvezdochet.direction.part.transit");
+			MPart part = partService.findPart("kz.zvezdochet.direction.part.events");
 		    part.setVisible(true);
 		    partService.showPart(part, PartState.VISIBLE);
 		    kz.zvezdochet.direction.part.EventPart transitPart = (kz.zvezdochet.direction.part.EventPart)part.getObject();

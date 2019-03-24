@@ -31,6 +31,7 @@ public class TransitLabelProvider extends ArrayLabelProvider implements ITableLa
 			case 5: return String.valueOf(aspect.getScore());
 			case 6: return planet.getSign() != null ? planet.getSign().getName() : null;
 			case 7: return planet.getHouse() != null ? planet.getHouse().getName() : null;
+			case 8: return aspect.getDescr();
 		}
 		return null;
 	}

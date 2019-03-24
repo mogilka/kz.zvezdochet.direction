@@ -40,4 +40,16 @@ public class PeriodItem {
 		spa.setSkyPoint2(planet2);
 		return spa;
 	}
+
+	/**
+	 * Возвращает аналогичный аспект планеты и куспида дома
+	 * @return аспект планеты к дому
+	 */
+	public SkyPointAspect getHouseAspect() {
+		SkyPointAspect spa = new SkyPointAspect();
+		spa.setAspect(aspect);
+		spa.setSkyPoint1(planet);
+		spa.setSkyPoint2(house);
+		return spa;
+	}
 }

@@ -19,14 +19,14 @@ import kz.zvezdochet.util.Configuration;
  * Дирекции планет по домам
  * @author Nataly Didenko
  */
-public class HousePart extends ListView {
+public class DirectionsPart extends ListView {
 	/**
 	 * Конфигурация события
 	 */
 	private Configuration conf;
 
 	@Inject
-	public HousePart() {
+	public DirectionsPart() {
 		
 	}
 
