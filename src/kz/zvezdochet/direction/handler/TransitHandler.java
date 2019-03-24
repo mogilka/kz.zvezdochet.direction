@@ -20,7 +20,7 @@ import kz.zvezdochet.util.Configuration;
  * @author Nataly Didenko
  *
  */
-public class PeriodHandler extends Handler {
+public class TransitHandler extends Handler {
 	@Inject
 	private EPartService partService;
 

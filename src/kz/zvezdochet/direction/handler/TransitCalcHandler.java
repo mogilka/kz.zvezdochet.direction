@@ -74,10 +74,10 @@ import kz.zvezdochet.util.Configuration;
  * Обработчик расчёта транзитов на указанный период
  * @author Nataly Didenko
  */
-public class PeriodCalcHandler extends Handler {
+public class TransitCalcHandler extends Handler {
 	private BaseFont baseFont;
 
-	public PeriodCalcHandler() {
+	public TransitCalcHandler() {
 		super();
 		try {
 			baseFont = PDFUtil.getBaseFont();
