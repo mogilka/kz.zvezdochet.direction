@@ -20,12 +20,10 @@ import kz.zvezdochet.bean.SkyPoint;
 import kz.zvezdochet.bean.SkyPointAspect;
 import kz.zvezdochet.core.bean.Model;
 import kz.zvezdochet.core.handler.Handler;
-import kz.zvezdochet.core.service.DataAccessException;
 import kz.zvezdochet.core.util.CalcUtil;
 import kz.zvezdochet.core.util.DateUtil;
 import kz.zvezdochet.direction.bean.PeriodItem;
 import kz.zvezdochet.direction.part.TransitPart;
-import kz.zvezdochet.service.AspectService;
 import kz.zvezdochet.util.Configuration;
 /**
  * Обработчик расчёта транзитов на указанный период
@@ -50,7 +48,11 @@ public class TransitCalcHandler extends Handler {
 			List<Model> houses = conf.getHouses();
 	
 			updateStatus("Расчёт транзитов на период", false);
-	
+
+			Planet selplanet = periodPart.getPlanet();
+			House selhouse = periodPart.getHouse();
+			Aspect selaspect = periodPart.getAspect();
+
 			Date initDate = periodPart.getInitialDate();
 			Date finalDate = periodPart.getFinalDate();
 			Calendar start = Calendar.getInstance();
@@ -86,23 +88,39 @@ public class TransitCalcHandler extends Handler {
 					if (eplanet.getCode().equals("Moon"))
 						continue;
 
-					for (Planet planet : planets) {
-						PeriodItem item = calc(eplanet, planet);
-						if (null == item)
-							continue;
-						SkyPointAspect spa = item.getPlanetAspect();
-						spa.setDescr(pdate);
-						items.add(spa);
-					}
-					for (Model model : houses) {
-						House house = (House)model;
-						PeriodItem item = calc(eplanet, house);
-						if (null == item)
-							continue;
-						SkyPointAspect spa = item.getHouseAspect();
-						spa.setDescr(pdate);
-						items.add(spa);
-					}
+					if (null == selhouse)
+						for (Planet planet : planets) {
+							if (selplanet != null && !planet.getId().equals(selplanet.getId()))
+								continue;
+	
+							PeriodItem item = calc(eplanet, planet, selaspect);
+							if (null == item)
+								continue;
+							SkyPointAspect spa = item.getPlanetAspect();
+							spa.setAspect(selaspect);
+							spa.setDescr(pdate);
+							spa.setRetro(eplanet.isRetrograde());
+							((Planet)spa.getSkyPoint1()).setHouse(item.house);
+							items.add(spa);
+						}
+
+					if (selplanet != null && selaspect != null) {
+						//
+					} else
+						for (Model model : houses) {
+							if (selhouse != null && !model.getId().equals(selhouse.getId()))
+								continue;
+	
+							House house = (House)model;
+							PeriodItem item = calc(eplanet, house, selaspect);
+							if (null == item)
+								continue;
+							SkyPointAspect spa = item.getHouseAspect();
+							spa.setAspect(selaspect);
+							spa.setDescr(pdate);
+							spa.setRetro(eplanet.isRetrograde());
+							items.add(spa);
+						}
 				}
 			}
 			updateStatus("Расчёт транзитов завершён", false);
@@ -115,43 +133,28 @@ public class TransitCalcHandler extends Handler {
 
 	/**
 	 * Определение аспектного транзита между небесными точками
-	 * @param point1 первая небесная точка
-	 * @param point2 вторая небесная точка
+	 * @param point1 транзитная планета
+	 * @param point2 натальная планета или дом
+	 * @param aspect аспект
 	 */
-	private PeriodItem calc(SkyPoint point1, SkyPoint point2) {
+	private PeriodItem calc(SkyPoint point1, SkyPoint point2, Aspect aspect) {
 		try {
 			//находим угол между точками космограммы
 			double res = CalcUtil.getDifference(point1.getCoord(), point2.getCoord());
-			AspectService service = new AspectService();
 
 			//для домов считаем только соединения
 			if (point2 instanceof House) {
 				if (res < 1) {
-					Aspect a = (Aspect)service.find(1L);
 					PeriodItem item = new PeriodItem();
-					item.aspect = a;
 					item.planet = (Planet)point1;
 					item.house = (House)point2;
 					return item;
 				}
 			} else {
-				//для планет определяем, является ли аспект стандартным
-				List<Model> aspects = service.getMajorList();
-				for (Model realasp : aspects) {
-					Aspect a = (Aspect)realasp;
-					if (a.isMain() && a.isExact(res)) {
-						if (a.getPlanetid() > 0)
-							continue;
-	
-						if (point1.getCode().equals(point2.getCode()))
-							continue;
-	
-						if (a.getCode().equals("OPPOSITION") &&
-								(point2.getCode().equals("Kethu") || point2.getCode().equals("Rakhu")))
-							continue;
-	
+				if (0 == aspect.getPlanetid())
+					if (aspect.isMain() && aspect.isExact(res)) {
 						PeriodItem item = new PeriodItem();
-						item.aspect = a;
+						item.aspect = aspect;
 						item.planet = (Planet)point1;
 						Planet planet2 = (Planet)point2;
 						item.planet2 = planet2;
@@ -159,9 +162,8 @@ public class TransitCalcHandler extends Handler {
 	//					System.out.println(point1.getName() + " " + type.getSymbol() + " " + point2.getName());
 						return item;
 					}
-				}
 			}
-		} catch (DataAccessException e) {
+		} catch (Exception e) {
 			e.printStackTrace();
 		}
 		return null;

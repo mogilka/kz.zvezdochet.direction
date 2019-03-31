@@ -98,7 +98,7 @@ public class TransitExportHandler extends Handler {
 
 			Place place = periodPart.getPlace();
 			double zone = periodPart.getZone();
-			boolean printable = periodPart.isPrintable();
+			boolean printable = true; //TODO
 
 			Object[] spheres = periodPart.getSpheres();
 			List<Long> selhouses = new ArrayList<>();
