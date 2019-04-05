@@ -160,18 +160,23 @@ public class AgeCalcHandler extends Handler {
 			if (retro && point2 instanceof Planet && point1 instanceof Planet
 					&& point1.getNumber() > point2.getNumber())
 				return;
-	
+
+			if (agedh[age - 1][point1.getNumber() - 1][point2.getNumber() - 1])
+				return;
+
 			//находим угол между точками космограммы с учетом возраста
 			double one = makeAge(point1.getCoord(), age, !retro);
 			double two = point2.getCoord();
 			double res = CalcUtil.getDifference(one, two);
 
-			if (point2 instanceof House && res >= 180)
-				--res;
-
 			//определяем, является ли аспект стандартным
 			for (Model realasp : aspects) {
 				Aspect a = (Aspect)realasp;
+
+				//оппозицию игнорируем, т.к. она получается со сдвигом в один год (ниже искусственно её создаём вслед за соединением)
+				if (point2 instanceof House && a.getCode().equals("OPPOSITION"))
+					continue;
+
 				if (aspectype != null && !aspectype.equals(a.getType().getCode()))
 					continue;
 
@@ -179,11 +184,6 @@ public class AgeCalcHandler extends Handler {
 					continue;
 
 				if (a.isExact(res)) {
-					if (point2 instanceof House && a.getCode().equals("CONJUNCTION")) {
-						if (agedh[age - 1][point1.getNumber() - 1][point2.getNumber() - 1])
-							continue;
-					}
-
 					SkyPointAspect aspect = new SkyPointAspect();
 					point1.setCoord(one);
 					initPlanetHouse(point1);
@@ -196,6 +196,20 @@ public class AgeCalcHandler extends Handler {
 					aspect.setRetro(retro);
 					aspect.setExact(true);
 					aged.add(aspect);
+
+					//для соединения создаём искусственную оппозицию в этом же возрасте
+					if (point2 instanceof House && a.getCode().equals("CONJUNCTION")) {
+						aspect = new SkyPointAspect();
+						point1.setCoord(one);
+						aspect.setSkyPoint1(point1);
+						aspect.setSkyPoint2(((House)point2).getOpposite());
+						aspect.setScore(res + 180);
+						aspect.setAge(age);
+						aspect.setAspect((Aspect)new AspectService().find("OPPOSITION"));
+						aspect.setRetro(retro);
+						aspect.setExact(true);
+						aged.add(aspect);
+					}
 
 					if (point2 instanceof Planet && point1 instanceof Planet)
 						agedp[age][point1.getNumber() - 1][point2.getNumber() - 1] = true;
