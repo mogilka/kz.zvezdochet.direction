@@ -3,7 +3,6 @@ package kz.zvezdochet.direction.handler;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.TreeMap;
 
 import org.eclipse.e4.core.contexts.Active;
 import org.eclipse.e4.core.di.annotations.Execute;
@@ -33,7 +32,7 @@ import kz.zvezdochet.util.Configuration;
 public class AgeCalcHandler extends Handler {
 	private boolean agedp[][][] = null;
 	private boolean agedh[][][] = null;
-	private TreeMap<Integer, List<SkyPointAspect>> aged = null;
+	private List<SkyPointAspect> aged = null;
 	private String aspectype;
 	private boolean retro = false;
 	List<Model> aspects = null;
@@ -42,7 +41,7 @@ public class AgeCalcHandler extends Handler {
 	@Execute
 	public void execute(@Active MPart activePart) {
 		try {
-			aged = new TreeMap<Integer, List<SkyPointAspect>>();
+			aged = new ArrayList<SkyPointAspect>();
 			AgePart agePart = (AgePart)activePart.getObject();
 			if (!agePart.check(0)) return;
 			event = agePart.getEvent();
@@ -117,11 +116,7 @@ public class AgeCalcHandler extends Handler {
 				}
 			}
 			updateStatus("Расчёт дирекций завершён", false);
-			Collection<List<SkyPointAspect>> values = aged.values();
-			List<SkyPointAspect> list = new ArrayList<>();
-			for (List<SkyPointAspect> item : values)
-				list.addAll(item);
-		    agePart.setData(list);
+		    agePart.setData(aged);
 			updateStatus("Таблица дирекций сформирована", false);
 		} catch (Exception e) {
 			DialogUtil.alertError(e.getMessage());
@@ -174,6 +169,11 @@ public class AgeCalcHandler extends Handler {
 			//определяем, является ли аспект стандартным
 			for (Model realasp : aspects) {
 				Aspect a = (Aspect)realasp;
+
+				//оппозицию игнорируем, т.к. она получается со сдвигом в один год (ниже искусственно её создаём вслед за соединением)
+				if (point2 instanceof House && a.getCode().equals("OPPOSITION"))
+					continue;
+
 				if (aspectype != null && !aspectype.equals(a.getType().getCode()))
 					continue;
 
@@ -188,20 +188,30 @@ public class AgeCalcHandler extends Handler {
 					aspect.setSkyPoint1(point1);
 					aspect.setSkyPoint2(point2);
 					aspect.setScore(res);
-					int correctedAge = a.getCode().equals("OPPOSITION") ? age - 1 : age;
-					aspect.setAge(correctedAge);
+					aspect.setAge(age);
 					aspect.setAspect(a);
 					aspect.setRetro(retro);
 					aspect.setExact(true);
-					List<SkyPointAspect> list = aged.get(correctedAge);
-					if (null == list)
-						list = new ArrayList<>();
-					list.add(aspect);
-					aged.put(correctedAge, list);
+					aged.add(aspect);
+
+					//для соединения создаём искусственную оппозицию в этом же возрасте
+					if (point2 instanceof House && a.getCode().equals("CONJUNCTION")) {
+						aspect = new SkyPointAspect();
+						point1.setCoord(one + 180);
+						aspect.setSkyPoint1(point1);
+						aspect.setSkyPoint2(point2);
+						aspect.setScore(res);
+						aspect.setAge(age);
+						aspect.setAspect(a);
+						aspect.setRetro(retro);
+						aspect.setExact(true);
+						aged.add(aspect);
+					}
+
 					if (point2 instanceof Planet && point1 instanceof Planet)
-						agedp[correctedAge][point1.getNumber() - 1][point2.getNumber() - 1] = true;
+						agedp[age][point1.getNumber() - 1][point2.getNumber() - 1] = true;
 					else
-						agedh[correctedAge][point1.getNumber() - 1][point2.getNumber() - 1] = true;
+						agedh[age][point1.getNumber() - 1][point2.getNumber() - 1] = true;
 				}
 			}
 		} catch (Exception e) {
