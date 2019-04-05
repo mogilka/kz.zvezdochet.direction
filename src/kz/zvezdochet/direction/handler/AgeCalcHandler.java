@@ -3,6 +3,7 @@ package kz.zvezdochet.direction.handler;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.TreeMap;
 
 import org.eclipse.e4.core.contexts.Active;
 import org.eclipse.e4.core.di.annotations.Execute;
@@ -32,7 +33,7 @@ import kz.zvezdochet.util.Configuration;
 public class AgeCalcHandler extends Handler {
 	private boolean agedp[][][] = null;
 	private boolean agedh[][][] = null;
-	private List<SkyPointAspect> aged = null;
+	private TreeMap<Integer, List<SkyPointAspect>> aged = null;
 	private String aspectype;
 	private boolean retro = false;
 	List<Model> aspects = null;
@@ -41,7 +42,7 @@ public class AgeCalcHandler extends Handler {
 	@Execute
 	public void execute(@Active MPart activePart) {
 		try {
-			aged = new ArrayList<SkyPointAspect>();
+			aged = new TreeMap<Integer, List<SkyPointAspect>>();
 			AgePart agePart = (AgePart)activePart.getObject();
 			if (!agePart.check(0)) return;
 			event = agePart.getEvent();
@@ -116,7 +117,11 @@ public class AgeCalcHandler extends Handler {
 				}
 			}
 			updateStatus("Расчёт дирекций завершён", false);
-		    agePart.setData(aged);
+			Collection<List<SkyPointAspect>> values = aged.values();
+			List<SkyPointAspect> list = new ArrayList<>();
+			for (List<SkyPointAspect> item : values)
+				list.addAll(item);
+		    agePart.setData(list);
 			updateStatus("Таблица дирекций сформирована", false);
 		} catch (Exception e) {
 			DialogUtil.alertError(e.getMessage());
@@ -183,15 +188,20 @@ public class AgeCalcHandler extends Handler {
 					aspect.setSkyPoint1(point1);
 					aspect.setSkyPoint2(point2);
 					aspect.setScore(res);
-					aspect.setAge(age);
+					int correctedAge = a.getCode().equals("OPPOSITION") ? age - 1 : age;
+					aspect.setAge(correctedAge);
 					aspect.setAspect(a);
 					aspect.setRetro(retro);
 					aspect.setExact(true);
-					aged.add(aspect);
+					List<SkyPointAspect> list = aged.get(correctedAge);
+					if (null == list)
+						list = new ArrayList<>();
+					list.add(aspect);
+					aged.put(correctedAge, list);
 					if (point2 instanceof Planet && point1 instanceof Planet)
-						agedp[age][point1.getNumber() - 1][point2.getNumber() - 1] = true;
+						agedp[correctedAge][point1.getNumber() - 1][point2.getNumber() - 1] = true;
 					else
-						agedh[age][point1.getNumber() - 1][point2.getNumber() - 1] = true;
+						agedh[correctedAge][point1.getNumber() - 1][point2.getNumber() - 1] = true;
 				}
 			}
 		} catch (Exception e) {
