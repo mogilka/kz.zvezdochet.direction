@@ -106,7 +106,7 @@ public class TransitCalcHandler extends Handler {
 
 					if (selplanet != null && selaspect != null) {
 						//
-					} else
+					} else if (person.isHousable())
 						for (Model model : houses) {
 							if (selhouse != null && !model.getId().equals(selhouse.getId()))
 								continue;

@@ -65,14 +65,15 @@ public class AgeCalcHandler extends Handler {
 
 			List<Model> selhouses = new ArrayList<Model>();
 			House selhouse = agePart.getHouse();
-			if (selhouse != null)
-				for (Model model : houses) {
-					if (selhouse.getId().equals(model.getId()))
-						selhouses.add(model);
-				}
-			else
-				selhouses.addAll(houses);
-
+			if (event.isHousable()) {
+				if (selhouse != null)
+					for (Model model : houses) {
+						if (selhouse.getId().equals(model.getId()))
+							selhouses.add(model);
+					}
+				else
+					selhouses.addAll(houses);
+			}
 			AspectType selaspect = agePart.getAspect();
 			if (null == selaspect)
 				aspectype = null;
@@ -104,7 +105,7 @@ public class AgeCalcHandler extends Handler {
 					}
 				}
 				//дирекции планеты к куспидам домов
-				if (houses != null) {
+				if (event.isHousable()) {
 					for (Model model2 : selhouses) {
 						House selp2 = (House)model2;
 						for (Model model : selplanets) {
