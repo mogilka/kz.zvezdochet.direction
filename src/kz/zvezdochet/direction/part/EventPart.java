@@ -400,7 +400,7 @@ public class EventPart extends ModelListView implements ICalculable {
 		txSearch.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 		txSearch.setFocus();
 
-		EventProposalProvider proposalProvider = new EventProposalProvider(new Object[] {0});
+		EventProposalProvider proposalProvider = new EventProposalProvider(new Object[] {0}, null);
 	    ContentProposalAdapter adapter = new ContentProposalAdapter(
 	        txSearch, new TextContentAdapter(),
 	        proposalProvider, KeyStroke.getInstance(SWT.CTRL, 32), new char[] {' '});

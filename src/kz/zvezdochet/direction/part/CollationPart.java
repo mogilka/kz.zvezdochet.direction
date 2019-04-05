@@ -123,7 +123,7 @@ public class CollationPart extends ModelPart implements ICalculable {
 //			}
 //		});
 
-		EventProposalProvider proposalProvider = new EventProposalProvider(new Object[] {0});
+		EventProposalProvider proposalProvider = new EventProposalProvider(new Object[] {0}, null);
 	    ContentProposalAdapter adapter = new ContentProposalAdapter(
 	        txEvent, new TextContentAdapter(),
 	        proposalProvider, KeyStroke.getInstance(SWT.CTRL, 32), new char[] {' '});
@@ -151,7 +151,7 @@ public class CollationPart extends ModelPart implements ICalculable {
 		new InfoDecoration(txParticipant, SWT.TOP | SWT.LEFT);
 		txParticipant.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false));
 
-		proposalProvider = new EventProposalProvider(new Object[] {1,2});
+		proposalProvider = new EventProposalProvider(new Object[] {1,2}, null);
 	    adapter = new ContentProposalAdapter(
 	        txParticipant, new TextContentAdapter(),
 	        proposalProvider, KeyStroke.getInstance(SWT.CTRL, 32), new char[] {' '});
@@ -709,7 +709,7 @@ public class CollationPart extends ModelPart implements ICalculable {
 		new InfoDecoration(txMember, SWT.TOP | SWT.LEFT);
 		txMember.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false));
 
-		EventProposalProvider proposalProvider = new EventProposalProvider(new Object[] {1});
+		EventProposalProvider proposalProvider = new EventProposalProvider(new Object[] {1}, null);
 		ContentProposalAdapter adapter = new ContentProposalAdapter(
 	        txMember, new TextContentAdapter(),
 	        proposalProvider, KeyStroke.getInstance(SWT.CTRL, 32), new char[] {' '});
