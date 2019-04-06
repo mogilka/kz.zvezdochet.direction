@@ -42,6 +42,7 @@ import kz.zvezdochet.bean.Planet;
 import kz.zvezdochet.bean.SkyPoint;
 import kz.zvezdochet.core.bean.Model;
 import kz.zvezdochet.core.handler.Handler;
+import kz.zvezdochet.core.ui.util.DialogUtil;
 import kz.zvezdochet.core.util.CalcUtil;
 import kz.zvezdochet.core.util.DateUtil;
 import kz.zvezdochet.core.util.PlatformUtil;
@@ -56,7 +57,7 @@ import kz.zvezdochet.util.Configuration;
 import kz.zvezdochet.util.HouseMap;
 /**
  * Генерация отчёта за указанный период по месяцам
- * @author Nataly Didenko
+ * @author Natalie Didenko
  */
 public class MonthHandler extends Handler {
 	private BaseFont baseFont;
@@ -93,6 +94,10 @@ public class MonthHandler extends Handler {
 					if (!selhouses.contains(model.getId()))
 						selhouses.add(model.getId());
 			}
+			if (selhouses.isEmpty()) {
+				DialogUtil.alertError("Отметьте галочкой хотя бы одну сферу жизни");
+				return;
+			}
 
 			Configuration conf = person.getConfiguration();
 			List<Model> houses = conf.getHouses();
@@ -128,8 +133,9 @@ public class MonthHandler extends Handler {
 			PDFUtil.printHeader(p, "Прогноз событий по месяцам", null);
 			chapter.add(p);
 
+			String text = person.getCallname() + " – ";
 			SimpleDateFormat sdf = new SimpleDateFormat("EEEE, d MMMM yyyy");
-			String text = sdf.format(initDate);
+			text += sdf.format(initDate);
 			boolean days = (DateUtil.getDateFromDate(initDate) != DateUtil.getDateFromDate(finalDate)
 					|| DateUtil.getMonthFromDate(initDate) != DateUtil.getMonthFromDate(finalDate)
 					|| DateUtil.getYearFromDate(initDate) != DateUtil.getYearFromDate(finalDate));
@@ -241,22 +247,12 @@ public class MonthHandler extends Handler {
 						event.calc(false);
 						event.getConfiguration().initPlanetAspects();
 		
-						Event prev = new Event();
-						Calendar cal = Calendar.getInstance();
-						cal.setTime(edate);
-						cal.add(Calendar.DATE, -1);
-						prev.setBirth(cal.getTime());
-						prev.setPlace(place);
-						prev.setZone(zone);
-						prev.calc(false);
-						prev.getConfiguration().initPlanetAspects();
-
 						List<Planet> iplanets = new ArrayList<Planet>();
 						Collection<Planet> eplanets = event.getConfiguration().getPlanets().values();
 						for (Model model : eplanets) {
 							Planet planet = (Planet)model;
-							List<Object> ingresses = planet.isIngressed(prev, event);
-							if (ingresses != null && ingresses.size() > 0)
+//							List<Object> ingresses = planet.isIngressed(prev, event);
+//							if (ingresses != null && ingresses.size() > 0)
 								iplanets.add(planet);
 						}
 
