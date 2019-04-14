@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -80,7 +81,7 @@ import kz.zvezdochet.util.Configuration;
 
 /**
  * Представление транзитов
- * @author Nataly Didenko
+ * @author Natalie Didenko
  *
  */
 public class EventPart extends ModelListView implements ICalculable {
@@ -181,14 +182,16 @@ public class EventPart extends ModelListView implements ICalculable {
 	 * @param event2 событие|персона
 	 */
 	private void refreshCard(Event event, Event event2) {
-		List<String> params = new ArrayList<String>();
+		Map<String, Object> params = new HashMap<>();
+		List<String> aparams = new ArrayList<String>();
 		Map<String, String[]> types = AspectType.getHierarchy();
 		for (Control control : grAspectType.getChildren()) {
 			Button button = (Button)control;
 			if (button.getSelection())
-				params.addAll(Arrays.asList(types.get(button.getData("type"))));
+				aparams.addAll(Arrays.asList(types.get(button.getData("type"))));
 		}
-		if (params.size() < 1) return;
+		params.put("aspects", aparams);
+		params.put("exact", true);
 		cmpCosmogram.paint(event.getConfiguration(), event2.getConfiguration(), params);
 	}
 
@@ -741,7 +744,7 @@ public class EventPart extends ModelListView implements ICalculable {
 	private List<SkyPointAspect> aged;
 
 	/**
-	 * Определение аспектной дирекции между небесными точками
+	 * Определение аспекта между небесными точками
 	 * @param point1 первая небесная точка
 	 * @param point2 вторая небесная точка
 	 */
