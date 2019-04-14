@@ -27,7 +27,7 @@ import kz.zvezdochet.direction.part.TransitPart;
 import kz.zvezdochet.util.Configuration;
 /**
  * Обработчик расчёта транзитов на указанный период
- * @author Nataly Didenko
+ * @author Natalie Didenko
  */
 public class TransitCalcHandler extends Handler {
 
@@ -72,15 +72,6 @@ public class TransitCalcHandler extends Handler {
 				event.setPlace(place);
 				event.setZone(zone);
 				event.calc(false);
-
-//					Event prev = new Event();
-//					Calendar cal = Calendar.getInstance();
-//					cal.setTime(edate);
-//					cal.add(Calendar.DATE, -1);
-//					prev.setBirth(cal.getTime());
-//					prev.setPlace(place);
-//					prev.setZone(zone);
-//					prev.calc(false);
 
 				Collection<Planet> eplanets = event.getConfiguration().getPlanets().values();
 				for (Planet eplanet : eplanets) {
@@ -142,26 +133,18 @@ public class TransitCalcHandler extends Handler {
 			//находим угол между точками космограммы
 			double res = CalcUtil.getDifference(point1.getCoord(), point2.getCoord());
 
-			//для домов считаем только соединения
-			if (point2 instanceof House) {
-				if (res < 1) {
-					PeriodItem item = new PeriodItem();
-					item.planet = (Planet)point1;
+			if (aspect.isExact(res)) {
+				PeriodItem item = new PeriodItem();
+				item.aspect = aspect;
+				item.planet = (Planet)point1;
+				if (point2 instanceof House) {
 					item.house = (House)point2;
-					return item;
+				} else if (0 == aspect.getPlanetid()) {
+					Planet planet2 = (Planet)point2;
+					item.planet2 = planet2;
+					item.house = planet2.getHouse();
 				}
-			} else {
-				if (0 == aspect.getPlanetid())
-					if (aspect.isMain() && aspect.isExact(res)) {
-						PeriodItem item = new PeriodItem();
-						item.aspect = aspect;
-						item.planet = (Planet)point1;
-						Planet planet2 = (Planet)point2;
-						item.planet2 = planet2;
-						item.house = planet2.getHouse();
-	//					System.out.println(point1.getName() + " " + type.getSymbol() + " " + point2.getName());
-						return item;
-					}
+				return item;
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
