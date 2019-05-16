@@ -190,18 +190,9 @@ public class CalcCollationHandler extends Handler {
 				House house = (House)houses.get(j);
 				if (!Arrays.asList(hfilter).contains(house.getId()))
 					continue;
-				double pcoord = planet.getCoord();
-				Double hmargin = (j == houses.size() - 1) ?
-					((House)houses.get(0)).getCoord() : 
-					((House)houses.get(j + 1)).getCoord();
-				double[] res = CalcUtil.checkMarginalValues(house.getCoord(), hmargin, pcoord);
-				hmargin = res[0];
-				pcoord = res[1];
-				//если градус планеты находится в пределах куспидов
-				//текущей и предыдущей трети домов,
-				//запоминаем, в каком доме находится планета
-				if (Math.abs(pcoord) < hmargin & 
-						Math.abs(pcoord) >= house.getCoord()) {
+				int h = (j == houses.size() - 1) ? 0 : j + 1;
+				House house2 = (House)houses.get(h);
+				if (SkyPoint.getHouse(house.getCoord(), house2.getCoord(), planet.getCoord())) {
 					PlanetHouseText phouse = new PlanetHouseText();
 					phouse.setPlanet(planet);
 					phouse.setHouse(house);

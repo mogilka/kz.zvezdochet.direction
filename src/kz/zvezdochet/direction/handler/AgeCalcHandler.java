@@ -249,18 +249,9 @@ public class AgeCalcHandler extends Handler {
 		Planet planet = (Planet)skyPoint;
 		for (int j = 0; j < houseList.size(); j++) { 
 			House house = ((House)houseList.get(j));
-			double pcoord = planet.getCoord();
-			Double hmargin = (j == houseList.size() - 1) ?
-				((House)houseList.get(0)).getCoord() : 
-				((House)houseList.get(j + 1)).getCoord();
-			double[] res = CalcUtil.checkMarginalValues(house.getCoord(), hmargin, pcoord);
-			hmargin = res[0];
-			pcoord = res[1];
-			//если градус планеты находится в пределах куспидов
-			//текущей и предыдущей трети домов,
-			//запоминаем, в каком доме находится планета
-			if (Math.abs(pcoord) < hmargin & 
-					Math.abs(pcoord) >= house.getCoord())
+			int h = (j == houseList.size() - 1) ? 0 : j + 1;
+			House house2 = (House)houseList.get(h);
+			if (SkyPoint.getHouse(house.getCoord(), house2.getCoord(), planet.getCoord()))
 				planet.setHouse(house);
 		}
 	}
