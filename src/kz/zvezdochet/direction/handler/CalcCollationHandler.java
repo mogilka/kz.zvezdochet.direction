@@ -118,7 +118,7 @@ public class CalcCollationHandler extends Handler {
 	private SkyPointAspect calc(SkyPoint point1, SkyPoint point2) {
 		try {
 			//находим транзитный угол
-			double res = CalcUtil.getDifference(point1.getCoord(), point2.getCoord());
+			double res = CalcUtil.getDifference(point1.getLongitude(), point2.getLongitude());
 	
 			//определяем, является ли аспект стандартным
 			for (Model realasp : aspects) {
@@ -192,7 +192,7 @@ public class CalcCollationHandler extends Handler {
 					continue;
 				int h = (j == houses.size() - 1) ? 0 : j + 1;
 				House house2 = (House)houses.get(h);
-				if (SkyPoint.getHouse(house.getCoord(), house2.getCoord(), planet.getCoord())) {
+				if (SkyPoint.getHouse(house.getLongitude(), house2.getLongitude(), planet.getLongitude())) {
 					PlanetHouseText phouse = new PlanetHouseText();
 					phouse.setPlanet(planet);
 					phouse.setHouse(house);

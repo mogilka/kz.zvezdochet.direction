@@ -740,7 +740,7 @@ public class TransitExportHandler extends Handler {
 	private PeriodItem calc(SkyPoint point1, SkyPoint point2) {
 		try {
 			//находим угол между точками космограммы
-			double res = CalcUtil.getDifference(point1.getCoord(), point2.getCoord());
+			double res = CalcUtil.getDifference(point1.getLongitude(), point2.getLongitude());
 			AspectService service = new AspectService();
 
 			//для домов считаем только соединения

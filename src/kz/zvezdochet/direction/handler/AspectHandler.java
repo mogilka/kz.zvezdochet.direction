@@ -57,13 +57,13 @@ public class AspectHandler extends Handler {
 			Object[][] data = new Object[pcount][pcount + 1];
 			//заполняем заголовки строк названиями планет и их координатами
 			for (Planet planet : planets2)
-				data[planet.getId().intValue() - 19][0] = planet.getName() + " (" + CalcUtil.roundTo(planet.getCoord(), 1) + ")";
+				data[planet.getId().intValue() - 19][0] = planet.getName() + " (" + CalcUtil.roundTo(planet.getLongitude(), 1) + ")";
 
 			//формируем массив аспектов планет
 			List<Model> aspects = new AspectService().getList();
 			for (Planet planet : planets2) {
 				for (Planet planet2 : planets) {
-					double res = CalcUtil.getDifference(planet.getCoord(), planet2.getCoord());
+					double res = CalcUtil.getDifference(planet.getLongitude(), planet2.getLongitude());
 					SkyPointAspect aspect = new SkyPointAspect();
 					aspect.setSkyPoint1(planet);
 					aspect.setSkyPoint2(planet2);

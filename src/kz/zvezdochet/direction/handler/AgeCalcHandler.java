@@ -165,8 +165,8 @@ public class AgeCalcHandler extends Handler {
 				return;
 
 			//находим угол между точками космограммы с учетом возраста
-			double one = makeAge(point1.getCoord(), age, !retro);
-			double two = point2.getCoord();
+			double one = makeAge(point1.getLongitude(), age, !retro);
+			double two = point2.getLongitude();
 			double res = CalcUtil.getDifference(one, two);
 
 			//определяем, является ли аспект стандартным
@@ -185,7 +185,7 @@ public class AgeCalcHandler extends Handler {
 
 				if (a.isExact(res)) {
 					SkyPointAspect aspect = new SkyPointAspect();
-					point1.setCoord(one);
+					point1.setLongitude(one);
 					initPlanetHouse(point1);
 					initPlanetSign(point1);
 					aspect.setSkyPoint1(point1);
@@ -200,7 +200,7 @@ public class AgeCalcHandler extends Handler {
 					//для соединения создаём искусственную оппозицию в этом же возрасте
 					if (point2 instanceof House && a.getCode().equals("CONJUNCTION")) {
 						aspect = new SkyPointAspect();
-						point1.setCoord(one);
+						point1.setLongitude(one);
 						aspect.setSkyPoint1(point1);
 						aspect.setSkyPoint2(((House)point2).getOpposite());
 						aspect.setScore(res + 180);
@@ -251,7 +251,7 @@ public class AgeCalcHandler extends Handler {
 			House house = ((House)houseList.get(j));
 			int h = (j == houseList.size() - 1) ? 0 : j + 1;
 			House house2 = (House)houseList.get(h);
-			if (SkyPoint.getHouse(house.getCoord(), house2.getCoord(), planet.getCoord()))
+			if (SkyPoint.getHouse(house.getLongitude(), house2.getLongitude(), planet.getLongitude()))
 				planet.setHouse(house);
 		}
 	}
@@ -263,7 +263,7 @@ public class AgeCalcHandler extends Handler {
 	 */
 	private void initPlanetSign(SkyPoint skyPoint) throws DataAccessException {
 		Planet planet = (Planet)skyPoint;
-		Sign sign = SkyPoint.getSign(planet.getCoord(), event.getBirthYear());
+		Sign sign = SkyPoint.getSign(planet.getLongitude(), event.getBirthYear());
 		planet.setSign(sign);
 	}
 }

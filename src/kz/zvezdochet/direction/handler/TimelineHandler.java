@@ -76,8 +76,8 @@ public class TimelineHandler extends Handler {
 				List<Model> trplanets = new ArrayList<Model>();
 				for (Model model: planets) {
 					Planet planet = new Planet((Planet)model);
-					double coord = CalcUtil.getAgedCoord(Math.abs(planet.getCoord()), i);
-					planet.setCoord(coord);
+					double coord = CalcUtil.getAgedCoord(Math.abs(planet.getLongitude()), i);
+					planet.setLongitude(coord);
 					trplanets.add(planet);
 				}
 				//дирекции натальной планеты к планетам и куспидам текущей минуты
@@ -116,7 +116,7 @@ public class TimelineHandler extends Handler {
 	private void calc(SkyPoint point1, SkyPoint point2) {
 		try {
 			//находим угол между точками космограммы
-			double res = CalcUtil.getDifference(point1.getCoord(), point2.getCoord());
+			double res = CalcUtil.getDifference(point1.getLongitude(), point2.getLongitude());
 	
 			SkyPointAspect aspect = new SkyPointAspect();
 			aspect.setSkyPoint1(point1);

@@ -131,7 +131,7 @@ public class TransitCalcHandler extends Handler {
 	private PeriodItem calc(SkyPoint point1, SkyPoint point2, Aspect aspect) {
 		try {
 			//находим угол между точками космограммы
-			double res = CalcUtil.getDifference(point1.getCoord(), point2.getCoord());
+			double res = CalcUtil.getDifference(point1.getLongitude(), point2.getLongitude());
 
 			if (aspect.isExact(res)) {
 				PeriodItem item = new PeriodItem();

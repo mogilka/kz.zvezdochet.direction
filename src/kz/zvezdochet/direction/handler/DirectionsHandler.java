@@ -49,15 +49,15 @@ public class DirectionsHandler extends Handler {
 			//заполняем заголовки строк названиями куспидов и третей домов и их координатами
 			for (int i = 0; i < hcount; i++) {
 				House house = (House)houses.get(i);
-				data[i][0] = house.getName() + " (" + CalcUtil.roundTo(house.getCoord(), 1) + ")";
+				data[i][0] = house.getName() + " (" + CalcUtil.roundTo(house.getLongitude(), 1) + ")";
 			}
 
 			//формируем массив дирекций планет по домам
 			for (Planet planet : planets) {
-				double one = Math.abs(planet.getCoord());
+				double one = Math.abs(planet.getLongitude());
 				for (int r = 0; r < hcount; r++) {
 					House house = (House)houses.get(r);
-					double two = Math.abs(house.getCoord());
+					double two = Math.abs(house.getLongitude());
 					double res;
 					boolean retro = false;
 					if (one - two > 0) {

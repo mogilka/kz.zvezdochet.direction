@@ -363,7 +363,7 @@ public class MonthHandler extends Handler {
 	private PeriodItem calc(SkyPoint point1, SkyPoint point2, List<Model> aspects) {
 		try {
 			//находим угол между точками космограммы
-			double res = CalcUtil.getDifference(point1.getCoord(), point2.getCoord());
+			double res = CalcUtil.getDifference(point1.getLongitude(), point2.getLongitude());
 
 			//определяем, является ли аспект стандартным
 			for (Model realasp : aspects) {

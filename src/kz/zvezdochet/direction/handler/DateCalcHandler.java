@@ -88,8 +88,8 @@ public class DateCalcHandler extends Handler {
 			TreeMap<Long, Planet> trplanets = new TreeMap<>();
 			for (Planet p: planets) {
 				Planet planet = new Planet((Planet)p);
-				double coord = CalcUtil.getAgedCoord(Math.abs(planet.getCoord()), age);
-				planet.setCoord(coord);
+				double coord = CalcUtil.getAgedCoord(Math.abs(planet.getLongitude()), age);
+				planet.setLongitude(coord);
 				trplanets.put(planet.getId(), planet);
 			}
 			person.getConfiguration().setPlanets(trplanets);
@@ -97,8 +97,8 @@ public class DateCalcHandler extends Handler {
 			List<Model> trhouses = new ArrayList<Model>();
 			for (Model model: houses) {
 				House house = new House((House)model);
-				double coord = CalcUtil.getAgedCoord(Math.abs(house.getCoord()), age);
-				house.setCoord(coord);
+				double coord = CalcUtil.getAgedCoord(Math.abs(house.getLongitude()), age);
+				house.setLongitude(coord);
 				trhouses.add(house);
 			}
 			person.getConfiguration().setHouses(trhouses);
@@ -145,7 +145,7 @@ public class DateCalcHandler extends Handler {
 	private void calc(SkyPoint point1, SkyPoint point2) {
 		try {
 			//находим угол между точками космограммы
-			double res = CalcUtil.getDifference(point1.getCoord(), point2.getCoord());
+			double res = CalcUtil.getDifference(point1.getLongitude(), point2.getLongitude());
 	
 			//определяем, является ли аспект стандартным
 			for (Model realasp : aspects) {

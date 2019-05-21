@@ -61,7 +61,7 @@ public class DirectionsPart extends ListView {
 			Collection<Planet> planets = conf.getPlanets().values();		
 			for (Planet planet : planets) {
 				tableColumn = new TableColumn(table, SWT.NONE);
-				tableColumn.setText(CalcUtil.roundTo(planet.getCoord(), 1) + "");
+				tableColumn.setText(CalcUtil.roundTo(planet.getLongitude(), 1) + "");
 				tableColumn.setImage(planet.getImage());
 				tableColumn.setToolTipText(planet.getName());
 			}
