@@ -460,7 +460,7 @@ public class TransitExportHandler extends Handler {
 						String shortdate = sdfshort.format(date);
 
 						//аспекты
-						Section section = PDFUtil.printSection(chapter, "Настроение " + shortdate);
+						Section section = PDFUtil.printSection(chapter, "Настроение " + shortdate, null);
 						for (Map.Entry<Long, Set<PeriodItem>> entry : atems.entrySet()) {
 							Set<PeriodItem> list = entry.getValue();
 							if (null == list || 0 == list.size()) {
@@ -526,7 +526,7 @@ public class TransitExportHandler extends Handler {
 									case 4: header = "Ночь " + shortdate; break;
 									default: header = "Ключевые события дня " + shortdate;
 								}
-								section = PDFUtil.printSection(chapter, header);
+								section = PDFUtil.printSection(chapter, header, null);
 								if (0 == i) {
 									section.add(new Paragraph("Ключевые события могут произойти в любое время суток", font));
 									section.add(Chunk.NEWLINE);
@@ -597,7 +597,7 @@ public class TransitExportHandler extends Handler {
 					chapter.setNumberDepth(0);
 	
 					//общая диаграмма
-					Section section = PDFUtil.printSection(chapter, "Общие тенденции");
+					Section section = PDFUtil.printSection(chapter, "Общие тенденции", null);
 					TimeSeriesCollection dataset = new TimeSeriesCollection();
 					for (Map.Entry<Long, List<TimeSeriesDataItem>> entry : series.entrySet()) {
 						List<TimeSeriesDataItem> sitems = entry.getValue();
@@ -616,7 +616,7 @@ public class TransitExportHandler extends Handler {
 				    chapter.add(Chunk.NEXTPAGE);
 
 					//общая диаграмма Гантта
-					section = PDFUtil.printSection(chapter, "Ключевые периоды");
+					section = PDFUtil.printSection(chapter, "Ключевые периоды", null);
 			        final TaskSeriesCollection collection = new TaskSeriesCollection();
 					for (Map.Entry<String, Map<String, Map<Long, TreeSet<Long>>>> pentry : gitems.entrySet()) {
 						Map<String, Map<Long, TreeSet<Long>>> hcats = pentry.getValue();
@@ -679,7 +679,7 @@ public class TransitExportHandler extends Handler {
 						int cnt = collectiona.getSeriesCount();
 						if (cnt > 0) {
 							String title = pgentry.getKey();
-							section = PDFUtil.printSection(chapter, title);
+							section = PDFUtil.printSection(chapter, title, null);
 						    image = PDFUtil.printGanttChart(writer, title, "", "", collectiona, 0, 0, false);
 						    section.add(image);
 						}
@@ -714,7 +714,7 @@ public class TransitExportHandler extends Handler {
 								collectionh.add(s);
 						}
 						if (collectionh.getSeriesCount() > 0) {
-							section = PDFUtil.printSection(chapter, hgentry.getKey());
+							section = PDFUtil.printSection(chapter, hgentry.getKey(), null);
 						    image = PDFUtil.printGanttChart(writer, hgentry.getKey(), "", "", collectionh, 0, 0, true);
 						    section.add(image);
 						}

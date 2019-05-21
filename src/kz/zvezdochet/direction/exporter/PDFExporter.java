@@ -341,7 +341,7 @@ public class PDFExporter {
 					printEvents(event, chapter, age, subentry.getKey(), subentry.getValue());
 
 				//диаграмма возраста
-				Section section = PDFUtil.printSection(chapter, "Диаграмма");
+				Section section = PDFUtil.printSection(chapter, "Диаграмма", null);
 				printDiagramDescr(section);
 				Map<Long, Double> mapa = seriesa.get(age);
 				Bar[] items = new Bar[mapa.size()];
@@ -438,7 +438,7 @@ public class PDFExporter {
 	
 		        HouseMap[] houseMap = HouseMap.getMap();
 		        for (HouseMap hmap : houseMap) {
-		        	Section section = PDFUtil.printSection(chapter, hmap.name);
+		        	Section section = PDFUtil.printSection(chapter, hmap.name, null);
 					XYSeriesCollection items = new XYSeriesCollection();
 					List<String> descrs = new ArrayList<String>();
 		        	for (int i = 0; i < 3; i++) {
@@ -504,7 +504,7 @@ public class PDFExporter {
 				header += "Проявления личности";
 				p = new Paragraph("В данном разделе описаны черты вашей личности, которые станут особенно яркими в возрасте " + agestr, font);
 			}
-			Section section = PDFUtil.printSection(chapter, header);
+			Section section = PDFUtil.printSection(chapter, header, null);
 			if (p != null) {
 				p.setSpacingAfter(10);
 				section.add(p);
