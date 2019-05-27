@@ -280,7 +280,9 @@ public class TransitExportHandler extends Handler {
 			chapter.setNumberDepth(0);
 
 			for (Map.Entry<String, Map<String, Map<String, TreeSet<Long>>>> pgentry : pitems.entrySet()) {
-		        final TaskSeriesCollection collectiona = new TaskSeriesCollection();
+				List<TaskSeriesCollection> collections = new ArrayList<>();
+		        TaskSeriesCollection collectiona = new TaskSeriesCollection();
+		        int i = 0;
 		        Map<String, Map<String, TreeSet<Long>>> pcats = pgentry.getValue();
 			    if (null == pcats || 0 == pcats.size())
 			    	continue;
@@ -301,16 +303,26 @@ public class TransitExportHandler extends Handler {
 						long initdate = dates.first();
 						long finaldate = (1 == dates.size()) ? initdate + 86400000 : dates.last();
 						s.add(new Task(aentry.getKey(), new SimpleTimePeriod(new Date(initdate), new Date(finaldate))));
+
+						if (finaldate - initDate.getTime() > 2592000 * ++i) {
+							collections.add(collectiona);
+							collectiona = new TaskSeriesCollection();
+							i = 0;
+						}
 					}
-					if (s != null && !s.isEmpty())
+					if (s != null && !s.isEmpty()) {
 						collectiona.add(s);
+					}
 				}
-				int cnt = collectiona.getSeriesCount();
-				if (cnt > 0) {
-					String title = pgentry.getKey();
-					Section section = PDFUtil.printSection(chapter, title, null);
-				    Image image = PDFUtil.printGanttChart(writer, title, "", "", collectiona, 0, 0, false);
-				    section.add(image);
+				collections.add(collectiona);
+				for (TaskSeriesCollection collection : collections) {
+					int cnt = collection.getSeriesCount();
+					if (cnt > 0) {
+						String title = pgentry.getKey();
+						Section section = PDFUtil.printSection(chapter, title, null);
+					    Image image = PDFUtil.printGanttChart(writer, title, "", "", collection, 0, 0, false);
+					    section.add(image);
+					}
 				}
 			}
 		    chapter.add(Chunk.NEXTPAGE);
