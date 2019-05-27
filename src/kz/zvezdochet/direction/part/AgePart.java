@@ -35,7 +35,7 @@ import kz.zvezdochet.service.PlanetService;
 
 /**
  * Поиск аспектов на указанный возраст
- * @author Nataly Didenko
+ * @author Natalie Didenko
  */
 public class AgePart extends ModelListView {
 	private Spinner spFrom;
@@ -171,9 +171,6 @@ public class AgePart extends ModelListView {
 			return false;
 		} else if (null == event) {
 			DialogUtil.alertError("Событие не задано");
-			return false;
-		} else if (null == event.getConfiguration()) {
-			DialogUtil.alertError("Конфигурация события не задана");
 			return false;
 		}
 		return true;

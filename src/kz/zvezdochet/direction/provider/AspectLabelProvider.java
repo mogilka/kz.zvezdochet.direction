@@ -7,7 +7,7 @@ import kz.zvezdochet.core.ui.ArrayLabelProvider;
 
 /**
  * Формат таблицы аспектов
- * @author Nataly Didenko
+ * @author Natalie Didenko
  */
 public class AspectLabelProvider extends ArrayLabelProvider {
 	@Override

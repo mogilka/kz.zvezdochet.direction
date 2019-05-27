@@ -17,7 +17,7 @@ import kz.zvezdochet.direction.part.AgePart;
 
 /**
  * Сохранение событий периода в файл
- * @author Nataly Didenko
+ * @author Natalie Didenko
  *
  */
 public class AgeSaveHandler extends Handler {

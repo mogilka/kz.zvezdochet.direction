@@ -20,11 +20,10 @@ import kz.zvezdochet.core.ui.util.DialogUtil;
 import kz.zvezdochet.core.util.CalcUtil;
 import kz.zvezdochet.direction.part.DirectionsPart;
 import kz.zvezdochet.part.EventPart;
-import kz.zvezdochet.util.Configuration;
 
 /**
  * Расчёт дирекций планет по домам
- * @author Nataly Didenko
+ * @author Natalie Didenko
  */
 public class DirectionsHandler extends Handler {
 	@Inject
@@ -36,13 +35,11 @@ public class DirectionsHandler extends Handler {
 			EventPart eventPart = (EventPart)activePart.getObject();
 			Event event = (Event)eventPart.getModel(EventPart.MODE_CALC, true);
 			if (null == event) return;
-			Configuration conf = event.getConfiguration();
-			if (null == conf) return; //TODO выдавать сообщение
-			if (null == conf.getHouses()) return; //TODO выдавать сообщение
+			if (null == event.getHouses()) return; //TODO выдавать сообщение
 			updateStatus("Расчёт дирекций планет по домам", false);
 
-			Collection<Planet> planets = conf.getPlanets().values();
-			List<Model> houses = conf.getHouses();
+			Collection<Planet> planets = event.getPlanets().values();
+			List<Model> houses = event.getHouses();
 			int hcount = houses.size();
 			int pcount = planets.size();
 			String[][] data = new String[hcount][pcount + 1];
@@ -83,7 +80,7 @@ public class DirectionsHandler extends Handler {
 		    part.setVisible(true);
 		    partService.showPart(part, PartState.VISIBLE);
 		    DirectionsPart housePart = (DirectionsPart)part.getObject();
-		    housePart.setConfiguration(conf);
+		    housePart.setEvent(event);
 		    housePart.setData(data);
 			updateStatus("Таблица дирекций сформирована", false);
 		} catch (Exception e) {

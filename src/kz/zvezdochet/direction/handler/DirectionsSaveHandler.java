@@ -30,12 +30,11 @@ import kz.zvezdochet.direction.bean.PrintDirection;
 import kz.zvezdochet.direction.part.DirectionsPart;
 import kz.zvezdochet.direction.service.DirectionService;
 import kz.zvezdochet.export.util.PDFUtil;
-import kz.zvezdochet.util.Configuration;
 
 /**
  * Сохранение в файл положительных дирекций планет по домам (только соединения).
  * Производится для составления вопросов в рамках ректификации
- * @author Nataly Didenko
+ * @author Natalie Didenko
  */
 public class DirectionsSaveHandler extends Handler {
 
@@ -43,15 +42,13 @@ public class DirectionsSaveHandler extends Handler {
 	public void execute(@Active MPart activePart) {
 		try {
 			DirectionsPart eventPart = (DirectionsPart)activePart.getObject();
-			Configuration conf = eventPart.getConfiguration();
-			if (null == conf) return; //TODO выдавать сообщение
-			if (null == conf.getHouses()) return; //TODO выдавать сообщение
-			Event event = conf.getEvent();
+			Event event = eventPart.getEvent();
+			if (null == event.getHouses()) return; //TODO выдавать сообщение
 			int age = event.getAge();
 			updateStatus("Сохранение дирекций в файл", false);
 
-			Collection<Planet> planets = conf.getPlanets().values();
-			List<Model> houses = conf.getHouses();
+			Collection<Planet> planets = event.getPlanets().values();
+			List<Model> houses = event.getHouses();
 			int hcount = houses.size();
 
 			//формируем списки дирекций по возрасту

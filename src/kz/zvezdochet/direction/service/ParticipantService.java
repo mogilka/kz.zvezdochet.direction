@@ -16,8 +16,8 @@ import kz.zvezdochet.direction.bean.Participant;
 import kz.zvezdochet.service.EventService;
 
 /**
- * Участник прогноза
- * @author Nataly Didenko
+ * Сервис участника прогноза
+ * @author Natalie Didenko
  */
 public class ParticipantService extends ModelService {
 

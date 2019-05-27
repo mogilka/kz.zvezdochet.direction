@@ -79,7 +79,7 @@ import kz.zvezdochet.provider.EventProposalProvider.EventContentProposal;
 
 /**
  * Представление синастрии
- * @author Nataly Didenko
+ * @author Natalie Didenko
  *
  */
 public class CollationPart extends ModelPart implements ICalculable {
@@ -597,7 +597,7 @@ public class CollationPart extends ModelPart implements ICalculable {
 
 	/**
 	 * Быстрое редактирование таблицы фигурантов
-	 * @author Nataly Didenko
+	 * @author Natalie Didenko
 	 *
 	 */
 	public class MemberEditingSupport extends EditingSupport {
@@ -654,7 +654,7 @@ public class CollationPart extends ModelPart implements ICalculable {
 
 	/**
 	 * Быстрое редактирование таблицы участников
-	 * @author Nataly Didenko
+	 * @author Natalie Didenko
 	 *
 	 */
 	public class ParticipantEditingSupport extends EditingSupport {

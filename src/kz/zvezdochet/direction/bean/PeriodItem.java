@@ -7,7 +7,7 @@ import kz.zvezdochet.bean.SkyPointAspect;
 
 /**
  * Вспомогательный класс для отчётов
- * @author Nataly Didenko
+ * @author Natalie Didenko
  *
  */
 public class PeriodItem {

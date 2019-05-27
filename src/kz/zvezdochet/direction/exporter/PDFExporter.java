@@ -60,7 +60,7 @@ import kz.zvezdochet.util.HouseMap;
 
 /**
  * Генератор PDF-файла для экспорта событий
- * @author Nataly Didenko
+ * @author Natalie Didenko
  *
  */
 public class PDFExporter {
@@ -581,7 +581,7 @@ public class PDFExporter {
 				} else if (skyPoint instanceof Planet) {
 					Planet planet2 = (Planet)skyPoint;
 					List<Model> texts = servicea.finds(spa);
-    				Map<Long, Planet> planets = event.getConfiguration().getPlanets();
+    				Map<Long, Planet> planets = event.getPlanets();
 					for (Model model : texts) {
 						PlanetAspectText dirText = (PlanetAspectText)model;
 		    			if (term) {

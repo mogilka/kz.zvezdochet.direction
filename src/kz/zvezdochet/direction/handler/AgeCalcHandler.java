@@ -23,11 +23,10 @@ import kz.zvezdochet.core.ui.util.DialogUtil;
 import kz.zvezdochet.core.util.CalcUtil;
 import kz.zvezdochet.direction.part.AgePart;
 import kz.zvezdochet.service.AspectService;
-import kz.zvezdochet.util.Configuration;
 
 /**
  * Обработчик расчёта транзитов на указанный возраст
- * @author Nataly Didenko
+ * @author Natalie Didenko
  */
 public class AgeCalcHandler extends Handler {
 	private boolean agedp[][][] = null;
@@ -46,9 +45,8 @@ public class AgeCalcHandler extends Handler {
 			if (!agePart.check(0)) return;
 			event = agePart.getEvent();
 
-			Configuration conf = event.getConfiguration();
-			Collection<Planet> planets = conf.getPlanets().values();
-			List<Model> houses = conf.getHouses();
+			Collection<Planet> planets = event.getPlanets().values();
+			List<Model> houses = event.getHouses();
 			
 			updateStatus("Расчёт дирекций на возраст", false);
 			List<Model> selplanets = new ArrayList<Model>();
@@ -245,7 +243,7 @@ public class AgeCalcHandler extends Handler {
 	 * @param skyPoint планета
 	 */
 	private void initPlanetHouse(SkyPoint skyPoint) {
-		List<Model> houseList = event.getConfiguration().getHouses();
+		List<Model> houseList = event.getHouses();
 		Planet planet = (Planet)skyPoint;
 		for (int j = 0; j < houseList.size(); j++) { 
 			House house = ((House)houseList.get(j));

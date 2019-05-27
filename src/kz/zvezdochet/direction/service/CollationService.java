@@ -23,7 +23,7 @@ import kz.zvezdochet.service.EventService;
 
 /**
  * Сервис прогнозов
- * @author Nataly Didenko
+ * @author Natalie Didenko
  */
 public class CollationService extends ModelService {
 

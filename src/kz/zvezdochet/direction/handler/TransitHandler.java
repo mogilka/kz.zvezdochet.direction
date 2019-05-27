@@ -13,11 +13,10 @@ import kz.zvezdochet.core.handler.Handler;
 import kz.zvezdochet.core.ui.util.DialogUtil;
 import kz.zvezdochet.direction.part.TransitPart;
 import kz.zvezdochet.part.EventPart;
-import kz.zvezdochet.util.Configuration;
 
 /**
  * Обработчик открытия транзитного периода персоны
- * @author Nataly Didenko
+ * @author Natalie Didenko
  *
  */
 public class TransitHandler extends Handler {
@@ -30,8 +29,6 @@ public class TransitHandler extends Handler {
 			EventPart eventPart = (EventPart)activePart.getObject();
 			Event person = (Event)eventPart.getModel(EventPart.MODE_CALC, true);
 			if (null == person) return;
-			Configuration conf = person.getConfiguration();
-			if (null == conf) return; //TODO выдавать сообщение
 
 			updateStatus("Открытие транзитного периода", false);
 			MPart part = partService.findPart("kz.zvezdochet.direction.part.transit");

@@ -16,7 +16,7 @@ import kz.zvezdochet.service.EventService;
 
 /**
  * Сервис транзитов
- * @author Nataly Didenko
+ * @author Natalie Didenko
  */
 public class TransitService extends ModelService {
 

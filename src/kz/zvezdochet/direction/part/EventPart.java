@@ -77,7 +77,6 @@ import kz.zvezdochet.provider.PlaceProposalProvider.PlaceContentProposal;
 import kz.zvezdochet.service.AspectService;
 import kz.zvezdochet.service.AspectTypeService;
 import kz.zvezdochet.service.EventService;
-import kz.zvezdochet.util.Configuration;
 
 /**
  * Представление транзитов
@@ -192,7 +191,7 @@ public class EventPart extends ModelListView implements ICalculable {
 		}
 		params.put("aspects", aparams);
 		params.put("exact", true);
-		cmpCosmogram.paint(event.getConfiguration(), event2.getConfiguration(), params);
+		cmpCosmogram.paint(event, event2, params);
 	}
 
 	/**
@@ -334,18 +333,16 @@ public class EventPart extends ModelListView implements ICalculable {
 		Control[] controls = grPlanets.getChildren();
 		Table table = (Table)controls[0];
 		table.removeAll();
-		Configuration conf = partner.getConfiguration();
-		Configuration conf2 = partner2.getConfiguration();
-		Collection<Planet> planets = conf.getPlanets().values();
-		if (conf != null) {
+		Collection<Planet> planets = partner.getPlanets().values();
+		if (partner != null) {
 			folder.setSelection(1);
 			for (Planet planet : planets) {
 				TableItem item = new TableItem(table, SWT.NONE);
 				item.setText(0, planet.getName());
 				item.setText(1, String.valueOf(planet.getLongitude()));
 				//планеты партнёра
-				if (conf2 != null) {
-					planet = (Planet)conf2.getPlanets().get(planet.getId());
+				if (partner2 != null) {
+					planet = (Planet)partner2.getPlanets().get(planet.getId());
 					item.setText(2, String.valueOf(planet.getLongitude()));
 				}
 			}
@@ -358,17 +355,17 @@ public class EventPart extends ModelListView implements ICalculable {
 		controls = grHouses.getChildren();
 		table = (Table)controls[0];
 		table.removeAll();
-		if (conf != null) {
+		if (partner != null) {
 			int j = -1;
-			for (Model base : conf.getHouses()) {
+			for (Model base : partner.getHouses()) {
 				++j;
 				House house = (House)base;
 				TableItem item = new TableItem(table, SWT.NONE);
 				item.setText(0, house.getName());		
 				item.setText(1, String.valueOf(house.getLongitude()));
 				//дома партнёра
-				if (conf2 != null) {
-					house = (House)conf2.getHouses().get(j);
+				if (partner2 != null) {
+					house = (House)partner2.getHouses().get(j);
 					item.setText(2, String.valueOf(house.getLongitude()));
 				}
 			}
@@ -703,8 +700,8 @@ public class EventPart extends ModelListView implements ICalculable {
 			syncModel(MODE_CALC);
 		if (null == trevent.getId())
 			trevent.calc(false);
-		if (null == trevent.getConfiguration())
-			trevent.init(false);
+//		if (null == trevent.getEvent())
+//			trevent.init(false);
 		return trevent;
 	}
 
@@ -779,9 +776,9 @@ public class EventPart extends ModelListView implements ICalculable {
 	 * Расчёт транзитов
 	 */
 	private void makeTransits(Event first, Event second) {
-		Collection<Planet> trplanets = first.getConfiguration().getPlanets().values();
-		Collection<Planet> splanets = second.getConfiguration().getPlanets().values();
-		List<Model> shouses = second.getConfiguration().getHouses();
+		Collection<Planet> trplanets = first.getPlanets().values();
+		Collection<Planet> splanets = second.getPlanets().values();
+		List<Model> shouses = second.getHouses();
 		for (Planet trplanet : trplanets) {
 			//дирекции планеты к планетам партнёра
 			for (Planet planet : splanets)

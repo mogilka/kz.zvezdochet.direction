@@ -22,7 +22,6 @@ import kz.zvezdochet.core.util.CalcUtil;
 import kz.zvezdochet.direction.part.EventPart;
 import kz.zvezdochet.part.AspectPart;
 import kz.zvezdochet.service.AspectService;
-import kz.zvezdochet.util.Configuration;
 
 /**
  * Обработчик расчёта аспектов транзита
@@ -39,20 +38,16 @@ public class AspectHandler extends Handler {
 			EventPart synPart = (EventPart)activePart.getObject();
 			Event person = synPart.getPerson();
 			if (null == person) return;
-			Configuration conf = person.getConfiguration();
-			if (null == conf) return; //TODO выдавать сообщение
-			if (null == conf.getPlanets()) return; //TODO выдавать сообщение
+			if (null == person.getPlanets()) return; //TODO выдавать сообщение
 			updateStatus("Инициализация персоны", false);
 
 			Event event = (Event)synPart.getModel();
 			if (null == event) return;
-			Configuration conf2 = event.getConfiguration();
-			if (null == conf2) return; //TODO выдавать сообщение
-			if (null == conf2.getPlanets()) return; //TODO выдавать сообщение
+			if (null == event.getPlanets()) return; //TODO выдавать сообщение
 			updateStatus("Инициализация транзитного события", false);
 
-			Collection<Planet> planets = conf.getPlanets().values();
-			Collection<Planet> planets2 = conf2.getPlanets().values();
+			Collection<Planet> planets = person.getPlanets().values();
+			Collection<Planet> planets2 = event.getPlanets().values();
 			int pcount = planets.size();
 			Object[][] data = new Object[pcount][pcount + 1];
 			//заполняем заголовки строк названиями планет и их координатами
@@ -83,7 +78,7 @@ public class AspectHandler extends Handler {
 		    part.setVisible(true);
 		    partService.showPart(part, PartState.VISIBLE);
 		    AspectPart aspectPart = (AspectPart)part.getObject();
-		    aspectPart.setConfiguration(conf);
+		    aspectPart.setEvent(person);
 		    aspectPart.setData(data);
 			updateStatus("Таблица аспектов сформирована", false);
 		} catch (Exception e) {

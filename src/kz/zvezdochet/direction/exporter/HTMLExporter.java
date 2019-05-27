@@ -32,7 +32,7 @@ import kz.zvezdochet.service.AspectTypeService;
 
 /**
  * Генератор HTML-файлов для экспорта данных
- * @author Nataly Didenko
+ * @author Natalie Didenko
  *
  */
 @SuppressWarnings("unchecked")

@@ -11,13 +11,11 @@ import org.eclipse.e4.ui.workbench.modeling.EPartService.PartState;
 import kz.zvezdochet.bean.Event;
 import kz.zvezdochet.core.handler.Handler;
 import kz.zvezdochet.core.ui.util.DialogUtil;
-import kz.zvezdochet.util.Configuration;
-
 import kz.zvezdochet.part.EventPart;
 
 /**
  * Обработчик открытия событий персоны
- * @author Nataly Didenko
+ * @author Natalie Didenko
  *
  */
 public class EventsHandler extends Handler {
@@ -30,8 +28,6 @@ public class EventsHandler extends Handler {
 			EventPart eventPart = (EventPart)activePart.getObject();
 			Event event = (Event)eventPart.getModel(EventPart.MODE_CALC, true);
 			if (null == event) return;
-			Configuration conf = event.getConfiguration();
-			if (null == conf) return; //TODO выдавать сообщение
 
 			updateStatus("Открытие списка транзитов", false);
 			MPart part = partService.findPart("kz.zvezdochet.direction.part.events");

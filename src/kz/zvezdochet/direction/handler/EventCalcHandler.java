@@ -12,7 +12,7 @@ import kz.zvezdochet.direction.part.EventPart;
 
 /**
  * Обработчик расчёта транзитов события персоны
- * @author Nataly Didenko
+ * @author Natalie Didenko
  */
 public class EventCalcHandler extends Handler {
 

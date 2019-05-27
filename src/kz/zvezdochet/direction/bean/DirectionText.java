@@ -6,7 +6,7 @@ import kz.zvezdochet.direction.service.DirectionService;
 
 /**
  * Толкование дирекции планеты в астрологическом доме
- * @author Nataly Didenko
+ * @author Natalie Didenko
  *
  */
 public class DirectionText extends PlanetHouseText {

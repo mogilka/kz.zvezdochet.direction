@@ -24,14 +24,13 @@ import kz.zvezdochet.core.service.DataAccessException;
 import kz.zvezdochet.core.ui.util.DialogUtil;
 import kz.zvezdochet.core.util.CalcUtil;
 import kz.zvezdochet.core.util.DateUtil;
-import kz.zvezdochet.direction.part.TimelinePart;
 import kz.zvezdochet.direction.part.EventPart;
+import kz.zvezdochet.direction.part.TimelinePart;
 import kz.zvezdochet.service.AspectService;
-import kz.zvezdochet.util.Configuration;
 
 /**
  * Расчёт таймлайна события
- * @author Nataly Didenko
+ * @author Natalie Didenko
  *
  */
 public class TimelineHandler extends Handler {
@@ -49,8 +48,7 @@ public class TimelineHandler extends Handler {
 			long minutes = 360;
 			EventPart transitPart = (EventPart)activePart.getObject();
 			Event person = transitPart.getPerson();
-			Configuration conf = person.getConfiguration();
-			Collection<Planet> planets = conf.getPlanets().values();
+			Collection<Planet> planets = person.getPlanets().values();
 
 			Event event = transitPart.getModel();
 			if (null == event.getDeath()) {
@@ -61,9 +59,8 @@ public class TimelineHandler extends Handler {
 				long time = (event.getDeath().getTime() - event.getBirth().getTime()) / 1000;
 				minutes = time / 60;
 			}
-			Configuration conf2 = event.getConfiguration();
-			Collection<Planet> planets2 = conf2.getPlanets().values();
-			List<Model> houses2 = conf2.getHouses();
+			Collection<Planet> planets2 = event.getPlanets().values();
+			List<Model> houses2 = event.getHouses();
 
 			//инициализируем список аспектов
 			try {

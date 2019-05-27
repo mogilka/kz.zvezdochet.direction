@@ -12,7 +12,7 @@ import kz.zvezdochet.direction.service.ParticipantService;
 
 /**
  * Групповой прогноз
- * @author Nataly Didenko
+ * @author Natalie Didenko
  *
  */
 public class Collation extends Model {

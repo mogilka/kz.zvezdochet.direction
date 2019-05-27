@@ -24,7 +24,6 @@ import kz.zvezdochet.core.util.CalcUtil;
 import kz.zvezdochet.core.util.DateUtil;
 import kz.zvezdochet.direction.bean.PeriodItem;
 import kz.zvezdochet.direction.part.TransitPart;
-import kz.zvezdochet.util.Configuration;
 /**
  * Обработчик расчёта транзитов на указанный период
  * @author Natalie Didenko
@@ -43,9 +42,8 @@ public class TransitCalcHandler extends Handler {
 				place = new Place().getDefault();
 			double zone = periodPart.getZone();
 
-			Configuration conf = person.getConfiguration();
-			Collection<Planet> planets = conf.getPlanets().values();
-			List<Model> houses = conf.getHouses();
+			Collection<Planet> planets = person.getPlanets().values();
+			List<Model> houses = person.getHouses();
 	
 			updateStatus("Расчёт транзитов на период", false);
 
@@ -73,7 +71,7 @@ public class TransitCalcHandler extends Handler {
 				event.setZone(zone);
 				event.calc(false);
 
-				Collection<Planet> eplanets = event.getConfiguration().getPlanets().values();
+				Collection<Planet> eplanets = event.getPlanets().values();
 				for (Planet eplanet : eplanets) {
 					//транзитную Луну не рассматриваем
 					if (eplanet.getCode().equals("Moon"))

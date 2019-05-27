@@ -5,8 +5,8 @@ import kz.zvezdochet.core.bean.Model;
 import kz.zvezdochet.direction.bean.DirectionAspectText;
 
 /**
- * Сервиса дирекций планет
- * @author Nataly Didenko
+ * Сервис дирекций планет
+ * @author Natalie Didenko
  */
 public class DirectionAspectService extends PlanetAspectService {
 

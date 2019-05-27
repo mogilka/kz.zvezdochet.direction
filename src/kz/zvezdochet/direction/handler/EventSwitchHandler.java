@@ -12,7 +12,7 @@ import kz.zvezdochet.direction.part.EventPart;
  * Обработчик переключения карты транзитов.
  * По умолчанию отображаются планеты персоны в карте события.
  * Можно переключиться в режим планет события в карте персоны
- * @author Nataly Didenko
+ * @author Natalie Didenko
  */
 public class EventSwitchHandler extends Handler {
 	@Execute

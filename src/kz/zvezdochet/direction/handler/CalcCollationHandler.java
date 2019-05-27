@@ -31,7 +31,7 @@ import kz.zvezdochet.service.AspectService;
 
 /**
  * Расчёт группового прогноза
- * @author Nataly Didenko
+ * @author Natalie Didenko
  *
  */
 public class CalcCollationHandler extends Handler {
@@ -152,13 +152,13 @@ public class CalcCollationHandler extends Handler {
 		Long[] pfilter = Planet.getSportSet();
 		Long[] hfilter = House.getSportSet();
 
-		if (null == person.getConfiguration())
-			person.init(false);
-		if (null == event.getConfiguration())
-			event.init(false);
-		Collection<Planet> planets = person.getConfiguration().getPlanets().values();
-		Collection<Planet> planets2 = event.getConfiguration().getPlanets().values();
-		List<Model> houses = event.getConfiguration().getHouses();
+//		if (null == person.getConfiguration())
+//			person.init(false);
+//		if (null == event.getConfiguration())
+//			event.init(false);
+		Collection<Planet> planets = person.getPlanets().values();
+		Collection<Planet> planets2 = event.getPlanets().values();
+		List<Model> houses = event.getHouses();
 
 		for (Model model : planets) {
 			if (!Arrays.asList(pfilter).contains(model.getId()))

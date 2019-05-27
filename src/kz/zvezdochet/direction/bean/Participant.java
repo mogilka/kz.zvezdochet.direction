@@ -12,7 +12,7 @@ import kz.zvezdochet.direction.service.ParticipantService;
 
 /**
  * Участник прогноза
- * @author Nataly Didenko
+ * @author Natalie Didenko
  *
  */
 public class Participant extends Model {

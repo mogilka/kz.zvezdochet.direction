@@ -13,7 +13,7 @@ import kz.zvezdochet.direction.provider.TransitLabelProvider;
 
 /**
  * Таймлайн события
- * @author Nataly Didenko
+ * @author Natalie Didenko
  */
 public class TimelinePart extends ModelListView {
 

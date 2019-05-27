@@ -6,7 +6,7 @@ import kz.zvezdochet.direction.service.TransitService;
 
 /**
  * Транзит
- * @author Nataly Didenko
+ * @author Natalie Didenko
  *
  */
 public class Transit extends Model {

@@ -53,7 +53,6 @@ import kz.zvezdochet.export.handler.PageEventHandler;
 import kz.zvezdochet.export.util.PDFUtil;
 import kz.zvezdochet.service.AspectService;
 import kz.zvezdochet.service.HouseService;
-import kz.zvezdochet.util.Configuration;
 import kz.zvezdochet.util.HouseMap;
 /**
  * Генерация отчёта за указанный период по месяцам
@@ -99,8 +98,7 @@ public class MonthHandler extends Handler {
 				return;
 			}
 
-			Configuration conf = person.getConfiguration();
-			List<Model> houses = conf.getHouses();
+			List<Model> houses = person.getHouses();
 	
 			updateStatus("Расчёт транзитов на период", false);
 
@@ -245,10 +243,10 @@ public class MonthHandler extends Handler {
 						event.setPlace(place);
 						event.setZone(zone);
 						event.calc(false);
-						event.getConfiguration().initPlanetAspects();
+						event.initAspects();
 		
 						List<Planet> iplanets = new ArrayList<Planet>();
-						Collection<Planet> eplanets = event.getConfiguration().getPlanets().values();
+						Collection<Planet> eplanets = event.getPlanets().values();
 						for (Model model : eplanets) {
 							Planet planet = (Planet)model;
 //							List<Object> ingresses = planet.isIngressed(prev, event);

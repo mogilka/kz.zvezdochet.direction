@@ -9,21 +9,21 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.TableColumn;
 
+import kz.zvezdochet.bean.Event;
 import kz.zvezdochet.bean.Planet;
 import kz.zvezdochet.core.ui.view.ListView;
 import kz.zvezdochet.core.ui.view.View;
 import kz.zvezdochet.core.util.CalcUtil;
-import kz.zvezdochet.util.Configuration;
 
 /**
  * Дирекции планет по домам
- * @author Nataly Didenko
+ * @author Natalie Didenko
  */
 public class DirectionsPart extends ListView {
 	/**
-	 * Конфигурация события
+	 * Событие
 	 */
-	private Configuration conf;
+	private Event event;
 
 	@Inject
 	public DirectionsPart() {
@@ -37,28 +37,28 @@ public class DirectionsPart extends ListView {
 
 	/**
 	 * Инициализация конфигурации события
-	 * @param configuration конфигурация события
+	 * @param event конфигурация события
 	 */
-	public void setConfiguration(Configuration configuration) {
-		conf = configuration;
+	public void setEvent(Event event) {
+		this.event = event;
 		if (0 == table.getColumnCount())
 			addColumns();
 	}
 
 	/**
-	 * Возвращает конфигурацию события
-	 * @return конфигурация
+	 * Возвращает событие
+	 * @return событин
 	 */
-	public Configuration getConfiguration() {
-		return conf;
+	public Event getEvent() {
+		return event;
 	}
 
 	@Override
 	protected void addColumns() {
-		if (conf != null) {
+		if (event != null) {
 			TableColumn tableColumn = new TableColumn(table, SWT.NONE);
 			tableColumn.setText("Астрологический дом");
-			Collection<Planet> planets = conf.getPlanets().values();		
+			Collection<Planet> planets = event.getPlanets().values();		
 			for (Planet planet : planets) {
 				tableColumn = new TableColumn(table, SWT.NONE);
 				tableColumn.setText(CalcUtil.roundTo(planet.getLongitude(), 1) + "");

@@ -54,7 +54,7 @@ import kz.zvezdochet.service.PlanetService;
 
 /**
  * Представление транзитов события
- * @author Nataly Didenko
+ * @author Natalie Didenko
  *
  */
 public class TransitPart extends ModelListView {
@@ -101,9 +101,6 @@ public class TransitPart extends ModelListView {
 			return false;
 		} else if (null == person) {
 			DialogUtil.alertError("Событие не задано");
-			return false;
-		} else if (null == person.getConfiguration()) {
-			DialogUtil.alertError("Конфигурация события не задана");
 			return false;
 		}
 		return true;

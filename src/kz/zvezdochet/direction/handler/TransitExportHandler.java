@@ -69,10 +69,9 @@ import kz.zvezdochet.export.handler.PageEventHandler;
 import kz.zvezdochet.export.util.PDFUtil;
 import kz.zvezdochet.service.AspectService;
 import kz.zvezdochet.service.AspectTypeService;
-import kz.zvezdochet.util.Configuration;
 /**
  * Обработчик расчёта транзитов на указанный период
- * @author Nataly Didenko
+ * @author Natalie Didenko
  */
 public class TransitExportHandler extends Handler {
 	private BaseFont baseFont;
@@ -111,9 +110,8 @@ public class TransitExportHandler extends Handler {
 						selhouses.add(model.getId());
 			}
 
-			Configuration conf = person.getConfiguration();
-			Collection<Planet> planets = conf.getPlanets().values();
-			List<Model> houses = conf.getHouses();
+			Collection<Planet> planets = person.getPlanets().values();
+			List<Model> houses = person.getHouses();
 	
 			updateStatus("Расчёт транзитов на период", false);
 	
@@ -289,7 +287,7 @@ public class TransitExportHandler extends Handler {
 					event.setZone(zone);
 					event.calc(false);
 
-					Collection<Planet> eplanets = event.getConfiguration().getPlanets().values();
+					Collection<Planet> eplanets = event.getPlanets().values();
 					Map<Long, Set<PeriodItem>> items = new HashMap<Long, Set<PeriodItem>>();
 					for (Planet eplanet : eplanets) {
 						//аспекты считаем только для утра

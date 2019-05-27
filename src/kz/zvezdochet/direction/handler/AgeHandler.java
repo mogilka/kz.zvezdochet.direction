@@ -16,7 +16,7 @@ import kz.zvezdochet.part.EventPart;
 
 /**
  * Обработчик отображения представления дирекций на указанный возраст
- * @author Nataly Didenko
+ * @author Natalie Didenko
  *
  */
 public class AgeHandler extends Handler {
@@ -28,7 +28,7 @@ public class AgeHandler extends Handler {
 		try {
 			EventPart eventPart = (EventPart)activePart.getObject();
 			Event event = (Event)eventPart.getModel(EventPart.MODE_CALC, true);
-			if (null == event || null == event.getConfiguration()) return;
+			if (null == event) return;
 		
 			MPart part = partService.findPart("kz.zvezdochet.direction.part.age");
 		    part.setVisible(true);

@@ -16,7 +16,7 @@ import kz.zvezdochet.service.AspectTypeService;
 
 /**
  * Сервис дирекций планет по астрологическим домам
- * @author Nataly Didenko
+ * @author Natalie Didenko
  */
 public class DirectionService extends PlanetHouseService {
 

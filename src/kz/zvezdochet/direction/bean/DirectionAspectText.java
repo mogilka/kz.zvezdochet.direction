@@ -6,7 +6,7 @@ import kz.zvezdochet.direction.service.DirectionAspectService;
 
 /**
  * Толкование дирекции планеты в аспекте к другой планете
- * @author Nataly Didenko
+ * @author Natalie Didenko
  *
  */
 public class DirectionAspectText extends PlanetAspectText {
