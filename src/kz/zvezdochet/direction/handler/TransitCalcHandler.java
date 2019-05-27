@@ -73,10 +73,6 @@ public class TransitCalcHandler extends Handler {
 
 				Collection<Planet> eplanets = event.getPlanets().values();
 				for (Planet eplanet : eplanets) {
-					//транзитную Луну не рассматриваем
-					if (eplanet.getCode().equals("Moon"))
-						continue;
-
 					if (null == selhouse)
 						for (Planet planet : planets) {
 							if (selplanet != null && !planet.getId().equals(selplanet.getId()))

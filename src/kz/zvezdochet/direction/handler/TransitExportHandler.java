@@ -8,7 +8,6 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -20,42 +19,29 @@ import org.eclipse.e4.ui.model.application.ui.basic.MPart;
 import org.jfree.data.gantt.Task;
 import org.jfree.data.gantt.TaskSeries;
 import org.jfree.data.gantt.TaskSeriesCollection;
-import org.jfree.data.time.Day;
 import org.jfree.data.time.SimpleTimePeriod;
-import org.jfree.data.time.TimeSeries;
-import org.jfree.data.time.TimeSeriesCollection;
-import org.jfree.data.time.TimeSeriesDataItem;
 
-import com.itextpdf.text.Anchor;
-import com.itextpdf.text.BaseColor;
 import com.itextpdf.text.Chapter;
 import com.itextpdf.text.ChapterAutoNumber;
 import com.itextpdf.text.Chunk;
 import com.itextpdf.text.Document;
 import com.itextpdf.text.Element;
 import com.itextpdf.text.Font;
-import com.itextpdf.text.ListItem;
+import com.itextpdf.text.Image;
 import com.itextpdf.text.Paragraph;
-import com.itextpdf.text.Phrase;
 import com.itextpdf.text.Section;
 import com.itextpdf.text.pdf.BaseFont;
 import com.itextpdf.text.pdf.PdfWriter;
 
-import kz.zvezdochet.analytics.bean.PlanetAspectText;
-import kz.zvezdochet.analytics.bean.Rule;
 import kz.zvezdochet.analytics.bean.Sphere;
-import kz.zvezdochet.analytics.exporter.EventRules;
 import kz.zvezdochet.analytics.service.SphereService;
 import kz.zvezdochet.bean.Aspect;
-import kz.zvezdochet.bean.AspectType;
 import kz.zvezdochet.bean.Event;
 import kz.zvezdochet.bean.House;
 import kz.zvezdochet.bean.Place;
 import kz.zvezdochet.bean.Planet;
 import kz.zvezdochet.bean.SkyPoint;
-import kz.zvezdochet.bean.SkyPointAspect;
 import kz.zvezdochet.core.bean.Model;
-import kz.zvezdochet.core.bean.TextGender;
 import kz.zvezdochet.core.handler.Handler;
 import kz.zvezdochet.core.service.DataAccessException;
 import kz.zvezdochet.core.util.CalcUtil;
@@ -64,13 +50,11 @@ import kz.zvezdochet.core.util.PlatformUtil;
 import kz.zvezdochet.direction.Activator;
 import kz.zvezdochet.direction.bean.PeriodItem;
 import kz.zvezdochet.direction.part.TransitPart;
-import kz.zvezdochet.direction.service.DirectionAspectService;
 import kz.zvezdochet.export.handler.PageEventHandler;
 import kz.zvezdochet.export.util.PDFUtil;
 import kz.zvezdochet.service.AspectService;
-import kz.zvezdochet.service.AspectTypeService;
 /**
- * Обработчик расчёта транзитов на указанный период
+ * Обработчик экспорта транзитов на указанный период
  * @author Natalie Didenko
  */
 public class TransitExportHandler extends Handler {
@@ -92,15 +76,12 @@ public class TransitExportHandler extends Handler {
 			TransitPart periodPart = (TransitPart)activePart.getObject();
 			if (!periodPart.check(0)) return;
 			Event person = periodPart.getPerson();
-			boolean female = person.isFemale();
-			boolean child = person.isChild();
-
 			Place place = periodPart.getPlace();
 			double zone = periodPart.getZone();
-			boolean printable = true; //TODO
 
 			Object[] spheres = periodPart.getSpheres();
 			List<Long> selhouses = new ArrayList<>();
+			List<Long> selplanets = new ArrayList<>();
 			SphereService sphereService = new SphereService();
 			for (Object item : spheres) {
 				Sphere sphere = (Sphere)item;
@@ -108,6 +89,11 @@ public class TransitExportHandler extends Handler {
 				for (Model model : houses)
 					if (!selhouses.contains(model.getId()))
 						selhouses.add(model.getId());
+
+				List<Model> planets = sphereService.getPlanets(sphere.getId());
+				for (Model model : planets)
+					if (!selplanets.contains(model.getId()))
+						selplanets.add(model.getId());
 			}
 
 			Collection<Planet> planets = person.getPlanets().values();
@@ -126,602 +112,249 @@ public class TransitExportHandler extends Handler {
 			PdfWriter writer = null;
 			Chapter chapter;
 			Font font = null;
-			AspectTypeService service = new AspectTypeService();
-			Map<Long, List<TimeSeriesDataItem>> series = new HashMap<Long, List<TimeSeriesDataItem>>();
 			boolean days = false;
 
-			if (printable) {
-				String filename = PlatformUtil.getPath(Activator.PLUGIN_ID, "/out/period.pdf").getPath();
-				writer = PdfWriter.getInstance(doc, new FileOutputStream(filename));
-		        writer.setPageEvent(new PageEventHandler(doc));
-		        doc.open();
+			String filename = PlatformUtil.getPath(Activator.PLUGIN_ID, "/out/period.pdf").getPath();
+			writer = PdfWriter.getInstance(doc, new FileOutputStream(filename));
+	        writer.setPageEvent(new PageEventHandler(doc));
+	        doc.open();
 
-				font = PDFUtil.getRegularFont();
+			font = PDFUtil.getRegularFont();
 
-		        //metadata
-		        PDFUtil.getMetaData(doc, "Прогноз событий");
+	        //metadata
+	        PDFUtil.getMetaData(doc, "Прогноз событий");
 	
-		        //раздел
-				chapter = new ChapterAutoNumber(PDFUtil.printHeader(new Paragraph(), "Общая информация", null));
-				chapter.setNumberDepth(0);
+	        //раздел
+			chapter = new ChapterAutoNumber(PDFUtil.printHeader(new Paragraph(), "Общая информация", null));
+			chapter.setNumberDepth(0);
 	
-				String text = person.getName() + " – Посуточный прогноз на период:\n";
-				text += sdf.format(initDate);
-				days = (DateUtil.getDateFromDate(initDate) != DateUtil.getDateFromDate(finalDate)
-						|| DateUtil.getMonthFromDate(initDate) != DateUtil.getMonthFromDate(finalDate)
-						|| DateUtil.getYearFromDate(initDate) != DateUtil.getYearFromDate(finalDate));
-//				System.out.println(DateUtil.getDateFromDate(initDate) + "-" + DateUtil.getDateFromDate(finalDate) + "\t" + 
-//						DateUtil.getMonthFromDate(initDate) + "-" + DateUtil.getMonthFromDate(finalDate) + "\t" +
-//						DateUtil.getYearFromDate(initDate) + "-" + DateUtil.getYearFromDate(finalDate));
-				if (days)
-					text += " — " + sdf.format(finalDate);
-				Paragraph p = new Paragraph(text, font);
-		        p.setAlignment(Element.ALIGN_CENTER);
-				chapter.add(p);
+			String text = person.getCallname() + " – Прогноз тенденций на период:\n";
+			text += sdf.format(initDate);
+			days = (DateUtil.getDateFromDate(initDate) != DateUtil.getDateFromDate(finalDate)
+					|| DateUtil.getMonthFromDate(initDate) != DateUtil.getMonthFromDate(finalDate)
+					|| DateUtil.getYearFromDate(initDate) != DateUtil.getYearFromDate(finalDate));
+			if (days)
+				text += " — " + sdf.format(finalDate);
+			Paragraph p = new Paragraph(text, font);
+	        p.setAlignment(Element.ALIGN_CENTER);
+			chapter.add(p);
 	
-				if (null == place)
-					place = new Place().getDefault();
-				text = (zone >= 0 ? "UTC+" : "") + zone +
-					" " + place.getName() +
-					" " + place.getLatitude() + "°" +
-					", " + place.getLongitude() + "°";
-				p = new Paragraph(text, font);
-		        p.setAlignment(Element.ALIGN_CENTER);
-				chapter.add(p);
-	
-				Font fontgray = PDFUtil.getAnnotationFont(false);
-				text = "Дата составления: " + DateUtil.fulldtf.format(new Date());
-				p = new Paragraph(text, fontgray);
-		        p.setAlignment(Element.ALIGN_CENTER);
-				chapter.add(p);
-	
-				p = new Paragraph();
-		        p.setAlignment(Element.ALIGN_CENTER);
-				p.setSpacingAfter(20);
-		        p.add(new Chunk("Автор: ", fontgray));
-		        Chunk chunk = new Chunk(PDFUtil.AUTHOR, new Font(baseFont, 10, Font.UNDERLINE, PDFUtil.FONTCOLOR));
-		        chunk.setAnchor(PDFUtil.WEBSITE);
-		        p.add(chunk);
-		        chapter.add(p);
-	
-				chapter.add(new Paragraph("С помощью данного прогноза можно определить, какое время суток наиболее благоприятно для ваших планов.", font));
+			if (null == place)
+				place = new Place().getDefault();
+			text = (zone >= 0 ? "UTC+" : "") + zone +
+				" " + place.getName() +
+				" " + place.getLatitude() + "°" +
+				", " + place.getLongitude() + "°";
+			p = new Paragraph(text, font);
+	        p.setAlignment(Element.ALIGN_CENTER);
+			chapter.add(p);
 
-				Anchor anchor = new Anchor("диаграммы", PDFUtil.getLinkFont());
-	            anchor.setReference("#diagram");
-	            p = new Paragraph();
-				p.add(new Chunk("А ", font));
-		        p.add(anchor);
-				p.add(new Chunk(" показывают динамику успешных и неудачных дней.", font));
-				chapter.add(p);
-
-				chapter.add(Chunk.NEWLINE);
-				chapter.add(new Paragraph("Прогноз классифицирует события по 3 признакам:", font));
+			Font fontgray = PDFUtil.getAnnotationFont(false);
+			text = "Дата составления: " + DateUtil.fulldtf.format(new Date());
+			p = new Paragraph(text, fontgray);
+	        p.setAlignment(Element.ALIGN_CENTER);
+			chapter.add(p);
 	
-				List<AspectType> types = service.getMainList();
-				com.itextpdf.text.List alist = new com.itextpdf.text.List(false, false, 10);
-				for (AspectType aspectType : types) {
-					if (aspectType.getId() > 3)
-						continue;
-					ListItem li = new ListItem();
-					BaseColor color = PDFUtil.htmlColor2Base(aspectType.getFontColor());
-			        chunk = new Chunk(aspectType.getDescription(), new Font(baseFont, 12, Font.BOLD, color));
-			        li.add(chunk);
-			        chunk = new Chunk(" — " + aspectType.getText(), new Font(baseFont, 12, Font.NORMAL, color));
-			        li.add(chunk);
-			        alist.add(li);
-			        series.put(aspectType.getId(), new ArrayList<TimeSeriesDataItem>());
-				}
-				chapter.add(alist);
+			p = new Paragraph();
+	        p.setAlignment(Element.ALIGN_CENTER);
+			p.setSpacingAfter(20);
+	        p.add(new Chunk("Автор: ", fontgray));
+	        Chunk chunk = new Chunk(PDFUtil.AUTHOR, new Font(baseFont, 10, Font.UNDERLINE, PDFUtil.FONTCOLOR));
+	        chunk.setAnchor(PDFUtil.WEBSITE);
+	        p.add(chunk);
+	        chapter.add(p);
 	
-				chapter.add(Chunk.NEWLINE);
-				Font bfont = new Font(baseFont, 12, Font.BOLD, PDFUtil.FONTCOLOR);
-				chapter.add(new Paragraph("Примечание", bfont));
-				alist = new com.itextpdf.text.List(false, false, 10);
-				alist.setNumbered(true);
+			chapter.add(new Paragraph("Данный прогноз показывает благоприятные и неблагоприятные периоды для тех или иных сфер жизни", font));
+			doc.add(chapter);
 
-				ListItem li = new ListItem();
-		        li.add(new Chunk("Самые судьбоносные факторы, на которые стоит обратить внимание, перечислены в разделе «Важное». "
-		        	+ "Если в числе важных указаны негативные события, необходимо откорректировать свои планы в указанных сферах жизни и не испытывать судьбу. "
-			        + "Остальные события, даже из раздела «Напряжение», носят временный и не особо глубокий характер.", font));
-		        alist.add(li);
-
-		        li = new ListItem();
-		        li.add(new Chunk("Важные, не повторяющиеся события говорят о главной повестке дня и задают тон всему дню. "
-		        	+ "Они являются важным поводом, за которым уже следуют другие, второстепенные события.", font));
-		        alist.add(li);
-
-				li = new ListItem();
-		        li.add(new Chunk("Если сфера жизни повторно упоминается в течение дня, значит она будет насыщена событиями, действиями и мыслями.", font));
-		        alist.add(li);
-	
-				li = new ListItem();
-		        li.add(new Chunk("Одна и та же сфера жизни в течение дня может проявиться негативно и позитивно. "
-		        	+ "Поэтому при составлении плана и ожидании событий учитывайте факторы успешности и факторы напряжения, упомянутые в тексте.", font));
-		        alist.add(li);
-	
-				li = new ListItem();
-		        li.add(new Chunk("Ключевые события указывают на сферы жизни, которые волнуют весь день. "
-		        	+ "Если они повторяются изо дня в день, значит будут регулярно всплывать и потребуют не сиюминутного, а длительного разрешения.", font));
-		        alist.add(li);
-
-				li = new ListItem();
-		        li.add(new Chunk("Понятие «Контекст» иллюстрирует обстановку события и лиц, которые в нём участвуют.", font));
-		        alist.add(li);
-
-				li = new ListItem();
-		        li.add(new Chunk("Раздел «Настроение» описывает ваше состояние, мысли и общий настрой, который сохраняется обычно в течение нескольких дней.", font));
-		        alist.add(li);
-	
-				li = new ListItem();
-		        li.add(new Chunk("Максимальная погрешность прогноза события ±18 часов.", font));
-		        alist.add(li);
-	
-		        chapter.add(alist);
-				doc.add(chapter);
-			}
-			DirectionAspectService servicea = new DirectionAspectService();
-
-			Map<String, Map<String, Map<Long, TreeSet<Long>>>> gitems = new HashMap<String, Map<String, Map<Long, TreeSet<Long>>>>();
 			Map<String, Map<String, Map<String, TreeSet<Long>>>> hitems = new HashMap<String, Map<String, Map<String, TreeSet<Long>>>>();
 			Map<String, Map<String, Map<String, TreeSet<Long>>>> pitems = new HashMap<String, Map<String, Map<String, TreeSet<Long>>>>();
 
 			for (Date date = start.getTime(); start.before(end); start.add(Calendar.DATE, 1), date = start.getTime()) {
-//				System.out.println(date);
 				long time = date.getTime();
 
-				Map<Long, Double> map = new HashMap<Long, Double>();
-				Map<Integer, Map<Long, Set<PeriodItem>>> times = new HashMap<Integer, Map<Long, Set<PeriodItem>>>();
-				Map<Integer, Set<PeriodItem>> ditems = new HashMap<Integer, Set<PeriodItem>>();
+				Event event = new Event();
+				String sdate = DateUtil.formatCustomDateTime(date, "yyyy-MM-dd") + " 00:00:00";
+				Date edate = DateUtil.getDatabaseDateTime(sdate);
+				event.setBirth(edate);
+				event.setPlace(place);
+				event.setZone(zone);
+				event.calc(false);
+
+				Map<Long, Set<PeriodItem>> htems = new HashMap<Long, Set<PeriodItem>>();
 				Map<Long, Set<PeriodItem>> atems = new HashMap<Long, Set<PeriodItem>>();
 
-				for (int i = 1; i < 5; i++) {
-					int h = i * 6;
-					String shour = (h < 10) ? "0" + h : String.valueOf(h);
-					String sdate = DateUtil.formatCustomDateTime(date, "yyyy-MM-dd") + " " + shour + ":00:00";
-//					System.out.println(shour);
-
-					Event event = new Event();
-					Date edate = DateUtil.getDatabaseDateTime(sdate);
-					event.setBirth(edate);
-					event.setPlace(place);
-					event.setZone(zone);
-					event.calc(false);
-
-					Collection<Planet> eplanets = event.getPlanets().values();
-					Map<Long, Set<PeriodItem>> items = new HashMap<Long, Set<PeriodItem>>();
-					for (Planet eplanet : eplanets) {
-						//аспекты считаем только для утра
-						if (1 == i) {
-							for (Planet planet : planets) {
-								PeriodItem item = calc(eplanet, planet);
-								if (null == item)
-									continue;
-								long id = item.aspect.getTypeid();
-								Set<PeriodItem> list = atems.get(id);
-								if (null == list)
-									list = new HashSet<PeriodItem>();
-								list.add(item);
-								atems.put(id, list);
-	
-								double val = map.containsKey(id) ? map.get(id) : 0;
-								map.put(id, val + 1);
-
-								//собираем аспекты для диаграммы Гантта
-								String pg = eplanet.getShortName();
-								Map<String, Map<String, TreeSet<Long>>> pcats = pitems.get(pg);
-								if (null == pcats)
-									pcats = new HashMap<>();
-
-								String p = planet.getShortName();
-								Map<String, TreeSet<Long>> asps = pcats.get(p);
-								if (null == asps)
-									asps = new HashMap<>();
-
-								String sign = " ";
-								if (item.aspect.getType().getCode().equals("NEUTRAL"))
-									sign = " × ";
-								else if (item.aspect.getType().getCode().equals("NEGATIVE"))
-									sign = " - ";
-								else
-									sign = " + ";
-								String a = pg + sign + p;
-
-								TreeSet<Long> dates = asps.get(a);
-								if (null == dates)
-									dates = new TreeSet<>();
-								dates.add(time);
-								asps.put(a, dates);
-								pcats.put(p, asps);
-								pitems.put(pg, pcats);
-							}
-						}
-						for (Model model : houses) {
-							House house = (House)model;
-							PeriodItem item = calc(eplanet, house);
-							if (null == item)
+				Collection<Planet> eplanets = event.getPlanets().values();
+				for (Planet eplanet : eplanets) {
+					for (Planet planet : planets) {
+						if (!selplanets.isEmpty()) {
+							if (!selplanets.contains(planet.getId()) && !selplanets.contains(eplanet.getId()))
 								continue;
+						}
+						PeriodItem item = calc(eplanet, planet);
+						if (item != null) {
 							long id = item.aspect.getTypeid();
-
-							//соблюдаем фильтр сфер жизни для аспектов кроме соединений
-							if (!item.aspect.getCode().equals("CONJUNCTION"))
-								if (!selhouses.contains(model.getId()))
-									continue;
-
-							Set<PeriodItem> list = items.get(id);
+							Set<PeriodItem> list = atems.get(id);
 							if (null == list)
 								list = new HashSet<PeriodItem>();
 							list.add(item);
-							items.put(id, list);
+							atems.put(id, list);
 
-							double val = map.containsKey(id) ? map.get(id) : 0;
-							map.put(id, val + 1);
+							//собираем аспекты для диаграммы Гантта
+							String pg = eplanet.getShortName();
+							Map<String, Map<String, TreeSet<Long>>> pcats = pitems.get(pg);
+							if (null == pcats)
+								pcats = new HashMap<>();
 
-							//собираем отдельно список для последующего вычисления ключевых событий дня
-							list = ditems.get(i);
-							if (null == list)
-								list = new HashSet<PeriodItem>();
-							list.add(item);
-							ditems.put(i, list);
+							String pg2 = planet.getShortName();
+							Map<String, TreeSet<Long>> asps = pcats.get(pg2);
+							if (null == asps)
+								asps = new HashMap<>();
 
-							//дома для диаграммы Гантта собираем только для утра
-							if (1 == i) {
-								String hg = house.getName();
-								Map<String, Map<String, TreeSet<Long>>> pcats = hitems.get(hg);
-								if (null == pcats)
-									pcats = new HashMap<>();
+							String sign = " ";
+							if (item.aspect.getType().getCode().equals("NEUTRAL"))
+								sign = " × ";
+							else if (item.aspect.getType().getCode().equals("NEGATIVE"))
+								sign = " - ";
+							else
+								sign = " + ";
+							String a = pg + sign + pg2;
 
-								String p = item.planet.getName();
-								Map<String, TreeSet<Long>> asps = pcats.get(p);
-								if (null == asps)
-									asps = new HashMap<>();
-
-								String a = "";
-								if (item.aspect.getType().getCode().equals("NEUTRAL"))
-									a = item.planet.isGood() ? item.planet.getShortName() : item.planet.getNegative();
-								else if (item.aspect.getType().getCode().equals("NEGATIVE"))
-									a = item.planet.getNegative();
-								else
-									a = item.planet.getPositive();
-
-								TreeSet<Long> dates = asps.get(a);
-								if (null == dates)
-									dates = new TreeSet<>();
-								dates.add(time);
-								asps.put(a, dates);
-								pcats.put(p, asps);
-								hitems.put(hg, pcats);
-							}
+							TreeSet<Long> dates = asps.get(a);
+							if (null == dates)
+								dates = new TreeSet<>();
+							dates.add(time);
+							asps.put(a, dates);
+							pcats.put(pg2, asps);
+							pitems.put(pg, pcats);
 						}
 					}
-					if (items != null && items.size() > 0)
-						times.put(i, items);
-				}
+					for (Model model : houses) {
+						House house = (House)model;
+						PeriodItem item = calc(eplanet, house);
+						if (null == item)
+							continue;
 
-				if (times.size() > 0 || atems.size() > 0) {
-					//определяем ключевые события (которые повторяются с утра до вечера)
-					Set<PeriodItem> set0 = new HashSet<>();
-					Set<PeriodItem> allitems = new HashSet<>();
-					Collection<Set<PeriodItem>> allsets = ditems.values();
-					for (Set<PeriodItem> set : allsets)
-						for (PeriodItem item : set)
-							allitems.add(item);
-					allsets = null;
+						if (!selhouses.isEmpty() && !selhouses.contains(model.getId()))
+							continue;
 
-					Set<PeriodItem> dItems1 = ditems.get(1);
-					Set<PeriodItem> dItems2 = ditems.get(2);
-					Set<PeriodItem> dItems3 = ditems.get(3);
-					Set<PeriodItem> dItems4 = ditems.get(4);
-					for (PeriodItem item : allitems) {
-						if (dItems1 != null && dItems1.contains(item)
-								&& dItems2 != null && dItems2.contains(item)
-								&& dItems3 != null && dItems3.contains(item)
-								&& dItems4 != null && dItems4.contains(item))
-							set0.add(item);
-					}
-					allitems = null; dItems1 = null; dItems2 = null; dItems3 = null; dItems4 = null;
-
-					Map<Long, Set<PeriodItem>> items0 = new HashMap<Long, Set<PeriodItem>>();
-					for (PeriodItem item : set0) {
 						long id = item.aspect.getTypeid();
-						Set<PeriodItem> list = items0.get(id);
+						Set<PeriodItem> list = htems.get(id);
 						if (null == list)
 							list = new HashSet<PeriodItem>();
 						list.add(item);
-						items0.put(id, list);
+						htems.put(id, list);
 
-						//собираем данные для диаграммы Гантта
-						String p = item.aspect.getType().getCode().equals("NEGATIVE") ? item.planet.getNegative() : item.planet.getPositive();
-						Map<String, Map<Long, TreeSet<Long>>> hcats = gitems.get(p);
-						if (null == hcats)
-							hcats = new HashMap<>();
-						Map<Long, TreeSet<Long>> asps = hcats.get(item.house.getName());
+						//собираем дома для диаграммы Гантта
+						String hg = house.getName();
+						Map<String, Map<String, TreeSet<Long>>> pcats = hitems.get(hg);
+						if (null == pcats)
+							pcats = new HashMap<>();
+
+						String pg = item.planet.getName();
+						Map<String, TreeSet<Long>> asps = pcats.get(pg);
 						if (null == asps)
 							asps = new HashMap<>();
-						TreeSet<Long> dates = asps.get(id);
+
+						String a = "";
+						if (item.aspect.getType().getCode().equals("NEUTRAL"))
+							a = item.planet.isGood() ? item.planet.getShortName() : item.planet.getNegative();
+						else if (item.aspect.getType().getCode().equals("NEGATIVE"))
+							a = item.planet.getNegative();
+						else
+							a = item.planet.getPositive();
+
+						TreeSet<Long> dates = asps.get(a);
 						if (null == dates)
 							dates = new TreeSet<>();
 						dates.add(time);
-						asps.put(id, dates);
-						hcats.put(item.house.getName(), asps);
-						gitems.put(p, hcats);
-					}
-					times.put(0, items0);
-
-					//формируем документ
-					if (printable) {
-						String sdfdate = sdf.format(date);
-						chapter = new ChapterAutoNumber(PDFUtil.printHeader(new Paragraph(), sdfdate, null));
-						chapter.setNumberDepth(0);
-						Font fonth5 = PDFUtil.getHeaderFont();
-
-						SimpleDateFormat sdfshort = new SimpleDateFormat("d MMMM");
-						String shortdate = sdfshort.format(date);
-
-						//аспекты
-						Section section = PDFUtil.printSection(chapter, "Настроение " + shortdate, null);
-						for (Map.Entry<Long, Set<PeriodItem>> entry : atems.entrySet()) {
-							Set<PeriodItem> list = entry.getValue();
-							if (null == list || 0 == list.size()) {
-								section.add(new Paragraph("Нет данных", font));
-								continue;
-							}
-							list = new LinkedHashSet<PeriodItem>(list);
-							AspectType type = (AspectType)service.find(entry.getKey());
-							section.add(new Paragraph(type.getDescription(), fonth5));
-	
-							String typeColor = type.getFontColor();
-							BaseColor color = PDFUtil.htmlColor2Base(typeColor);
-							Font afont = new Font(baseFont, 12, Font.NORMAL, color);
-							Font abfont = new Font(baseFont, 12, Font.BOLD, color);
-	
-							com.itextpdf.text.List alist = new com.itextpdf.text.List(false, false, 10);
-							for (PeriodItem item : list) {
-								ListItem li = new ListItem();
-						        li.add(new Chunk(item.planet.getShortName() + " " + type.getSymbol() + " " + item.planet2.getShortName() + ": ", abfont));
-								li.setSpacingAfter(10);
-
-								List<Model> texts = servicea.finds(new SkyPointAspect(item.planet, item.planet2, item.aspect));
-								if (texts.isEmpty())
-									alist.add(li);
-								else for (Model model : texts) {
-									PlanetAspectText dirText = (PlanetAspectText)model;
-									if (dirText != null)
-										li.add(new Phrase(PDFUtil.removeTags(dirText.getText(), afont)));
-								    alist.add(li);
-
-									if (dirText != null) {
-										List<TextGender> genders = dirText.getGenderTexts(female, child);
-										for (TextGender gender : genders) {
-											li = new ListItem();
-									        li.add(new Chunk(PDFUtil.getGenderHeader(gender.getType()) + ": ", abfont));
-											li.add(new Phrase(PDFUtil.removeTags(gender.getText(), afont)));
-											li.setSpacingAfter(10);
-									        alist.add(li);
-										};
-									}
-									Rule rule = EventRules.ruleDirectionAspect(item.getPlanetAspect());
-									if (rule != null) {
-										li = new ListItem();
-										li.add(new Phrase(PDFUtil.removeTags(rule.getText(), afont)));
-										li.setSpacingAfter(10);
-								        alist.add(li);
-									}
-								}
-							}
-							section.add(alist);
-						}
-	
-						//дома
-						for (Map.Entry<Integer, Map<Long, Set<PeriodItem>>> entry : times.entrySet()) {
-							Map <Long, Set<PeriodItem>> items = entry.getValue();
-							if (items != null && items.size() > 0) {
-								int i = entry.getKey();
-								String header = "";
-								switch (i) {
-									case 1: header = "Утро " + shortdate; break;
-									case 2: header = "День " + shortdate; break;
-									case 3: header = "Вечер " + shortdate; break;
-									case 4: header = "Ночь " + shortdate; break;
-									default: header = "Ключевые события дня " + shortdate;
-								}
-								section = PDFUtil.printSection(chapter, header, null);
-								if (0 == i) {
-									section.add(new Paragraph("Ключевые события могут произойти в любое время суток", font));
-									section.add(Chunk.NEWLINE);
-								}
-
-								for (Map.Entry<Long, Set<PeriodItem>> entry2 : items.entrySet()) {
-									Set<PeriodItem> list = entry2.getValue();
-									if (null == list || 0 == list.size()) {
-										section.add(new Paragraph("Нет данных", font));
-										continue;
-									}
-									list = new LinkedHashSet<PeriodItem>(list);
-									AspectType type = (AspectType)service.find(entry2.getKey());
-									section.add(new Paragraph(type.getDescription(), fonth5));
-			
-									String typeColor = type.getFontColor();
-									BaseColor color = PDFUtil.htmlColor2Base(typeColor);
-									com.itextpdf.text.List alist = new com.itextpdf.text.List(false, false, 10);
-	
-									if (i > 0) {
-										Set<PeriodItem> list2 = new HashSet<>();
-										for (PeriodItem item : list)
-											if (set0.contains(item))
-												continue;
-											else
-												list2.add(item);
-										list = new LinkedHashSet<PeriodItem>(list2);
-									}
-									if (0 == list.size())
-										section.add(new Paragraph("См. ключевые события", font));
-									else for (PeriodItem item : list) {
-										ListItem li = new ListItem();
-										String text = "";
-										String tcode = type.getCode();
-										if (tcode.equals("NEGATIVE"))
-											text = item.house.getNegative() + ". Причина – " + item.planet.getNegative();
-										else if (tcode.equals("POSITIVE"))
-											text = item.house.getPositive() + ". Фактор успеха – " + item.planet.getPositive();
-										else {
-											String s = "Контекст – " + (item.planet.isGood() ? item.planet.getPositive() : item.planet.getNegative());
-											text = item.house.getDescription() + ". " + s;
-										}
-										Chunk chunk = new Chunk(text, new Font(baseFont, 12, Font.NORMAL, color));
-								        li.add(new Chunk(item.house.getName() + ": ", new Font(baseFont, 12, Font.BOLD, color)));
-								        li.add(chunk);
-								        alist.add(li);
-									}
-									section.add(alist);
-								}
-							}
-						}
-						doc.add(chapter);
+						asps.put(a, dates);
+						pcats.put(pg, asps);
+						hitems.put(hg, pcats);
 					}
 				}
-				for (Map.Entry<Long, Double> entry : map.entrySet()) {
-					List<TimeSeriesDataItem> sitems = series.containsKey(entry.getKey()) ? series.get(entry.getKey()) : new ArrayList<TimeSeriesDataItem>();
-					TimeSeriesDataItem tsdi = new TimeSeriesDataItem(new Day(date), entry.getValue());
-					if (!sitems.contains(tsdi))
-						sitems.add(tsdi);
-					series.put(entry.getKey(), sitems);
+			}
+
+			//диаграммы Гантта по аспектам
+			chapter = new ChapterAutoNumber(PDFUtil.printHeader(new Paragraph(), "Тенденции личности", null));
+			chapter.setNumberDepth(0);
+
+			for (Map.Entry<String, Map<String, Map<String, TreeSet<Long>>>> pgentry : pitems.entrySet()) {
+		        final TaskSeriesCollection collectiona = new TaskSeriesCollection();
+		        Map<String, Map<String, TreeSet<Long>>> pcats = pgentry.getValue();
+			    if (null == pcats || 0 == pcats.size())
+			    	continue;
+			    for (Map.Entry<String, Map<String, TreeSet<Long>>> pentry : pcats.entrySet()) {
+			    	Map<String, TreeSet<Long>> asps = pentry.getValue();
+			    	if (null == asps || 0 == asps.size())
+			    		continue;
+
+					//с учётом того, что в диаграмме Гантта может иметь место только один отрезок времени
+					//данной категории в серии, то рассматриваем только первое вхождение планеты-дома в общий период
+					TaskSeries s = null;
+					for (Map.Entry<String, TreeSet<Long>> aentry : asps.entrySet()) {
+						s = new TaskSeries(aentry.getKey());
+						TreeSet<Long> dates = aentry.getValue();
+						if (null == dates)
+							continue;
+
+						long initdate = dates.first();
+						long finaldate = (1 == dates.size()) ? initdate + 86400000 : dates.last();
+						s.add(new Task(aentry.getKey(), new SimpleTimePeriod(new Date(initdate), new Date(finaldate))));
+					}
+					if (s != null && !s.isEmpty())
+						collectiona.add(s);
 				}
-//				System.out.println();
-			}
-
-			if (printable) {
-				if (days) {
-					chapter = new ChapterAutoNumber(PDFUtil.printHeader(new Paragraph(), "Диаграммы", "diagram"));
-					chapter.setNumberDepth(0);
-	
-					//общая диаграмма
-					Section section = PDFUtil.printSection(chapter, "Общие тенденции", null);
-					TimeSeriesCollection dataset = new TimeSeriesCollection();
-					for (Map.Entry<Long, List<TimeSeriesDataItem>> entry : series.entrySet()) {
-						List<TimeSeriesDataItem> sitems = entry.getValue();
-						if (null == sitems || 0 == sitems.size())
-							continue;
-						AspectType asptype = (AspectType)service.find(entry.getKey());
-						if (null == asptype.getDescription())
-							continue;
-						TimeSeries timeSeries = new TimeSeries(asptype.getDescription());
-						for (TimeSeriesDataItem tsdi : sitems)
-							timeSeries.add(tsdi);
-						dataset.addSeries(timeSeries);
-					}
-				    com.itextpdf.text.Image image = PDFUtil.printTimeChart(writer, "Общие тенденции", "Даты", "Баллы", dataset, 500, 0, true);
+				int cnt = collectiona.getSeriesCount();
+				if (cnt > 0) {
+					String title = pgentry.getKey();
+					Section section = PDFUtil.printSection(chapter, title, null);
+				    Image image = PDFUtil.printGanttChart(writer, title, "", "", collectiona, 0, 0, false);
 				    section.add(image);
-				    chapter.add(Chunk.NEXTPAGE);
-
-					//общая диаграмма Гантта
-					section = PDFUtil.printSection(chapter, "Ключевые периоды", null);
-			        final TaskSeriesCollection collection = new TaskSeriesCollection();
-					for (Map.Entry<String, Map<String, Map<Long, TreeSet<Long>>>> pentry : gitems.entrySet()) {
-						Map<String, Map<Long, TreeSet<Long>>> hcats = pentry.getValue();
-						if (null == hcats || 0 == hcats.size())
-							continue;
-						final TaskSeries s = new TaskSeries(pentry.getKey());
-
-						for (Map.Entry<String, Map<Long, TreeSet<Long>>> hentry : hcats.entrySet()) {
-							Map<Long, TreeSet<Long>> asps = hentry.getValue();
-							if (null == asps || 0 == asps.size())
-								continue;
-
-							//с учётом того, что в диаграмме Гантта может иметь место только один отрезок времени
-							//данной категории в серии, то рассматриваем только первое вхождение планеты-дома в общий период
-							for (Map.Entry<Long, TreeSet<Long>> aentry : asps.entrySet()) {
-								TreeSet<Long> dates = aentry.getValue();
-								if (null == dates || dates.size() < 2)
-									continue;
-	
-								long initdate = dates.first();
-								long finaldate = dates.last();
-								if (finaldate > initdate)
-									s.add(new Task(hentry.getKey(), new SimpleTimePeriod(new Date(initdate), new Date(finaldate))));
-							}
-						}
-						if (!s.isEmpty())
-							collection.add(s);
-					}
-				    image = PDFUtil.printGanttChart(writer, "Ключевые периоды", "", "", collection, 0, 700, true);
-				    section.add(image);
-				    chapter.add(Chunk.NEXTPAGE);
-
-					//диаграммы Гантта по аспектам
-					for (Map.Entry<String, Map<String, Map<String, TreeSet<Long>>>> pgentry : pitems.entrySet()) {
-				        final TaskSeriesCollection collectiona = new TaskSeriesCollection();
-				        Map<String, Map<String, TreeSet<Long>>> pcats = pgentry.getValue();
-				        if (null == pcats || 0 == pcats.size())
-				        	continue;
-						for (Map.Entry<String, Map<String, TreeSet<Long>>> pentry : pcats.entrySet()) {
-							Map<String, TreeSet<Long>> asps = pentry.getValue();
-							if (null == asps || 0 == asps.size())
-								continue;
-
-							//с учётом того, что в диаграмме Гантта может иметь место только один отрезок времени
-							//данной категории в серии, то рассматриваем только первое вхождение планеты-дома в общий период
-							TaskSeries s = null;
-							for (Map.Entry<String, TreeSet<Long>> aentry : asps.entrySet()) {
-								s = new TaskSeries(aentry.getKey());
-								TreeSet<Long> dates = aentry.getValue();
-								if (null == dates)
-									continue;
-
-								long initdate = dates.first();
-								long finaldate = (1 == dates.size()) ? initdate + 86400000 : dates.last();
-								s.add(new Task(aentry.getKey(), new SimpleTimePeriod(new Date(initdate), new Date(finaldate))));
-							}
-							if (s != null && !s.isEmpty())
-								collectiona.add(s);
-						}
-						int cnt = collectiona.getSeriesCount();
-						if (cnt > 0) {
-							String title = pgentry.getKey();
-							section = PDFUtil.printSection(chapter, title, null);
-						    image = PDFUtil.printGanttChart(writer, title, "", "", collectiona, 0, 0, false);
-						    section.add(image);
-						}
-					}
-				    chapter.add(Chunk.NEXTPAGE);
-
-					//диаграммы Гантта по домам
-					for (Map.Entry<String, Map<String, Map<String, TreeSet<Long>>>> hgentry : hitems.entrySet()) {
-				        final TaskSeriesCollection collectionh = new TaskSeriesCollection();
-				        Map<String, Map<String, TreeSet<Long>>> pcats = hgentry.getValue();
-				        if (null == pcats || 0 == pcats.size())
-				        	continue;
-						for (Map.Entry<String, Map<String, TreeSet<Long>>> pentry : pcats.entrySet()) {
-							Map<String, TreeSet<Long>> asps = pentry.getValue();
-							if (null == asps || 0 == asps.size())
-								continue;
-
-							//с учётом того, что в диаграмме Гантта может иметь место только один отрезок времени
-							//данной категории в серии, то рассматриваем только первое вхождение планеты-дома в общий период
-							TaskSeries s = null;
-							for (Map.Entry<String, TreeSet<Long>> aentry : asps.entrySet()) {
-								s = new TaskSeries(aentry.getKey());
-								TreeSet<Long> dates = aentry.getValue();
-								if (null == dates)
-									continue;
-
-								long initdate = dates.first();
-								long finaldate = (1 == dates.size()) ? initdate + 86400000 : dates.last();
-								s.add(new Task(aentry.getKey(), new SimpleTimePeriod(new Date(initdate), new Date(finaldate))));
-							}
-							if (s != null && !s.isEmpty())
-								collectionh.add(s);
-						}
-						if (collectionh.getSeriesCount() > 0) {
-							section = PDFUtil.printSection(chapter, hgentry.getKey(), null);
-						    image = PDFUtil.printGanttChart(writer, hgentry.getKey(), "", "", collectionh, 0, 0, true);
-						    section.add(image);
-						}
-					}
-					doc.add(chapter);
-				}			
-				doc.add(Chunk.NEWLINE);
-		        doc.add(PDFUtil.printCopyright());
+				}
 			}
+		    chapter.add(Chunk.NEXTPAGE);
+			doc.add(chapter);
+
+			//диаграммы Гантта по домам
+			chapter = new ChapterAutoNumber(PDFUtil.printHeader(new Paragraph(), "Тенденции событий", null));
+			chapter.setNumberDepth(0);
+
+			for (Map.Entry<String, Map<String, Map<String, TreeSet<Long>>>> hgentry : hitems.entrySet()) {
+		        final TaskSeriesCollection collectionh = new TaskSeriesCollection();
+		        Map<String, Map<String, TreeSet<Long>>> pcats = hgentry.getValue();
+		        if (null == pcats || 0 == pcats.size())
+		        	continue;
+				for (Map.Entry<String, Map<String, TreeSet<Long>>> pentry : pcats.entrySet()) {
+					Map<String, TreeSet<Long>> asps = pentry.getValue();
+					if (null == asps || 0 == asps.size())
+						continue;
+
+					//с учётом того, что в диаграмме Гантта может иметь место только один отрезок времени
+					//данной категории в серии, то рассматриваем только первое вхождение планеты-дома в общий период
+					TaskSeries s = null;
+					for (Map.Entry<String, TreeSet<Long>> aentry : asps.entrySet()) {
+						s = new TaskSeries(aentry.getKey());
+						TreeSet<Long> dates = aentry.getValue();
+						if (null == dates)
+							continue;
+
+						long initdate = dates.first();
+						long finaldate = (1 == dates.size()) ? initdate + 86400000 : dates.last();
+						s.add(new Task(aentry.getKey(), new SimpleTimePeriod(new Date(initdate), new Date(finaldate))));
+					}
+					if (s != null && !s.isEmpty())
+						collectionh.add(s);
+				}
+				if (collectionh.getSeriesCount() > 0) {
+					Section section = PDFUtil.printSection(chapter, hgentry.getKey(), null);
+					Image image = PDFUtil.printGanttChart(writer, hgentry.getKey(), "", "", collectionh, 0, 0, true);
+				    section.add(image);
+				}
+			}
+			doc.add(chapter);
+			doc.add(Chunk.NEWLINE);
+	        doc.add(PDFUtil.printCopyright());
 		} catch(Exception e) {
 			e.printStackTrace();
 		} finally {
@@ -755,12 +388,11 @@ public class TransitExportHandler extends Handler {
 				//для планет определяем, является ли аспект стандартным
 				List<Model> aspects = service.getMajorList();
 				for (Model realasp : aspects) {
+					if (realasp.getId() > 5)
+						continue;
 					Aspect a = (Aspect)realasp;
-					if (a.isMain() && a.isExact(res)) {
+					if (a.isExact(res)) {
 						if (a.getPlanetid() > 0)
-							continue;
-	
-						if (point1.getCode().equals(point2.getCode()))
 							continue;
 	
 						if (a.getCode().equals("OPPOSITION") &&
