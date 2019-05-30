@@ -280,9 +280,7 @@ public class TransitExportHandler extends Handler {
 			chapter.setNumberDepth(0);
 
 			for (Map.Entry<String, Map<String, Map<String, TreeSet<Long>>>> pgentry : pitems.entrySet()) {
-				List<TaskSeriesCollection> collections = new ArrayList<>();
-		        TaskSeriesCollection collectiona = new TaskSeriesCollection();
-		        int i = 0;
+		        final TaskSeriesCollection collectiona = new TaskSeriesCollection();
 		        Map<String, Map<String, TreeSet<Long>>> pcats = pgentry.getValue();
 			    if (null == pcats || 0 == pcats.size())
 			    	continue;
@@ -303,26 +301,16 @@ public class TransitExportHandler extends Handler {
 						long initdate = dates.first();
 						long finaldate = (1 == dates.size()) ? initdate + 86400000 : dates.last();
 						s.add(new Task(aentry.getKey(), new SimpleTimePeriod(new Date(initdate), new Date(finaldate))));
-
-						if (finaldate - initDate.getTime() > 2592000 * ++i) {
-							collections.add(collectiona);
-							collectiona = new TaskSeriesCollection();
-							i = 0;
-						}
 					}
-					if (s != null && !s.isEmpty()) {
+					if (s != null && !s.isEmpty())
 						collectiona.add(s);
-					}
 				}
-				collections.add(collectiona);
-				for (TaskSeriesCollection collection : collections) {
-					int cnt = collection.getSeriesCount();
-					if (cnt > 0) {
-						String title = pgentry.getKey();
-						Section section = PDFUtil.printSection(chapter, title, null);
-					    Image image = PDFUtil.printGanttChart(writer, title, "", "", collection, 0, 0, false);
-					    section.add(image);
-					}
+				int cnt = collectiona.getSeriesCount();
+				if (cnt > 0) {
+					String title = pgentry.getKey();
+					Section section = PDFUtil.printSection(chapter, title, null);
+				    Image image = PDFUtil.printGanttChart(writer, title, "", "", collectiona, 0, 0, false);
+				    section.add(image);
 				}
 			}
 		    chapter.add(Chunk.NEXTPAGE);
@@ -386,40 +374,32 @@ public class TransitExportHandler extends Handler {
 			double res = CalcUtil.getDifference(point1.getLongitude(), point2.getLongitude());
 			AspectService service = new AspectService();
 
-			//для домов считаем только соединения
-			if (point2 instanceof House) {
-				if (res < 1) {
-					Aspect a = (Aspect)service.find(1L);
-					PeriodItem item = new PeriodItem();
-					item.aspect = a;
-					item.planet = (Planet)point1;
-					item.house = (House)point2;
-					return item;
-				}
-			} else {
-				//для планет определяем, является ли аспект стандартным
-				List<Model> aspects = service.getMajorList();
-				for (Model realasp : aspects) {
-					if (realasp.getId() > 5)
+			//определяем, является ли аспект стандартным
+			List<Model> aspects = service.getMajorList();
+			for (Model realasp : aspects) {
+				if (realasp.getId() > 5)
+					continue;
+				Aspect a = (Aspect)realasp;
+				if (a.isExact(res)) {
+					if (a.getPlanetid() > 0)
 						continue;
-					Aspect a = (Aspect)realasp;
-					if (a.isExact(res)) {
-						if (a.getPlanetid() > 0)
-							continue;
-	
+
+					if (point2 instanceof Planet)
 						if (a.getCode().equals("OPPOSITION") &&
 								(point2.getCode().equals("Kethu") || point2.getCode().equals("Rakhu")))
 							continue;
-	
-						PeriodItem item = new PeriodItem();
-						item.aspect = a;
-						item.planet = (Planet)point1;
+
+					PeriodItem item = new PeriodItem();
+					item.aspect = a;
+					item.planet = (Planet)point1;
+					if (point2 instanceof Planet) {
 						Planet planet2 = (Planet)point2;
 						item.planet2 = planet2;
 						item.house = planet2.getHouse();
-	//					System.out.println(point1.getName() + " " + type.getSymbol() + " " + point2.getName());
-						return item;
-					}
+					} else if (point2 instanceof House)
+						item.house = (House)point2;
+//					System.out.println(point1.getName() + " " + type.getSymbol() + " " + point2.getName());
+					return item;
 				}
 			}
 		} catch (DataAccessException e) {
