@@ -36,6 +36,7 @@ public class PeriodItem {
 	public SkyPointAspect getPlanetAspect() {
 		SkyPointAspect spa = new SkyPointAspect();
 		spa.setAspect(aspect);
+		spa.setScore(aspect.getValue());
 		spa.setSkyPoint1(planet);
 		spa.setSkyPoint2(planet2);
 		return spa;
@@ -48,6 +49,7 @@ public class PeriodItem {
 	public SkyPointAspect getHouseAspect() {
 		SkyPointAspect spa = new SkyPointAspect();
 		spa.setAspect(aspect);
+		spa.setScore(aspect.getValue());
 		spa.setSkyPoint1(planet);
 		spa.setSkyPoint2(house);
 		return spa;
