@@ -372,18 +372,11 @@ public class TransitPart extends ModelListView {
 	 * @return аспект
 	 */
 	public Aspect getAspect() {
-		try {
-			IStructuredSelection selection = (IStructuredSelection)cvAspect.getSelection();
-			if (null == selection.getFirstElement())
-				return (Aspect)new AspectService().find(1L);
-			else {
-				Aspect type = (Aspect)selection.getFirstElement();
-				if (type.getId() > 0)
-					return type;
-			}
-				return (Aspect)new AspectService().find(1L);
-		} catch (DataAccessException e) {
-			e.printStackTrace();
+		IStructuredSelection selection = (IStructuredSelection)cvAspect.getSelection();
+		if (selection.getFirstElement() != null) {
+			Aspect type = (Aspect)selection.getFirstElement();
+			if (type.getId() > 0)
+				return type;
 		}
 		return null;
 	}
