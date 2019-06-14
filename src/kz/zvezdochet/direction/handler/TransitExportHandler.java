@@ -131,8 +131,8 @@ public class TransitExportHandler extends Handler {
 			String text = person.getCallname() + " – Прогноз тенденций на период:\n";
 			text += sdf.format(initDate);
 			days = (DateUtil.getDateFromDate(initDate) != DateUtil.getDateFromDate(finalDate)
-					|| DateUtil.getMonthFromDate(initDate) != DateUtil.getMonthFromDate(finalDate)
-					|| DateUtil.getYearFromDate(initDate) != DateUtil.getYearFromDate(finalDate));
+				|| DateUtil.getMonthFromDate(initDate) != DateUtil.getMonthFromDate(finalDate)
+				|| DateUtil.getYearFromDate(initDate) != DateUtil.getYearFromDate(finalDate));
 			if (days)
 				text += " — " + sdf.format(finalDate);
 			Paragraph p = new Paragraph(text, font);
@@ -201,7 +201,7 @@ public class TransitExportHandler extends Handler {
 							atems.put(id, list);
 
 							//собираем аспекты для диаграммы Гантта
-							String pg = eplanet.getShortName();
+							String pg = eplanet.getMark(null) + " " + eplanet.getShortName();
 							Map<String, Map<String, TreeSet<Long>>> pcats = pitems.get(pg);
 							if (null == pcats)
 								pcats = new HashMap<>();
@@ -211,14 +211,8 @@ public class TransitExportHandler extends Handler {
 							if (null == asps)
 								asps = new HashMap<>();
 
-							String sign = " ";
-							if (item.aspect.getType().getCode().equals("NEUTRAL"))
-								sign = " × ";
-							else if (item.aspect.getType().getCode().equals("NEGATIVE"))
-								sign = " - ";
-							else
-								sign = " + ";
-							String a = pg + sign + pg2;
+							String sign = Math.round(item.aspect.getValue()) + "°";
+							String a = pg + " " + sign + " " + pg2;
 
 							TreeSet<Long> dates = asps.get(a);
 							if (null == dates)
@@ -251,18 +245,18 @@ public class TransitExportHandler extends Handler {
 						if (null == pcats)
 							pcats = new HashMap<>();
 
-						String pg = item.planet.getName();
+						String pg = eplanet.getName();
 						Map<String, TreeSet<Long>> asps = pcats.get(pg);
 						if (null == asps)
 							asps = new HashMap<>();
 
-						String a = "";
+						String a = eplanet.getMark(null) + " " + Math.round(item.aspect.getValue()) + "° ";
 						if (item.aspect.getType().getCode().equals("NEUTRAL"))
-							a = item.planet.isGood() ? item.planet.getShortName() : item.planet.getNegative();
+							a += eplanet.getShortName();
 						else if (item.aspect.getType().getCode().equals("NEGATIVE"))
-							a = item.planet.getNegative();
+							a += eplanet.getNegative();
 						else
-							a = item.planet.getPositive();
+							a += eplanet.getPositive();
 
 						TreeSet<Long> dates = asps.get(a);
 						if (null == dates)
@@ -377,8 +371,6 @@ public class TransitExportHandler extends Handler {
 			//определяем, является ли аспект стандартным
 			List<Model> aspects = service.getMajorList();
 			for (Model realasp : aspects) {
-				if (realasp.getId() > 5)
-					continue;
 				Aspect a = (Aspect)realasp;
 				if (a.isExact(res)) {
 					if (a.getPlanetid() > 0)
