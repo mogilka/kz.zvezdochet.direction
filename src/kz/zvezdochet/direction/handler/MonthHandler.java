@@ -266,7 +266,11 @@ public class MonthHandler extends Handler {
 									continue;
 								long id = house.getId();
 								int val = hitems.containsKey(id) ? hitems.get(id) : 0;
-								hitems.put(id, val + item.aspect.getType().getPoints());
+								int points = item.aspect.getType().getPoints();
+								if (item.aspect.getType().getCode().equals("NEUTRAL")
+										&& (eplanet.getCode().equals("Lilith") || eplanet.getCode().equals("Kethu")))
+									points = -points;
+								hitems.put(id, val + points);
 							}
 						}
 
