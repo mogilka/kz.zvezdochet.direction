@@ -1,7 +1,6 @@
 package kz.zvezdochet.direction.part;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
@@ -44,7 +43,6 @@ import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
 
 import kz.zvezdochet.bean.Aspect;
-import kz.zvezdochet.bean.AspectType;
 import kz.zvezdochet.bean.Event;
 import kz.zvezdochet.bean.House;
 import kz.zvezdochet.bean.Place;
@@ -75,7 +73,6 @@ import kz.zvezdochet.provider.EventProposalProvider.EventContentProposal;
 import kz.zvezdochet.provider.PlaceProposalProvider;
 import kz.zvezdochet.provider.PlaceProposalProvider.PlaceContentProposal;
 import kz.zvezdochet.service.AspectService;
-import kz.zvezdochet.service.AspectTypeService;
 import kz.zvezdochet.service.EventService;
 
 /**
@@ -112,10 +109,11 @@ public class EventPart extends ModelListView implements ICalculable {
 	private int MODE_CALC = 2;
 
 	private CosmogramComposite cmpCosmogram;
+	private CosmogramComposite cmpCosmogram2;
 	private CTabFolder folder;
+	private CTabFolder folder2;
 	private Group grPlanets;
 	private Group grHouses;
-	private Group grAspectType;
 	private Group grTransits;
 
 	@PostConstruct @Override
@@ -123,13 +121,25 @@ public class EventPart extends ModelListView implements ICalculable {
 		super.create(parent);
 		Group grCosmogram = new Group(parent, SWT.NONE);
 		grCosmogram.setText("Космограмма");
-		cmpCosmogram = new CosmogramComposite(grCosmogram, SWT.NONE);
+
+		folder2 = new CTabFolder(grCosmogram, SWT.BORDER);
+		folder2.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
+		folder2.setSimple(false);
+		folder2.setUnselectedCloseVisible(false);
+		Tab[] tabs = initTabs2();
+		for (Tab tab : tabs) {
+			CTabItem item = new CTabItem(folder2, SWT.CLOSE);
+			item.setText(tab.name);
+			item.setImage(tab.image);
+			item.setControl(tab.control);
+		}
+		folder2.pack();
 
 		folder = new CTabFolder(grCosmogram, SWT.BORDER);
 		folder.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 		folder.setSimple(false);
 		folder.setUnselectedCloseVisible(false);
-		Tab[] tabs = initTabs();
+		tabs = initTabs();
 		for (Tab tab : tabs) {
 			CTabItem item = new CTabItem(folder, SWT.CLOSE);
 			item.setText(tab.name);
@@ -139,8 +149,6 @@ public class EventPart extends ModelListView implements ICalculable {
 		folder.pack();
 		GridLayoutFactory.swtDefaults().applyTo(grCosmogram);
 		GridDataFactory.fillDefaults().grab(true, true).applyTo(grCosmogram);
-		GridDataFactory.fillDefaults().align(SWT.CENTER, SWT.FILL).
-			hint(514, 514).span(3, 1).grab(true, false).applyTo(cmpCosmogram);
 		return null;
 	}
 
@@ -182,16 +190,9 @@ public class EventPart extends ModelListView implements ICalculable {
 	 */
 	private void refreshCard(Event event, Event event2) {
 		Map<String, Object> params = new HashMap<>();
-		List<String> aparams = new ArrayList<String>();
-		Map<String, String[]> types = AspectType.getHierarchy();
-		for (Control control : grAspectType.getChildren()) {
-			Button button = (Button)control;
-			if (button.getSelection())
-				aparams.addAll(Arrays.asList(types.get(button.getData("type"))));
-		}
-		params.put("aspects", aparams);
 		params.put("exact", true);
 		cmpCosmogram.paint(event, event2, params);
+		cmpCosmogram2.paint(event2, null, params);
 	}
 
 	/**
@@ -212,7 +213,7 @@ public class EventPart extends ModelListView implements ICalculable {
 	 * @return массив вкладок
 	 */
 	private Tab[] initTabs() {
-		Tab[] tabs = new Tab[5];
+		Tab[] tabs = new Tab[4];
 		//настройки расчёта
 		Tab tab = new Tab();
 		tab.name = "Настройки";
@@ -262,40 +263,6 @@ public class EventPart extends ModelListView implements ICalculable {
 		GridLayoutFactory.swtDefaults().applyTo(grHouses);
 		GridDataFactory.fillDefaults().grab(true, true).applyTo(grHouses);
 		tabs[2] = tab;
-		
-		//аспекты
-		tab = new Tab();
-		tab.name = "Аспекты";
-		tab.image = AbstractUIPlugin.imageDescriptorFromPlugin("kz.zvezdochet", "icons/aspect.gif").createImage();
-		grAspectType = new Group(folder, SWT.NONE);
-		grAspectType.setLayout(new GridLayout());
-		List<Model> types = new ArrayList<Model>();
-		try {
-			types = new AspectTypeService().getList();
-		} catch (DataAccessException e) {
-			e.printStackTrace();
-		}
-		for (Model model : types) {
-			AspectType type = (AspectType)model;
-			if (type.getImage() != null) {
-				final Button bt = new Button(grAspectType, SWT.BORDER | SWT.CHECK);
-				bt.setText(type.getName());
-				bt.setImage(AbstractUIPlugin.imageDescriptorFromPlugin("kz.zvezdochet", "icons/aspect/" + type.getImage()).createImage());
-				bt.setSelection(true);
-				bt.setData("type", type.getCode());
-				bt.addSelectionListener(new SelectionListener() {
-					@Override
-					public void widgetSelected(SelectionEvent e) {
-						if (bt.getSelection())
-							onCalc(MODE_CALC);
-					}
-					@Override
-					public void widgetDefaultSelected(SelectionEvent e) {}
-				});
-			}
-		}
-		tab.control = grAspectType;
-		tabs[3] = tab;
 
 		//транзиты
 		tab = new Tab();
@@ -320,7 +287,7 @@ public class EventPart extends ModelListView implements ICalculable {
 		tab.control = grTransits;
 		GridLayoutFactory.swtDefaults().applyTo(grTransits);
 		GridDataFactory.fillDefaults().grab(true, true).applyTo(grTransits);
-		tabs[4] = tab;
+		tabs[3] = tab;
 
 		return tabs;
 	}
@@ -794,5 +761,42 @@ public class EventPart extends ModelListView implements ICalculable {
 	@Override
 	public Model createModel() {
 		return null;
+	}
+
+	/**
+	 * Инициализация вкладок космограммы
+	 * @return массив вкладок
+	 */
+	private Tab[] initTabs2() {
+		Tab[] tabs = new Tab[2];
+		//космограмма транзитов
+		Tab tab = new Tab();
+		tab.name = "Транзиты";
+		tab.image = AbstractUIPlugin.imageDescriptorFromPlugin("kz.zvezdochet.runner", "icons/configure.gif").createImage();
+		Group group = new Group(folder2, SWT.NONE);
+		group.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
+		cmpCosmogram = new CosmogramComposite(group, SWT.NONE);
+		tab.control = group;
+		GridLayoutFactory.swtDefaults().applyTo(group);
+		GridDataFactory.fillDefaults().grab(true, true).applyTo(group);
+		tabs[0] = tab;
+
+		//космограмма транзитного события
+		tab = new Tab();
+		tab.name = "Транзитный день";
+		tab.image = AbstractUIPlugin.imageDescriptorFromPlugin("kz.zvezdochet", "icons/planet.gif").createImage();
+		group = new Group(folder2, SWT.NONE);
+		cmpCosmogram2 = new CosmogramComposite(group, SWT.NONE);
+		tab.control = group;
+		GridLayoutFactory.swtDefaults().applyTo(group);
+		GridDataFactory.fillDefaults().grab(true, true).applyTo(group);
+		tabs[1] = tab;
+
+		GridDataFactory.fillDefaults().align(SWT.CENTER, SWT.FILL).
+			hint(514, 514).span(3, 1).grab(true, false).applyTo(cmpCosmogram);
+		GridDataFactory.fillDefaults().align(SWT.CENTER, SWT.FILL).
+			hint(514, 514).span(3, 1).grab(true, false).applyTo(cmpCosmogram2);
+
+		return tabs;
 	}
 }
