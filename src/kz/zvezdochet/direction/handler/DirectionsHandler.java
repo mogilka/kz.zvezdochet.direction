@@ -22,7 +22,7 @@ import kz.zvezdochet.direction.part.DirectionsPart;
 import kz.zvezdochet.part.EventPart;
 
 /**
- * Расчёт дирекций планет по домам
+ * Отображение сводной таблицы дирекций планет по домам
  * @author Natalie Didenko
  */
 public class DirectionsHandler extends Handler {

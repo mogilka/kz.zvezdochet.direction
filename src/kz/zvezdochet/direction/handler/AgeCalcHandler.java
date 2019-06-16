@@ -159,9 +159,6 @@ public class AgeCalcHandler extends Handler {
 					&& point1.getNumber() > point2.getNumber())
 				return;
 
-			if (agedh[age - 1][point1.getNumber() - 1][point2.getNumber() - 1])
-				return;
-
 			//находим угол между точками космограммы с учетом возраста
 			double one = makeAge(point1.getLongitude(), age, !retro);
 			double two = point2.getLongitude();
@@ -170,11 +167,6 @@ public class AgeCalcHandler extends Handler {
 			//определяем, является ли аспект стандартным
 			for (Model realasp : aspects) {
 				Aspect a = (Aspect)realasp;
-
-				//оппозицию игнорируем, т.к. она получается со сдвигом в один год (ниже искусственно её создаём вслед за соединением)
-				if (point2 instanceof House && a.getCode().equals("OPPOSITION"))
-					continue;
-
 				if (aspectype != null && !aspectype.equals(a.getType().getCode()))
 					continue;
 
