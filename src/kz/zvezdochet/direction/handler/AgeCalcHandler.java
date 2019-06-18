@@ -186,21 +186,6 @@ public class AgeCalcHandler extends Handler {
 					aspect.setRetro(retro);
 					aspect.setExact(true);
 					aged.add(aspect);
-
-					//для соединения создаём искусственную оппозицию в этом же возрасте
-					if (point2 instanceof House && a.getCode().equals("CONJUNCTION")) {
-						aspect = new SkyPointAspect();
-						point1.setLongitude(one);
-						aspect.setSkyPoint1(point1);
-						aspect.setSkyPoint2(((House)point2).getOpposite());
-						aspect.setScore(res + 180);
-						aspect.setAge(age);
-						aspect.setAspect((Aspect)new AspectService().find("OPPOSITION"));
-						aspect.setRetro(retro);
-						aspect.setExact(true);
-						aged.add(aspect);
-					}
-
 					if (point2 instanceof Planet && point1 instanceof Planet)
 						agedp[age][point1.getNumber() - 1][point2.getNumber() - 1] = true;
 					else
