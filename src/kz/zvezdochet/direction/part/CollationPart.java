@@ -89,9 +89,7 @@ public class CollationPart extends ModelPart implements ICalculable {
 	private Text txEvent;
 	private Text txDescription;
 	private TableViewer tvParticipants;
-	private Table tbParticipants;
 	private TableViewer tvMembers;
-	private Table tbMembers;
 	private CTabFolder folder;
 	private TableViewer tvAspects;
 	private TableViewer tvDirections;
@@ -167,7 +165,7 @@ public class CollationPart extends ModelPart implements ICalculable {
 		});
 
 	    tvParticipants = new TableViewer(grParticipants, SWT.BORDER | SWT.FULL_SELECTION);
-		tbParticipants = tvParticipants.getTable();
+		Table tbParticipants = tvParticipants.getTable();
 		tbParticipants.setHeaderVisible(true);
 		tbParticipants.setLinesVisible(true);
 
@@ -501,8 +499,8 @@ public class CollationPart extends ModelPart implements ICalculable {
 	protected void init(Composite parent) {
 		GridLayoutFactory.swtDefaults().applyTo(parent);
 		GridDataFactory.fillDefaults().grab(true, true).applyTo(parent);
-		GridDataFactory.fillDefaults().align(SWT.FILL, SWT.FILL).grab(true, true).applyTo(tbParticipants);
-		GridDataFactory.fillDefaults().align(SWT.FILL, SWT.FILL).grab(true, true).applyTo(tbMembers);
+		GridDataFactory.fillDefaults().align(SWT.FILL, SWT.FILL).grab(true, true).applyTo(tvParticipants.getTable());
+		GridDataFactory.fillDefaults().align(SWT.FILL, SWT.FILL).grab(true, true).applyTo(tvMembers.getTable());
 	}
 	
 	@Override
@@ -543,6 +541,7 @@ public class CollationPart extends ModelPart implements ICalculable {
 	private void initParticipants(List<Participant> data, boolean refresh) {
 		try {
 			showBusy(true);
+			Table tbParticipants = tvParticipants.getTable();
 			if (null == data)
 				tbParticipants.removeAll();
 			else {
@@ -725,6 +724,7 @@ public class CollationPart extends ModelPart implements ICalculable {
 		});
 
 	    tvMembers = new TableViewer(grMembers, SWT.BORDER | SWT.FULL_SELECTION);
+	    Table tbMembers = tvMembers.getTable();
 		tbMembers = tvMembers.getTable();
 		tbMembers.setHeaderVisible(true);
 		tbMembers.setLinesVisible(true);

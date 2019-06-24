@@ -112,10 +112,9 @@ public class TransitPart extends ModelListView {
 		GridDataFactory.fillDefaults().grab(true, true).applyTo(parent);
 		GridDataFactory.fillDefaults().grab(true, true).applyTo(container);
 		GridLayoutFactory.swtDefaults().applyTo(container);
-		GridDataFactory.fillDefaults().align(SWT.FILL, SWT.FILL).grab(true, true).applyTo(table);
+		GridDataFactory.fillDefaults().align(SWT.FILL, SWT.FILL).grab(true, true).applyTo(tableViewer.getTable());
 	}
 
-	private Table table2;
 	private CheckboxTableViewer tableViewer2;
 
 	@Override
@@ -143,7 +142,7 @@ public class TransitPart extends ModelListView {
 		cvAspect = new ComboViewer(grFilter, SWT.READ_ONLY | SWT.BORDER);
 
 		tableViewer2 = CheckboxTableViewer.newCheckList(grFilter, SWT.CHECK | SWT.BORDER | SWT.V_SCROLL | SWT.SINGLE);
-		table2 = tableViewer2.getTable();
+		Table table2 = tableViewer2.getTable();
 		table2.setHeaderVisible(false);
 		table2.setLinesVisible(true);
 
