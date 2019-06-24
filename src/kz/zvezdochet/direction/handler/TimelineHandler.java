@@ -73,7 +73,7 @@ public class TimelineHandler extends Handler {
 				List<Model> trplanets = new ArrayList<Model>();
 				for (Model model: planets) {
 					Planet planet = new Planet((Planet)model);
-					double coord = CalcUtil.getAgedCoord(Math.abs(planet.getLongitude()), i);
+					double coord = CalcUtil.incrementCoord(planet.getLongitude(), i, true);
 					planet.setLongitude(coord);
 					trplanets.add(planet);
 				}

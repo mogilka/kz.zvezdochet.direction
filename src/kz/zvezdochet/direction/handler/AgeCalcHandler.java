@@ -115,6 +115,7 @@ public class AgeCalcHandler extends Handler {
 			}
 			updateStatus("Расчёт дирекций завершён", false);
 		    agePart.setData(aged);
+		    agePart.onCalc(false);
 			updateStatus("Таблица дирекций сформирована", false);
 		} catch (Exception e) {
 			DialogUtil.alertError(e.getMessage());
@@ -160,7 +161,7 @@ public class AgeCalcHandler extends Handler {
 				return;
 
 			//находим угол между точками космограммы с учетом возраста
-			double one = makeAge(point1.getLongitude(), age, !retro);
+			double one = CalcUtil.incrementCoord(point1.getLongitude(), age, !retro);
 			double two = point2.getLongitude();
 			double res = CalcUtil.getDifference(one, two);
 
@@ -196,23 +197,6 @@ public class AgeCalcHandler extends Handler {
 			DialogUtil.alertError(point1.getNumber() + ", " + point2.getNumber() + ", " + age);
 			e.printStackTrace();
 		}
-	}
-
-	/**
-	 * Преобразуем координату с учётом возраста
-	 * @param k координата
-	 * @param age возраст
-	 * @param increment true|false прибавляем|отнимаем
-	 * @return модифицированное значение координаты
-	 */
-	private double makeAge(double k, int age, boolean increment) {
-		double res;
-		if (increment) {
-			double val = k + age;
-			res = (val > 360) ? val - 360 : val;
-		} else
-			res = (k > age) ? res = k - age : k + 360 - age;
-      return res;
 	}
 
 	/**

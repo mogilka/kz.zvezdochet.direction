@@ -86,7 +86,7 @@ public class DateCalcHandler extends Handler {
 			TreeMap<Long, Planet> trplanets = new TreeMap<>();
 			for (Planet p: planets) {
 				Planet planet = new Planet((Planet)p);
-				double coord = CalcUtil.getAgedCoord(Math.abs(planet.getLongitude()), age);
+				double coord = CalcUtil.incrementCoord(planet.getLongitude(), age, true);
 				planet.setLongitude(coord);
 				trplanets.put(planet.getId(), planet);
 			}
@@ -95,7 +95,7 @@ public class DateCalcHandler extends Handler {
 			List<Model> trhouses = new ArrayList<Model>();
 			for (Model model: houses) {
 				House house = new House((House)model);
-				double coord = CalcUtil.getAgedCoord(Math.abs(house.getLongitude()), age);
+				double coord = CalcUtil.incrementCoord(house.getLongitude(), age, true);
 				house.setLongitude(coord);
 				trhouses.add(house);
 			}
