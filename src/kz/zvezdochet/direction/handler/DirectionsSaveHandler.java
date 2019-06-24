@@ -55,10 +55,10 @@ public class DirectionsSaveHandler extends Handler {
 			Map<Integer, List<PrintDirection>> map = new HashMap<Integer, List<PrintDirection>>();
 			for (Planet planet : planets) {
 				if (planet.getCode().equals("Kethu")) continue;
-				double one = Math.abs(planet.getLongitude());
+				double one = planet.getLongitude();
 				for (int r = 0; r < hcount; r++) {
 					House house = (House)houses.get(r);
-					double two = Math.abs(house.getLongitude());
+					double two = house.getLongitude();
 					double res = 0;
 					if (two >= one) {
 						if (two - one < 189)

@@ -51,10 +51,10 @@ public class DirectionsHandler extends Handler {
 
 			//формируем массив дирекций планет по домам
 			for (Planet planet : planets) {
-				double one = Math.abs(planet.getLongitude());
+				double one = planet.getLongitude();
 				for (int r = 0; r < hcount; r++) {
 					House house = (House)houses.get(r);
-					double two = Math.abs(house.getLongitude());
+					double two = house.getLongitude();
 					double res;
 					boolean retro = false;
 					if (one - two > 0) {
