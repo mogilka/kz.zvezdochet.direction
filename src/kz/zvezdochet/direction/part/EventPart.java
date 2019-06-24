@@ -1,6 +1,7 @@
 package kz.zvezdochet.direction.part;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
@@ -180,7 +181,7 @@ public class EventPart extends ModelListView implements ICalculable {
 		GridDataFactory.fillDefaults().grab(true, true).applyTo(parent);
 		GridDataFactory.fillDefaults().grab(true, true).applyTo(container);
 		GridLayoutFactory.swtDefaults().applyTo(container);
-		GridDataFactory.fillDefaults().align(SWT.FILL, SWT.FILL).grab(true, true).applyTo(table);
+		GridDataFactory.fillDefaults().align(SWT.FILL, SWT.FILL).grab(true, true).applyTo(tableViewer.getTable());
 	}
 
 	/**
@@ -191,6 +192,13 @@ public class EventPart extends ModelListView implements ICalculable {
 	private void refreshCard(Event event, Event event2) {
 		Map<String, Object> params = new HashMap<>();
 		params.put("exact", true);
+		params.put("houseAspectable", true);
+
+		String[] atcodes = {"NEUTRAL", "POSITIVE", "NEGATIVE"};
+		List<String> aparams = new ArrayList<String>();
+		aparams.addAll(Arrays.asList(atcodes));
+		params.put("aspects", aparams);
+
 		cmpCosmogram.paint(event, event2, params);
 		cmpCosmogram2.paint(event2, null, params);
 	}
@@ -294,14 +302,16 @@ public class EventPart extends ModelListView implements ICalculable {
 
 	/**
 	 * Обновление вкладок
+	 * @param partner персона
+	 * @param partner2 транзитное событие
 	 */
 	private void refreshTabs(Event partner, Event partner2) {
 		//планеты
 		Control[] controls = grPlanets.getChildren();
 		Table table = (Table)controls[0];
 		table.removeAll();
-		Collection<Planet> planets = partner.getPlanets().values();
 		if (partner != null) {
+			Collection<Planet> planets = partner.getPlanets().values();
 			folder.setSelection(1);
 			for (Planet planet : planets) {
 				TableItem item = new TableItem(table, SWT.NONE);
@@ -475,7 +485,7 @@ public class EventPart extends ModelListView implements ICalculable {
 //		System.out.println("onCalc" + MODE_CALC);
 		if (null == trevent)
 			syncModel(MODE_CALC);
-		trevent.init(false);
+		trevent.init(true);
 		aged = new ArrayList<SkyPointAspect>();
 
 		Event first = trevent;

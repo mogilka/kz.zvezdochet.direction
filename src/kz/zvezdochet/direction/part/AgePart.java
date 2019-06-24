@@ -1,6 +1,11 @@
 package kz.zvezdochet.direction.part;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.annotation.PostConstruct;
 import javax.inject.Inject;
@@ -28,16 +33,19 @@ import kz.zvezdochet.core.ui.provider.DictionaryLabelProvider;
 import kz.zvezdochet.core.ui.util.DialogUtil;
 import kz.zvezdochet.core.ui.view.ModelListView;
 import kz.zvezdochet.core.ui.view.View;
+import kz.zvezdochet.core.util.CalcUtil;
 import kz.zvezdochet.direction.provider.TransitLabelProvider;
+import kz.zvezdochet.part.CosmogramComposite;
+import kz.zvezdochet.part.ICalculable;
 import kz.zvezdochet.service.AspectTypeService;
 import kz.zvezdochet.service.HouseService;
 import kz.zvezdochet.service.PlanetService;
 
 /**
- * Поиск аспектов на указанный возраст
+ * Поиск дирекций на указанный возраст
  * @author Natalie Didenko
  */
-public class AgePart extends ModelListView {
+public class AgePart extends ModelListView implements ICalculable {
 	private Spinner spFrom;
 	private Spinner spTo;
 	private ComboViewer cvPlanet;
@@ -245,5 +253,47 @@ public class AgePart extends ModelListView {
 	@Override
 	public Model createModel() {
 		return null;
+	}
+
+	@Override
+	protected void initGroup() {
+		cmpCosmogram = new CosmogramComposite(group, SWT.NONE);
+		GridLayoutFactory.swtDefaults().applyTo(group);
+		GridDataFactory.fillDefaults().grab(true, true).applyTo(group);
+		GridDataFactory.fillDefaults().align(SWT.CENTER, SWT.FILL).
+			hint(514, 514).span(3, 1).grab(true, false).applyTo(cmpCosmogram);
+	}
+
+	private CosmogramComposite cmpCosmogram;
+
+	@Override
+	public void onCalc(Object mode) {
+		int initage = getInitialAge();
+		int finage = getFinalAge();
+		if (initage != finage)
+			return;
+
+		Event direvent = new Event();
+		direvent.setRecalculable(false);
+		direvent.init(false);
+		direvent.setHouses(null);
+
+		Collection<Planet> planets = event.getPlanets().values();
+		Map<Long, Planet> planets2 = direvent.getPlanets();
+		for (Planet planet : planets) {
+			double coord = CalcUtil.incrementCoord(planet.getLongitude(), initage, true);
+			planets2.get(planet.getId()).setLongitude(coord);
+		}
+
+		Map<String, Object> params = new HashMap<>();
+		params.put("exact", true);
+		params.put("houseAspectable", true);
+
+		String[] atcodes = {"NEUTRAL", "POSITIVE", "NEGATIVE"};
+		List<String> aparams = new ArrayList<String>();
+		aparams.addAll(Arrays.asList(atcodes));
+		params.put("aspects", aparams);
+
+		cmpCosmogram.paint(event, direvent, params);
 	}
 }
