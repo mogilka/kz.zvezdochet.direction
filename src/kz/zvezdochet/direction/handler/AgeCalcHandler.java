@@ -3,6 +3,7 @@ package kz.zvezdochet.direction.handler;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.TreeMap;
 
 import org.eclipse.e4.core.contexts.Active;
 import org.eclipse.e4.core.di.annotations.Execute;
@@ -25,13 +26,13 @@ import kz.zvezdochet.direction.part.AgePart;
 import kz.zvezdochet.service.AspectService;
 
 /**
- * Обработчик расчёта транзитов на указанный возраст
+ * Обработчик расчёта дирекций на указанный возраст
  * @author Natalie Didenko
  */
 public class AgeCalcHandler extends Handler {
 	private boolean agedp[][][] = null;
 	private boolean agedh[][][] = null;
-	private List<SkyPointAspect> aged = null;
+	private TreeMap<Integer, List<SkyPointAspect>> aged = null;
 	private String aspectype;
 	private boolean retro = false;
 	List<Model> aspects = null;
@@ -40,7 +41,7 @@ public class AgeCalcHandler extends Handler {
 	@Execute
 	public void execute(@Active MPart activePart) {
 		try {
-			aged = new ArrayList<SkyPointAspect>();
+			aged = new TreeMap<>();
 			AgePart agePart = (AgePart)activePart.getObject();
 			if (!agePart.check(0)) return;
 			event = agePart.getEvent();
@@ -82,8 +83,8 @@ public class AgeCalcHandler extends Handler {
 
 			int initage = agePart.getInitialAge();
 			int finage = agePart.getFinalAge() + 1;
-			agedp = new boolean[finage][16][16];
-			agedh = new boolean[finage][16][36];
+			agedp = new boolean[finage + 1][16][16];
+			agedh = new boolean[finage + 1][16][36];
 			//инициализируем аспекты
 			try {
 				aspects = new AspectService().getList();
@@ -91,7 +92,7 @@ public class AgeCalcHandler extends Handler {
 				e.printStackTrace();
 			}
 
-			for (int age = initage; age < finage; age++) {
+			for (int age = initage; age <= finage; age++) {
 				//дирекции планеты к другим планетам
 				if (null == selhouse) {
 					for (Model model : selplanets) {
@@ -114,7 +115,11 @@ public class AgeCalcHandler extends Handler {
 				}
 			}
 			updateStatus("Расчёт дирекций завершён", false);
-		    agePart.setData(aged);
+			//TODO map to list
+			List<SkyPointAspect> list = new ArrayList<SkyPointAspect>();
+			for (List<SkyPointAspect> items : aged.values())
+				list.addAll(items);
+		    agePart.setData(list);
 		    agePart.onCalc(false);
 			updateStatus("Таблица дирекций сформирована", false);
 		} catch (Exception e) {
@@ -133,15 +138,16 @@ public class AgeCalcHandler extends Handler {
 	private void manageCalc(SkyPoint point1, SkyPoint point2, int age) {
 		if (point1.getCode().equals(point2.getCode())) return;
 		calc(new Planet((Planet)point1), point2, age, false);
-		if (!retro) return;
-		if (point2 instanceof Planet && point1 instanceof Planet) {
-			//если неретроградная итерация выявила дирекцию по аспекту,
-			//пропускаем расчёт ретроградного транзита
-			if (!agedp[age][point1.getNumber() - 1][point2.getNumber() - 1])
-				calc(new Planet((Planet)point1), point2, age, true);
-		} else {
-			if (!agedh[age][point1.getNumber() - 1][point2.getNumber() - 1])
-				calc(new Planet((Planet)point1), point2, age, true);
+		if (retro) {
+			if (point2 instanceof Planet && point1 instanceof Planet) {
+				//если неретроградная итерация выявила дирекцию по аспекту,
+				//пропускаем расчёт ретроградного транзита
+				if (!agedp[age][point1.getNumber() - 1][point2.getNumber() - 1])
+					calc(new Planet((Planet)point1), point2, age, true);
+			} else {
+				if (!agedh[age][point1.getNumber() - 1][point2.getNumber() - 1])
+					calc(new Planet((Planet)point1), point2, age, true);
+			}
 		}
 	}
 
@@ -164,6 +170,11 @@ public class AgeCalcHandler extends Handler {
 			double one = CalcUtil.incrementCoord(point1.getLongitude(), age, !retro);
 			double two = point2.getLongitude();
 			double res = CalcUtil.getDifference(one, two);
+			if (point2 instanceof House)
+				if (res >= 179 && res < 180)
+					++res;
+//			if (28 == point1.getId() && 166 == point2.getId())
+//				System.out.println(one + "-" + two + "=" + res);
 
 			//определяем, является ли аспект стандартным
 			for (Model realasp : aspects) {
@@ -181,12 +192,22 @@ public class AgeCalcHandler extends Handler {
 					initPlanetSign(point1);
 					aspect.setSkyPoint1(point1);
 					aspect.setSkyPoint2(point2);
+					if (point2 instanceof House && CalcUtil.compareAngles(one, two, res)) {
+						++res;
+						--age;
+					}
 					aspect.setScore(res);
 					aspect.setAge(age);
 					aspect.setAspect(a);
 					aspect.setRetro(retro);
 					aspect.setExact(true);
-					aged.add(aspect);
+
+					List<SkyPointAspect> list = aged.get(age);
+					if (null == list)
+						list = new ArrayList<SkyPointAspect>();
+					list.add(aspect);
+					aged.put(age, list);
+
 					if (point2 instanceof Planet && point1 instanceof Planet)
 						agedp[age][point1.getNumber() - 1][point2.getNumber() - 1] = true;
 					else
