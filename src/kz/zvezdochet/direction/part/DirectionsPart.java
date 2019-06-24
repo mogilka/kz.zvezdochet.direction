@@ -7,6 +7,7 @@ import javax.inject.Inject;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableColumn;
 
 import kz.zvezdochet.bean.Event;
@@ -41,7 +42,7 @@ public class DirectionsPart extends ListView {
 	 */
 	public void setEvent(Event event) {
 		this.event = event;
-		if (0 == table.getColumnCount())
+		if (0 == tableViewer.getTable().getColumnCount())
 			addColumns();
 	}
 
@@ -56,6 +57,7 @@ public class DirectionsPart extends ListView {
 	@Override
 	protected void addColumns() {
 		if (event != null) {
+			Table table = tableViewer.getTable();
 			TableColumn tableColumn = new TableColumn(table, SWT.NONE);
 			tableColumn.setText("Астрологический дом");
 			Collection<Planet> planets = event.getPlanets().values();		
