@@ -101,6 +101,7 @@ public class EventPart extends ModelListView implements ICalculable {
 	private CDateTime dtBirth;
 	private Text txDescr;
 	private TableViewer transitViewer;
+	private List<Model> aspects = null;
 	
 	/**
 	 * Режим расчёта транзитов.
@@ -482,7 +483,6 @@ public class EventPart extends ModelListView implements ICalculable {
 	@Override
 	public void onCalc(Object mode) {
 		MODE_CALC = (int)mode;
-//		System.out.println("onCalc" + MODE_CALC);
 		if (null == trevent)
 			syncModel(MODE_CALC);
 		trevent.init(true);
@@ -493,6 +493,11 @@ public class EventPart extends ModelListView implements ICalculable {
 		if (mode.equals(1)) {
 			first = person;
 			second = trevent;
+		}
+		try {
+			aspects = new AspectService().getList();
+		} catch (DataAccessException e) {
+			e.printStackTrace();
 		}
 		makeTransits(first, second);
 		setTransitData(aged);
@@ -725,10 +730,18 @@ public class EventPart extends ModelListView implements ICalculable {
 	private void calc(SkyPoint point1, SkyPoint point2) {
 		try {
 			//находим угол между точками космограммы
-			double res = CalcUtil.getDifference(point1.getLongitude(), point2.getLongitude());
-	
+			double one = point1.getLongitude();
+			double two = point2.getLongitude();
+			double res = CalcUtil.getDifference(one, two);
+			if (point2 instanceof House) {
+				if ((res >= 179 && res < 180)
+						|| CalcUtil.compareAngles(one, two, res))
+					++res;
+			}
+			if (31 == point1.getId() && 158 == point2.getId())
+				System.out.println(one + "-" + two + "=" + res);
+
 			//определяем, является ли аспект стандартным
-			List<Model> aspects = new AspectService().getList();
 			for (Model realasp : aspects) {
 				Aspect a = (Aspect)realasp;
 				if (a.isExact(res)) {
@@ -741,8 +754,6 @@ public class EventPart extends ModelListView implements ICalculable {
 					aged.add(aspect);
 				}
 			}
-		} catch (DataAccessException e) {
-			e.printStackTrace();
 		} catch (Exception e) {
 			DialogUtil.alertError(point1.getNumber() + ", " + point2.getNumber());
 			e.printStackTrace();

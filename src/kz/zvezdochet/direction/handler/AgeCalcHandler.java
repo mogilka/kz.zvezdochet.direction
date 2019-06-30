@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.TreeMap;
+import java.util.Map.Entry;
 
 import org.eclipse.e4.core.contexts.Active;
 import org.eclipse.e4.core.di.annotations.Execute;
@@ -82,9 +83,9 @@ public class AgeCalcHandler extends Handler {
 			retro = agePart.getRetro();
 
 			int initage = agePart.getInitialAge();
-			int finage = agePart.getFinalAge() + 1;
-			agedp = new boolean[finage + 1][16][16];
-			agedh = new boolean[finage + 1][16][36];
+			int finage = agePart.getFinalAge();
+			agedp = new boolean[finage + 2][16][16];
+			agedh = new boolean[finage + 2][16][36];
 			//инициализируем аспекты
 			try {
 				aspects = new AspectService().getList();
@@ -92,7 +93,7 @@ public class AgeCalcHandler extends Handler {
 				e.printStackTrace();
 			}
 
-			for (int age = initage; age <= finage; age++) {
+			for (int age = initage; age <= finage + 1; age++) {
 				//дирекции планеты к другим планетам
 				if (null == selhouse) {
 					for (Model model : selplanets) {
@@ -115,10 +116,11 @@ public class AgeCalcHandler extends Handler {
 				}
 			}
 			updateStatus("Расчёт дирекций завершён", false);
-			//TODO map to list
 			List<SkyPointAspect> list = new ArrayList<SkyPointAspect>();
-			for (List<SkyPointAspect> items : aged.values())
-				list.addAll(items);
+			for (Entry<Integer, List<SkyPointAspect>> entry : aged.entrySet()) {
+				if (entry.getKey() >= initage && entry.getKey() <= finage)
+				list.addAll(entry.getValue());
+			}
 		    agePart.setData(list);
 		    agePart.onCalc(false);
 			updateStatus("Таблица дирекций сформирована", false);
@@ -173,8 +175,6 @@ public class AgeCalcHandler extends Handler {
 			if (point2 instanceof House)
 				if (res >= 179 && res < 180)
 					++res;
-//			if (28 == point1.getId() && 166 == point2.getId())
-//				System.out.println(one + "-" + two + "=" + res);
 
 			//определяем, является ли аспект стандартным
 			for (Model realasp : aspects) {
