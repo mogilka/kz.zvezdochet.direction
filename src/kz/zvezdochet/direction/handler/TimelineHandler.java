@@ -60,7 +60,7 @@ public class TimelineHandler extends Handler {
 				minutes = time / 60;
 			}
 			Collection<Planet> planets2 = event.getPlanets().values();
-			List<Model> houses2 = event.getHouses();
+			Collection<House> houses2 = event.getHouses().values();
 
 			//инициализируем список аспектов
 			try {

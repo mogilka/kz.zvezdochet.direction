@@ -18,7 +18,6 @@ import org.eclipse.e4.ui.model.application.ui.basic.MPart;
 import kz.zvezdochet.bean.Event;
 import kz.zvezdochet.bean.House;
 import kz.zvezdochet.bean.Planet;
-import kz.zvezdochet.core.bean.Model;
 import kz.zvezdochet.core.bean.TextGender;
 import kz.zvezdochet.core.handler.Handler;
 import kz.zvezdochet.core.ui.util.DialogUtil;
@@ -48,16 +47,14 @@ public class DirectionsSaveHandler extends Handler {
 			updateStatus("Сохранение дирекций в файл", false);
 
 			Collection<Planet> planets = event.getPlanets().values();
-			List<Model> houses = event.getHouses();
-			int hcount = houses.size();
+			Collection<House> houses = event.getHouses().values();
 
 			//формируем списки дирекций по возрасту
 			Map<Integer, List<PrintDirection>> map = new HashMap<Integer, List<PrintDirection>>();
 			for (Planet planet : planets) {
 				if (planet.getCode().equals("Kethu")) continue;
 				double one = planet.getLongitude();
-				for (int r = 0; r < hcount; r++) {
-					House house = (House)houses.get(r);
+				for (House house : houses) {
 					double two = house.getLongitude();
 					double res = 0;
 					if (two >= one) {

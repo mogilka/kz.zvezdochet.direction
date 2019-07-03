@@ -1,7 +1,7 @@
 package kz.zvezdochet.direction.handler;
 
 import java.util.Collection;
-import java.util.List;
+import java.util.Map;
 
 import javax.inject.Inject;
 
@@ -14,7 +14,6 @@ import org.eclipse.e4.ui.workbench.modeling.EPartService.PartState;
 import kz.zvezdochet.bean.Event;
 import kz.zvezdochet.bean.House;
 import kz.zvezdochet.bean.Planet;
-import kz.zvezdochet.core.bean.Model;
 import kz.zvezdochet.core.handler.Handler;
 import kz.zvezdochet.core.ui.util.DialogUtil;
 import kz.zvezdochet.core.util.CalcUtil;
@@ -39,21 +38,18 @@ public class DirectionsHandler extends Handler {
 			updateStatus("Расчёт дирекций планет по домам", false);
 
 			Collection<Planet> planets = event.getPlanets().values();
-			List<Model> houses = event.getHouses();
+			Map<Long, House> houses = event.getHouses();
 			int hcount = houses.size();
 			int pcount = planets.size();
 			String[][] data = new String[hcount][pcount + 1];
 			//заполняем заголовки строк названиями куспидов и третей домов и их координатами
-			for (int i = 0; i < hcount; i++) {
-				House house = (House)houses.get(i);
-				data[i][0] = house.getName() + " (" + CalcUtil.roundTo(house.getLongitude(), 1) + ")";
-			}
+			for (House house : houses.values())
+				data[house.getNumber() - 1][0] = house.getName() + " (" + CalcUtil.roundTo(house.getLongitude(), 1) + ")";
 
 			//формируем массив дирекций планет по домам
 			for (Planet planet : planets) {
 				double one = planet.getLongitude();
-				for (int r = 0; r < hcount; r++) {
-					House house = (House)houses.get(r);
+				for (House house : houses.values()) {
 					double two = house.getLongitude();
 					double res;
 					boolean retro = false;
@@ -72,7 +68,7 @@ public class DirectionsHandler extends Handler {
 					if (retro)
 						res *= -1;
 					if (Math.abs(res) < 100) //TODO корректировать лимит возраста по дате смерти? =)
-						data[r][planet.getId().intValue() - 18] = String.valueOf(CalcUtil.roundTo(res, 2));
+						data[house.getNumber() - 1][planet.getId().intValue() - 18] = String.valueOf(CalcUtil.roundTo(res, 2));
 				}
 			}
 			updateStatus("Расчёт дирекций завершён", false);

@@ -45,7 +45,7 @@ public class TransitCalcHandler extends Handler {
 			double zone = periodPart.getZone();
 
 			Collection<Planet> planets = person.getPlanets().values();
-			List<Model> houses = person.getHouses();
+			Collection<House> houses = person.getHouses().values();
 			aspects = new AspectService().getMajorList();
 	
 			updateStatus("Расчёт транзитов на период", false);

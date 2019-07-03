@@ -649,6 +649,7 @@ public class PDFExporter {
 	 * Поиск поражённых и непоражённых планет
 	 * @throws DataAccessException 
 	 */
+	@SuppressWarnings("unused")
 	private void initPlanetStatistics(Event event, List<SkyPointAspect> spas) throws DataAccessException {
 		PlanetService service = new PlanetService();
 		List<Model> positions = new PositionTypeService().getList();

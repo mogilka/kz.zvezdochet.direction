@@ -334,17 +334,14 @@ public class EventPart extends ModelListView implements ICalculable {
 		table = (Table)controls[0];
 		table.removeAll();
 		if (partner != null) {
-			int j = -1;
-			for (Model base : partner.getHouses()) {
-				++j;
-				House house = (House)base;
+			for (House house : partner.getHouses().values()) {
 				TableItem item = new TableItem(table, SWT.NONE);
 				item.setText(0, house.getName());		
 				item.setText(1, String.valueOf(house.getLongitude()));
 				//дома партнёра
 				if (partner2 != null) {
-					house = (House)partner2.getHouses().get(j);
-					item.setText(2, String.valueOf(house.getLongitude()));
+					House house2 = (House)partner2.getHouses().get(house.getId());
+					item.setText(2, String.valueOf(house2.getLongitude()));
 				}
 			}
 			for (int i = 0; i < table.getColumnCount(); i++)
@@ -766,16 +763,14 @@ public class EventPart extends ModelListView implements ICalculable {
 	private void makeTransits(Event first, Event second) {
 		Collection<Planet> trplanets = first.getPlanets().values();
 		Collection<Planet> splanets = second.getPlanets().values();
-		List<Model> shouses = second.getHouses();
+		Collection<House> shouses = second.getHouses().values();
 		for (Planet trplanet : trplanets) {
 			//дирекции планеты к планетам партнёра
 			for (Planet planet : splanets)
 				calc(trplanet, planet);
 			//дирекции планеты к куспидам домов
-			for (Model model2 : shouses) {
-				House house = (House)model2;
+			for (House house : shouses)
 				calc(trplanet, house);
-			}
 		}
 	}
 

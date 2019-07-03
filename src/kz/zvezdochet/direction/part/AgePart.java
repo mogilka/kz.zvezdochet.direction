@@ -27,6 +27,7 @@ import kz.zvezdochet.bean.AspectType;
 import kz.zvezdochet.bean.Event;
 import kz.zvezdochet.bean.House;
 import kz.zvezdochet.bean.Planet;
+import kz.zvezdochet.bean.SkyPointAspect;
 import kz.zvezdochet.core.bean.Model;
 import kz.zvezdochet.core.service.DataAccessException;
 import kz.zvezdochet.core.ui.provider.DictionaryLabelProvider;
@@ -266,6 +267,7 @@ public class AgePart extends ModelListView implements ICalculable {
 
 	private CosmogramComposite cmpCosmogram;
 
+	@SuppressWarnings("unchecked")
 	@Override
 	public void onCalc(Object mode) {
 		int initage = getInitialAge();
@@ -277,6 +279,7 @@ public class AgePart extends ModelListView implements ICalculable {
 		direvent.setRecalculable(false);
 		direvent.init(false);
 		direvent.setHouses(null);
+		direvent.setAspectList((List<SkyPointAspect>)data);
 
 		Collection<Planet> planets = event.getPlanets().values();
 		Map<Long, Planet> planets2 = direvent.getPlanets();

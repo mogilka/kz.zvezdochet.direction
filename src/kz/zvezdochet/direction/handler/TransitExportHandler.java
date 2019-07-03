@@ -97,7 +97,7 @@ public class TransitExportHandler extends Handler {
 			}
 
 			Collection<Planet> planets = person.getPlanets().values();
-			List<Model> houses = person.getHouses();
+			Collection<House> houses = person.getHouses().values();
 	
 			updateStatus("Расчёт транзитов на период", false);
 	

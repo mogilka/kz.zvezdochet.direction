@@ -98,7 +98,7 @@ public class MonthHandler extends Handler {
 				return;
 			}
 
-			List<Model> houses = person.getHouses();
+			Collection<House> houses = person.getHouses().values();
 	
 			updateStatus("Расчёт транзитов на период", false);
 

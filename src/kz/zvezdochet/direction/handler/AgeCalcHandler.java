@@ -3,8 +3,9 @@ package kz.zvezdochet.direction.handler;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.TreeMap;
+import java.util.Map;
 import java.util.Map.Entry;
+import java.util.TreeMap;
 
 import org.eclipse.e4.core.contexts.Active;
 import org.eclipse.e4.core.di.annotations.Execute;
@@ -48,28 +49,28 @@ public class AgeCalcHandler extends Handler {
 			event = agePart.getEvent();
 
 			Collection<Planet> planets = event.getPlanets().values();
-			List<Model> houses = event.getHouses();
+			Collection<House> houses = event.getHouses().values();
 			
 			updateStatus("Расчёт дирекций на возраст", false);
-			List<Model> selplanets = new ArrayList<Model>();
+			List<Planet> selplanets = new ArrayList<Planet>();
 			Planet selplanet = agePart.getPlanet();
-			for (Model model : planets) {
+			for (Planet planet : planets) {
 				if (selplanet != null) {
-					if (selplanet.getId().equals(model.getId())) {
-						selplanets.add(model);
+					if (selplanet.getId().equals(planet.getId())) {
+						selplanets.add(planet);
 						break;
 					}
 				} else
-					selplanets.add(model);
+					selplanets.add(planet);
 			}
 
-			List<Model> selhouses = new ArrayList<Model>();
+			List<House> selhouses = new ArrayList<House>();
 			House selhouse = agePart.getHouse();
 			if (event.isHousable()) {
 				if (selhouse != null)
-					for (Model model : houses) {
-						if (selhouse.getId().equals(model.getId()))
-							selhouses.add(model);
+					for (House house : houses) {
+						if (selhouse.getId().equals(house.getId()))
+							selhouses.add(house);
 					}
 				else
 					selhouses.addAll(houses);
@@ -96,23 +97,15 @@ public class AgeCalcHandler extends Handler {
 			for (int age = initage; age <= finage + 1; age++) {
 				//дирекции планеты к другим планетам
 				if (null == selhouse) {
-					for (Model model : selplanets) {
-						Planet selp = (Planet)model;
-						for (Model model2 : planets) {
-							Planet selp2 = (Planet)model2;
+					for (Planet selp : selplanets)
+						for (Planet selp2 : planets)
 							manageCalc(selp, selp2, age);
-						}
-					}
 				}
 				//дирекции планеты к куспидам домов
 				if (event.isHousable()) {
-					for (Model model2 : selhouses) {
-						House selp2 = (House)model2;
-						for (Model model : selplanets) {
-							Planet selp = (Planet)model;
+					for (House selp2 : selhouses)
+						for (Planet selp : selplanets)
 							manageCalc(selp, selp2, age);
-						}
-					}
 				}
 			}
 			updateStatus("Расчёт дирекций завершён", false);
@@ -225,12 +218,11 @@ public class AgeCalcHandler extends Handler {
 	 * @param skyPoint планета
 	 */
 	private void initPlanetHouse(SkyPoint skyPoint) {
-		List<Model> houseList = event.getHouses();
+		Map<Long, House> houseList = event.getHouses();
 		Planet planet = (Planet)skyPoint;
-		for (int j = 0; j < houseList.size(); j++) { 
-			House house = ((House)houseList.get(j));
-			int h = (j == houseList.size() - 1) ? 0 : j + 1;
-			House house2 = (House)houseList.get(h);
+		for (House house : houseList.values()) { 
+			long h = (house.getNumber() == houseList.size()) ? 142 : house.getId() + 1;
+			House house2 = houseList.get(h);
 			if (SkyPoint.getHouse(house.getLongitude(), house2.getLongitude(), planet.getLongitude()))
 				planet.setHouse(house);
 		}

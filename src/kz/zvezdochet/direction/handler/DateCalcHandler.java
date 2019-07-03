@@ -48,7 +48,7 @@ public class DateCalcHandler extends Handler {
 			Event person = transitPart.getPerson();
 
 			Collection<Planet> planets = person.getPlanets().values();
-			List<Model> houses = person.getHouses();
+			Collection<House> houses = person.getHouses().values();
 			
 			updateStatus("Расчёт транзитов на указанную дату", false);
 			Date seldate = transitPart.getDate();
@@ -92,12 +92,12 @@ public class DateCalcHandler extends Handler {
 			}
 			person.setPlanets(trplanets);
 
-			List<Model> trhouses = new ArrayList<Model>();
+			TreeMap<Long, House> trhouses = new TreeMap<>();
 			for (Model model: houses) {
 				House house = new House((House)model);
 				double coord = CalcUtil.incrementCoord(house.getLongitude(), age, true);
 				house.setLongitude(coord);
-				trhouses.add(house);
+				trhouses.put(house.getId(), house);
 			}
 			person.setHouses(trhouses);
 
@@ -116,7 +116,7 @@ public class DateCalcHandler extends Handler {
 			for (Planet trplanet : trplanets.values()) {
 				for (Planet planet : event.getPlanets().values())
 					calc(trplanet, planet);
-				for (Model model2 : event.getHouses()) {
+				for (Model model2 : event.getHouses().values()) {
 					House house = (House)model2;
 					calc(trplanet, house);
 				}
@@ -179,12 +179,10 @@ public class DateCalcHandler extends Handler {
 				calc(trplanet, planet);
 
 		//дирекции планеты к куспидам домов
-		List<Model> phouses = person.getHouses();
+		Collection<House> phouses = person.getHouses().values();
 		for (Planet trplanet : trplanets) {
-			for (Model model2 : phouses) {
-				House house = (House)model2;
+			for (House house : phouses)
 				calc(trplanet, house);
-			}
 		}
 		updateStatus("Расчёт транзитов завершён", false);
 	}

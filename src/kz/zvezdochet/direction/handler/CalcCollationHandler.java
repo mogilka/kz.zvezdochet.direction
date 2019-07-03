@@ -158,7 +158,7 @@ public class CalcCollationHandler extends Handler {
 //			event.init(false);
 		Collection<Planet> planets = person.getPlanets().values();
 		Collection<Planet> planets2 = event.getPlanets().values();
-		List<Model> houses = event.getHouses();
+		Map<Long, House> houses = event.getHouses();
 
 		for (Model model : planets) {
 			if (!Arrays.asList(pfilter).contains(model.getId()))
@@ -174,7 +174,7 @@ public class CalcCollationHandler extends Handler {
 					aspectMap.add(aspect);
 			}
 			//дирекции планеты участника к куспидам домов события
-			for (Model model2 : houses) {
+			for (Model model2 : houses.values()) {
 				if (!Arrays.asList(hfilter).contains(model2.getId()))
 					continue;
 				House house = (House)model2;
@@ -186,11 +186,10 @@ public class CalcCollationHandler extends Handler {
 		//планеты участника в домах события
 		for (Model model : planets) {
 			Planet planet = (Planet)model;
-			for (int j = 0; j < houses.size(); j++) {
-				House house = (House)houses.get(j);
+			for (House house : houses.values()) {
 				if (!Arrays.asList(hfilter).contains(house.getId()))
 					continue;
-				int h = (j == houses.size() - 1) ? 0 : j + 1;
+				long h = (house.getNumber() == houses.size()) ? 142 : house.getId() + 1;
 				House house2 = (House)houses.get(h);
 				if (SkyPoint.getHouse(house.getLongitude(), house2.getLongitude(), planet.getLongitude())) {
 					PlanetHouseText phouse = new PlanetHouseText();
