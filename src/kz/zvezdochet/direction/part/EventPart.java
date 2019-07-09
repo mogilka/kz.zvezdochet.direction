@@ -736,12 +736,17 @@ public class EventPart extends ModelListView implements ICalculable {
 						|| CalcUtil.compareAngles(one, two))
 					++res;
 			}
-			if (31 == point1.getId() && 158 == point2.getId())
-				System.out.println(one + "-" + two + "=" + res);
+//			if (31 == point1.getId() && 158 == point2.getId())
+//				System.out.println(one + "-" + two + "=" + res);
 
 			//определяем, является ли аспект стандартным
 			for (Model realasp : aspects) {
 				Aspect a = (Aspect)realasp;
+
+				//соединения Солнца не рассматриваем
+				if (a.getPlanetid() > 0)
+					continue;
+
 				if (a.isExact(res)) {
 					SkyPointAspect aspect = new SkyPointAspect();
 					aspect.setSkyPoint1(point1);
