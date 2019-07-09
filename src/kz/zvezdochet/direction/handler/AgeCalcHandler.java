@@ -165,6 +165,9 @@ public class AgeCalcHandler extends Handler {
 			double one = CalcUtil.incrementCoord(point1.getLongitude(), age, !retro);
 			double two = point2.getLongitude();
 			double res = CalcUtil.getDifference(one, two);
+
+			//искусственно устанавливаем нарастающую оппозицию,
+			//чтобы она синхронизировалась с соответствующим ей соединением в этом возрасте
 			if (point2 instanceof House)
 				if (res >= 179 && res < 180)
 					++res;
@@ -175,20 +178,25 @@ public class AgeCalcHandler extends Handler {
 				if (aspectype != null && !aspectype.equals(a.getType().getCode()))
 					continue;
 
-				if (a.getPlanetid() > 0 && a.getPlanetid() != point1.getId())
+				//соединения Солнца не рассматриваем
+				if (a.getPlanetid() > 0)
 					continue;
 
 				if (a.isExact(res)) {
+//					if (21 == point1.getId() && 153 == point2.getId())
+//						System.out.println(one + " - " + two + " = " + res);
 					SkyPointAspect aspect = new SkyPointAspect();
 					point1.setLongitude(one);
 					initPlanetHouse(point1);
 					initPlanetSign(point1);
 					aspect.setSkyPoint1(point1);
 					aspect.setSkyPoint2(point2);
-					if (point2 instanceof House && CalcUtil.compareAngles(one, two, res)) {
+					if (point2 instanceof House && CalcUtil.compareAngles(one, two)) {
 						++res;
 						--age;
 					}
+					if (age < 0)
+						continue;
 					aspect.setScore(res);
 					aspect.setAge(age);
 					aspect.setAspect(a);

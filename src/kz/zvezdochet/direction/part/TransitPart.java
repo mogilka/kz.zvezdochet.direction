@@ -106,15 +106,6 @@ public class TransitPart extends ModelListView {
 		return true;
 	}
 
-	@Override
-	protected void init(Composite parent) {
-		GridLayoutFactory.swtDefaults().numColumns(2).applyTo(parent);
-		GridDataFactory.fillDefaults().grab(true, true).applyTo(parent);
-		GridDataFactory.fillDefaults().grab(true, true).applyTo(container);
-		GridLayoutFactory.swtDefaults().applyTo(container);
-		GridDataFactory.fillDefaults().align(SWT.FILL, SWT.FILL).grab(true, true).applyTo(tableViewer.getTable());
-	}
-
 	private CheckboxTableViewer tableViewer2;
 
 	@Override

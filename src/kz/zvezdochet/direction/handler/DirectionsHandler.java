@@ -53,17 +53,21 @@ public class DirectionsHandler extends Handler {
 					double two = house.getLongitude();
 					double res;
 					boolean retro = false;
-					if (one - two > 0) {
-						if (one - two < 189) {
-							res = one - two;
+					double diff = one - two;
+					if (diff > 0) {
+						if (diff < 189) {
+							res = diff;
 							retro = true;
 						} else
 							res = 360 - one + two;
-					} else if (two - one < 189)
-						res = two - one;
-					else {
-						res = 360 - two + one;
-						retro = true;
+					} else {
+						diff = two - one;
+						if (diff < 189)
+							res = diff;
+						else {
+							res = 360 - two + one;
+							retro = true;
+						}
 					}
 					if (retro)
 						res *= -1;

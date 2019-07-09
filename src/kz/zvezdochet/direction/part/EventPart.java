@@ -498,6 +498,7 @@ public class EventPart extends ModelListView implements ICalculable {
 		}
 		makeTransits(first, second);
 		setTransitData(aged);
+		trevent.setAspectList(aged);
 		refreshCard(second, first);
 		refreshTabs(second, first);
 	}
@@ -520,7 +521,7 @@ public class EventPart extends ModelListView implements ICalculable {
 				((Event)model).calc(true);
 				model = new EventService().save(model);
 			}
-			//сразу сохраняем событие в базу
+			//сразу сохраняем транзит в базу
 			Transit transit = new Transit();
 			transit.setEventid(model.getId());
 			transit.setPersonid(person.getId());
@@ -732,7 +733,7 @@ public class EventPart extends ModelListView implements ICalculable {
 			double res = CalcUtil.getDifference(one, two);
 			if (point2 instanceof House) {
 				if ((res >= 179 && res < 180)
-						|| CalcUtil.compareAngles(one, two, res))
+						|| CalcUtil.compareAngles(one, two))
 					++res;
 			}
 			if (31 == point1.getId() && 158 == point2.getId())
