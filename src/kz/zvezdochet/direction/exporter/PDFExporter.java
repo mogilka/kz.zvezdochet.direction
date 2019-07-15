@@ -141,19 +141,19 @@ public class PDFExporter {
 	        chapter.add(p);
 
 	        int ages = finalage - initage + 1;
-	        p = new Paragraph("Прогноз описывает самые значительные тенденции развития вашей жизни в ближайшие " + CoreUtil.getAgeString(ages) + ". "
-	        	+ "Перечислены как позитивные, так и негативные тенденции, которые будут действовать независимо от переездов и местоположения. "
-				+ "Негатив – признак того, что вам необходим отдых, переосмысление и мобилизация ресурсов для решения проблемы. "
+	        p = new Paragraph("Прогноз описывает самые значительные тенденции развития вашей жизни в ближайшие " + CoreUtil.getAgeString(ages)
+        		+ " независимо от переездов и местоположения."
+	        	+ " Негативные тенденции – признак того, что вам необходим отдых, переосмысление и мобилизация ресурсов для решения проблемы. "
 				+ "А также это возможность смягчить напряжение, ведь вы будете знать о нём заранее. "
-				+ "Не зацикливайтесь на негативе, используйте свои сильные стороны и благоприятные события.", font);
+				+ "Не зацикливайтесь на негативе, используйте свои сильные стороны и благоприятные события, которые есть в прогнозе.", font);
 	        p.setSpacingAfter(10);
 			chapter.add(p);
 
 			chapter.add(new Paragraph("Если из возраста в возраст событие повторяется, значит оно создаст большой резонанс.", font));
-			chapter.add(new Paragraph("Максимальная погрешность прогноза ±6 месяцев.", font));
+			chapter.add(new Paragraph("Максимальная погрешность прогноза ±3 месяца.", font));
 
 			p = new Paragraph("Если в прогнозе упомянуты люди, которых уже нет в живых (родители, супруги, родственники), "
-				+ "значит речь идёт о людях, их заменяющих (опекуны, крёстные родители) или похожих на них по характеру.", font);
+				+ "значит речь идёт о людях, их заменяющих (опекуны, крёстные) или похожих на них по характеру.", font);
 			p.setSpacingBefore(10);
 			chapter.add(p);
 
@@ -181,10 +181,7 @@ public class PDFExporter {
 				boolean isHouse = spa.getSkyPoint2() instanceof House;
 
 				if (spa.getAspect().getCode().equals("OPPOSITION")) {
-					if (isHouse) {
-						if	(pcode.equals("Kethu") || pcode.equals("Rakhu"))
-							continue;
-					} else {
+					if (!isHouse) {
 						Planet planet2 = (Planet)spa.getSkyPoint2();
 						String pcode2 = planet2.getCode();
 						if	(pcode.equals("Kethu") || pcode.equals("Rakhu")
@@ -258,7 +255,12 @@ public class PDFExporter {
 				bars[i] = new Bar(strage, positive.get(nextage), null, "Позитивные события");
 				bars[i + ages] = new Bar(strage, negative.get(nextage) * (-1), null, "Негативные события");
 			}
-			Image image = PDFUtil.printStackChart(writer, "Соотношение категорий событий", "Возраст", "Количество", bars, 500, ages > 2 ? 400 : 100, true);
+			int height = 400;
+			if (ages < 2)
+				height = 100;
+			else if (ages < 4)
+				height = 200;
+			Image image = PDFUtil.printStackChart(writer, "Соотношение категорий событий", "Возраст", "Количество", bars, 500, height, true);
 			chapter.add(image);
 			if (ages > 2)
 				chapter.add(Chunk.NEXTPAGE);
@@ -514,14 +516,16 @@ public class PDFExporter {
 			DirectionService service = new DirectionService();
 			DirectionAspectService servicea = new DirectionAspectService();
 			boolean child = age < event.MAX_TEEN_AGE;
+			Map<Long, Planet> planets = event.getPlanets();
+
 			for (SkyPointAspect spa : spas) {
 				AspectType type = spa.getAspect().getType();
 				if (type.getCode().contains("HIDDEN"))
 					continue;
 
 				Planet planet = (Planet)spa.getSkyPoint1();
-				if (planet.isLilithed() && type.getCode().equals("NEUTRAL"))
-					continue;
+//				if (planet.isLilithed() && type.getCode().equals("NEUTRAL"))
+//					continue;
 
 				String acode = spa.getAspect().getCode();
 
@@ -581,8 +585,9 @@ public class PDFExporter {
 				} else if (skyPoint instanceof Planet) {
 					Planet planet2 = (Planet)skyPoint;
 					List<Model> texts = servicea.finds(spa);
-    				Map<Long, Planet> planets = event.getPlanets();
-					for (Model model : texts) {
+					if (0 == texts.size())
+	    				section.addSection(new Paragraph(planet.getShortName() + " " + type.getSymbol() + " " + planet2.getShortName(), fonth5));
+					else for (Model model : texts) {
 						PlanetAspectText dirText = (PlanetAspectText)model;
 		    			if (term) {
 		    				Planet aspl2 = (Planet)planets.get(planet2.getId());

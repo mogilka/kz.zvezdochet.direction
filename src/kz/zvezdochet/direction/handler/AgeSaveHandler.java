@@ -16,7 +16,7 @@ import kz.zvezdochet.direction.exporter.PDFExporter;
 import kz.zvezdochet.direction.part.AgePart;
 
 /**
- * Сохранение событий периода в файл
+ * Сохранение дирекций периода в файл
  * @author Natalie Didenko
  *
  */
