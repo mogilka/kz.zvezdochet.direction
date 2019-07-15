@@ -54,8 +54,9 @@ import kz.zvezdochet.export.util.PDFUtil;
 import kz.zvezdochet.service.AspectService;
 import kz.zvezdochet.service.HouseService;
 import kz.zvezdochet.util.HouseMap;
+
 /**
- * Генерация отчёта за указанный период по месяцам
+ * Генерация прогноза за указанный период по месяцам
  * @author Natalie Didenko
  */
 public class MonthHandler extends Handler {
@@ -77,9 +78,9 @@ public class MonthHandler extends Handler {
 			long duration = System.currentTimeMillis();
 			long run = duration;
 			TransitPart periodPart = (TransitPart)activePart.getObject();
-				if (!periodPart.check(0)) return;
-			Event person = periodPart.getPerson();
+			if (!periodPart.check(0)) return;
 
+			Event person = periodPart.getPerson();
 			Place place = periodPart.getPlace();
 			double zone = periodPart.getZone();
 
@@ -120,18 +121,18 @@ public class MonthHandler extends Handler {
 	    	Font font = PDFUtil.getRegularFont();
 
 	        //metadata
-	        PDFUtil.getMetaData(doc, "Прогноз событий по месяцам");
+	        PDFUtil.getMetaData(doc, "Прогноз по месяцам");
 
 	        //раздел
-			Chapter chapter = new ChapterAutoNumber("Общая информация");
+			Chapter chapter = new ChapterAutoNumber("Прогноз по месяцам");
 			chapter.setNumberDepth(1);
 
 			//шапка
 			Paragraph p = new Paragraph();
-			PDFUtil.printHeader(p, "Прогноз событий по месяцам", null);
+			PDFUtil.printHeader(p, "Прогноз по месяцам", null);
 			chapter.add(p);
 
-			String text = person.getCallname() + " – ";
+			String text = person.getCallname() + ": ";
 			SimpleDateFormat sdf = new SimpleDateFormat("EEEE, d MMMM yyyy");
 			text += sdf.format(initDate);
 			boolean days = (DateUtil.getDateFromDate(initDate) != DateUtil.getDateFromDate(finalDate)
@@ -168,11 +169,9 @@ public class MonthHandler extends Handler {
 	        p.add(chunk);
 	        chapter.add(p);
 
-			chapter.add(new Paragraph("Расчёт сделан с учётом указанного вами места проживания. "
-				+ "Однако если вы в течение данного периода переедете в другое место, то с того момента прогноз будет недействителен, "
-				+ "т.к. привязка идёт к конкретному местонахождению. В этом случае после переезда можете написать мне, "
-				+ "где вы обосновались, и я составлю прогноз на тот же период, но уже на новое место. "
-				+ "Такая релокация будет бесплатна в рамках периода, указанного вами в заказе.", font));
+			chapter.add(new Paragraph("Данный прогноз сделан с учётом указанного вами места проживания. "
+				+ "Если вы в течение данного периода переедете в более отдалённое место, то с того момента прогноз будет недействителен, "
+				+ "т.к. привязка идёт к конкретному местонахождению. В случае переезда можете написать мне, я составлю прогноз на тот же период на новом месте", font));
 
 			chapter.add(Chunk.NEWLINE);
 			chapter.add(new Paragraph("При этом, если ранее вы получали от меня прогноз по годам, индивидуальный гороскоп или гороскоп совместимости, "
@@ -184,7 +183,7 @@ public class MonthHandler extends Handler {
 
 			com.itextpdf.text.List list = new com.itextpdf.text.List(false, false, 10);
 			ListItem li = new ListItem();
-	        li.add(new Chunk("Показатели выше нуля указывают на успех и лёгкость.", font));
+	        li.add(new Chunk("Показатели выше нуля указывают на сферы жизни, значимость которых усилится.", font));
 	        list.add(li);
 
 			li = new ListItem();
@@ -270,6 +269,9 @@ public class MonthHandler extends Handler {
 								if (item.aspect.getType().getCode().equals("NEUTRAL")
 										&& (eplanet.getCode().equals("Lilith") || eplanet.getCode().equals("Kethu")))
 									points = -points;
+								else if (eplanet.isRetrograde()
+										&& !item.aspect.getType().getCode().equals("NEGATIVE"))
+									--points;
 								hitems.put(id, val + points);
 							}
 						}
@@ -365,15 +367,26 @@ public class MonthHandler extends Handler {
 	private PeriodItem calc(SkyPoint point1, SkyPoint point2, List<Model> aspects) {
 		try {
 			//находим угол между точками космограммы
-			double res = CalcUtil.getDifference(point1.getLongitude(), point2.getLongitude());
+			double one = point1.getLongitude();
+			double two = point2.getLongitude();
+			double res = CalcUtil.getDifference(one, two);
+
+			//искусственно устанавливаем нарастающую оппозицию,
+			//чтобы она синхронизировалась с соответствующим ей соединением в этот день
+			if (point2 instanceof House)
+				if ((res >= 179 && res < 180)
+						|| CalcUtil.compareAngles(one, two))
+					++res;
 
 			//определяем, является ли аспект стандартным
 			for (Model realasp : aspects) {
 				Aspect a = (Aspect)realasp;
-				if (a.isExact(res)) {
-					if (a.getPlanetid() > 0)
-						continue;
 
+				//соединения Солнца не рассматриваем
+				if (a.getPlanetid() > 0)
+					continue;
+
+				if (a.isExact(res)) {
 					PeriodItem item = new PeriodItem();
 					item.aspect = a;
 

@@ -154,8 +154,6 @@ public class TransitCalcHandler extends Handler {
 					SkyPointAspect aspect = new SkyPointAspect();
 					aspect.setSkyPoint1(point1);
 					aspect.setSkyPoint2(point2);
-//					if (point2 instanceof House && CalcUtil.compareAngles(one, two))
-//						++res;
 					aspect.setScore(res);
 					aspect.setAspect(a);
 					aspect.setRetro(point1.isRetrograde());
