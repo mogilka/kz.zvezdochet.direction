@@ -44,7 +44,7 @@ public class DirectionsHandler extends Handler {
 			String[][] data = new String[hcount][pcount + 1];
 			//заполняем заголовки строк названиями куспидов и третей домов и их координатами
 			for (House house : houses.values())
-				data[house.getNumber() - 1][0] = house.getName() + " (" + CalcUtil.roundTo(house.getLongitude(), 1) + ")";
+				data[house.getNumber() - 1][0] = house.getName() + " (" + CalcUtil.roundTo(house.getLongitude(), 2) + ")";
 
 			//формируем массив дирекций планет по домам
 			for (Planet planet : planets) {
