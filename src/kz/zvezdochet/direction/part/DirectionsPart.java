@@ -27,9 +27,7 @@ public class DirectionsPart extends ListView {
 	private Event event;
 
 	@Inject
-	public DirectionsPart() {
-		
-	}
+	public DirectionsPart() {}
 
 	@PostConstruct @Override
 	public View create(Composite parent) {

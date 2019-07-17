@@ -181,7 +181,10 @@ public class PDFExporter {
 				boolean isHouse = spa.getSkyPoint2() instanceof House;
 
 				if (spa.getAspect().getCode().equals("OPPOSITION")) {
-					if (!isHouse) {
+					if (isHouse) {
+						if	(pcode.equals("Kethu") || pcode.equals("Rakhu"))
+							continue;
+					} else {
 						Planet planet2 = (Planet)spa.getSkyPoint2();
 						String pcode2 = planet2.getCode();
 						if	(pcode.equals("Kethu") || pcode.equals("Rakhu")
