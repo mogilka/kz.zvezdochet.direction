@@ -26,7 +26,6 @@ import com.itextpdf.text.Chunk;
 import com.itextpdf.text.Document;
 import com.itextpdf.text.Element;
 import com.itextpdf.text.Font;
-import com.itextpdf.text.ListItem;
 import com.itextpdf.text.Paragraph;
 import com.itextpdf.text.Section;
 import com.itextpdf.text.pdf.BaseFont;
@@ -52,8 +51,6 @@ import kz.zvezdochet.direction.part.TransitPart;
 import kz.zvezdochet.export.handler.PageEventHandler;
 import kz.zvezdochet.export.util.PDFUtil;
 import kz.zvezdochet.service.AspectService;
-import kz.zvezdochet.service.HouseService;
-import kz.zvezdochet.util.HouseMap;
 
 /**
  * Генерация прогноза за указанный период по месяцам
@@ -99,7 +96,7 @@ public class MonthHandler extends Handler {
 				return;
 			}
 
-			Collection<House> houses = person.getHouses().values();
+			Map<Long, House> houses = person.getHouses();
 	
 			updateStatus("Расчёт транзитов на период", false);
 
@@ -125,7 +122,7 @@ public class MonthHandler extends Handler {
 
 	        //раздел
 			Chapter chapter = new ChapterAutoNumber("Прогноз по месяцам");
-			chapter.setNumberDepth(1);
+			chapter.setNumberDepth(0);
 
 			//шапка
 			Paragraph p = new Paragraph();
@@ -171,7 +168,7 @@ public class MonthHandler extends Handler {
 
 			chapter.add(new Paragraph("Данный прогноз сделан с учётом указанного вами места проживания. "
 				+ "Если вы в течение данного периода переедете в более отдалённое место, то с того момента прогноз будет недействителен, "
-				+ "т.к. привязка идёт к конкретному местонахождению. В случае переезда можете написать мне, я составлю прогноз на тот же период на новом месте", font));
+				+ "т.к. привязка идёт к конкретному местонахождению. В случае переезда можно будет составить прогноз на тот же период на новом месте", font));
 
 			chapter.add(Chunk.NEWLINE);
 			chapter.add(new Paragraph("При этом, если ранее вы получали от меня прогноз по годам, индивидуальный гороскоп или гороскоп совместимости, "
@@ -179,25 +176,11 @@ public class MonthHandler extends Handler {
 			chapter.add(Chunk.NEWLINE);
 
 			chapter.add(new Paragraph("Диаграммы показывают динамику событий в сферах жизни. "
-				+ "По ним можно смотреть, где всё сложится относительно ровно, а где ожидаются резкие перепады:", font));
-
-			com.itextpdf.text.List list = new com.itextpdf.text.List(false, false, 10);
-			ListItem li = new ListItem();
-	        li.add(new Chunk("Показатели выше нуля указывают на сферы жизни, значимость которых усилится.", font));
-	        list.add(li);
-
-			li = new ListItem();
-	        li.add(new Chunk("Показатели на нуле указывают на сбалансированность ситуации.", font));
-	        list.add(li);
-
-			li = new ListItem();
-	        li.add(new Chunk("Показатели ниже нуля указывают на трудности и напряжение.", font));
-	        list.add(li);
-	        chapter.add(list);
+				+ "По ним можно смотреть, где всё сложится относительно ровно, а где ожидаются резкие перепады", font));
 			doc.add(chapter);
 
 			Map<Integer, Map<Integer, List<Long>>> years = new TreeMap<Integer, Map<Integer, List<Long>>>();
-			Map<Integer, Map<Integer, Map<Long, List<TimeSeriesDataItem>>>> years2 = new TreeMap<Integer, Map<Integer, Map<Long, List<TimeSeriesDataItem>>>>();
+			Map<Integer, Map<Integer, Map<Long, Map<Long, List<TimeSeriesDataItem>>>>> years2 = new TreeMap<Integer, Map<Integer, Map<Long, Map<Long, List<TimeSeriesDataItem>>>>>();
 
 			System.out.println("Prepared for: " + (System.currentTimeMillis() - run));
 			run = System.currentTimeMillis();
@@ -218,8 +201,8 @@ public class MonthHandler extends Handler {
 				months.put(m, dates);
 				years.put(y, months);
 
-				Map<Integer, Map<Long, List<TimeSeriesDataItem>>> months2 = years2.containsKey(y) ? years2.get(y) : new TreeMap<Integer, Map<Long, List<TimeSeriesDataItem>>>();
-				months2.put(m, new TreeMap<Long, List<TimeSeriesDataItem>>());
+				Map<Integer, Map<Long, Map<Long, List<TimeSeriesDataItem>>>> months2 = years2.containsKey(y) ? years2.get(y) : new TreeMap<Integer, Map<Long, Map<Long, List<TimeSeriesDataItem>>>>();
+				months2.put(m, new TreeMap<Long, Map<Long, List<TimeSeriesDataItem>>>());
 				years2.put(y, months2);
 			}
 
@@ -253,9 +236,9 @@ public class MonthHandler extends Handler {
 								iplanets.add(planet);
 						}
 
-						Map<Long, Integer> hitems = new HashMap<Long, Integer>();
+						Map<Long, Map<Long, Integer>> hitems = new HashMap<Long, Map<Long, Integer>>();
 						for (Planet eplanet : iplanets) {
-							for (Model model : houses) {
+							for (Model model : houses.values()) {
 								if (!selhouses.contains(model.getId()))
 									continue;
 
@@ -264,27 +247,31 @@ public class MonthHandler extends Handler {
 								if (null == item)
 									continue;
 								long id = house.getId();
-								int val = hitems.containsKey(id) ? hitems.get(id) : 0;
-								int points = item.aspect.getType().getPoints();
-								if (item.aspect.getType().getCode().equals("NEUTRAL")
-										&& (eplanet.getCode().equals("Lilith") || eplanet.getCode().equals("Kethu")))
-									points = -points;
-								else if (eplanet.isRetrograde()
-										&& !item.aspect.getType().getCode().equals("NEGATIVE"))
-									--points;
-								hitems.put(id, val + points);
+								Map<Long, Integer> amap = hitems.containsKey(id) ? hitems.get(id) : new HashMap<Long, Integer>();
+								long aid = item.aspect.getType().getCode().equals("NEUTRAL")
+										&& (eplanet.getCode().equals("Lilith") || eplanet.getCode().equals("Kethu"))
+									? 2 : item.aspect.getTypeid();
+								int val = amap.containsKey(aid) ? amap.get(aid) : 0;
+								amap.put(aid, val + 1);
+								hitems.put(id, amap);
 							}
 						}
 
-						Map<Integer, Map<Long, List<TimeSeriesDataItem>>> months2 = years2.containsKey(y) ? years2.get(y) : new TreeMap<Integer, Map<Long, List<TimeSeriesDataItem>>>();
-						Map<Long, List<TimeSeriesDataItem>> items = months2.containsKey(m) ? months2.get(m) : new TreeMap<Long, List<TimeSeriesDataItem>>();
-						for (Map.Entry<Long, Integer> entry3 : hitems.entrySet()) {
-							long hid = entry3.getKey();
-							List<TimeSeriesDataItem> series = items.containsKey(hid) ? items.get(hid) : new ArrayList<TimeSeriesDataItem>();
-							TimeSeriesDataItem tsdi = new TimeSeriesDataItem(new Day(date), entry3.getValue());
-							if (!series.contains(tsdi))
-								series.add(tsdi);
-							items.put(hid, series);
+						Map<Integer, Map<Long, Map<Long, List<TimeSeriesDataItem>>>> months2 = years2.containsKey(y) ? years2.get(y) : new TreeMap<Integer, Map<Long, Map<Long, List<TimeSeriesDataItem>>>>();
+						Map<Long, Map<Long, List<TimeSeriesDataItem>>> items = months2.containsKey(m) ? months2.get(m) : new TreeMap<Long, Map<Long, List<TimeSeriesDataItem>>>();
+						for (Map.Entry<Long, Map<Long, Integer>> entryh : hitems.entrySet()) {
+							Map<Long, Integer> amap = entryh.getValue();
+							long hid = entryh.getKey();
+							Map<Long, List<TimeSeriesDataItem>> map = items.containsKey(hid) ? items.get(hid) : new HashMap<Long, List<TimeSeriesDataItem>>();
+							for (Map.Entry<Long, Integer> entry3 : amap.entrySet()) {
+								long aid = entry3.getKey();
+								List<TimeSeriesDataItem> series = map.containsKey(aid) ? map.get(aid) : new ArrayList<TimeSeriesDataItem>();
+								TimeSeriesDataItem tsdi = new TimeSeriesDataItem(new Day(date), entry3.getValue());
+								if (!series.contains(tsdi))
+									series.add(tsdi);
+								map.put(aid, series);
+								items.put(hid, map);
+							}
 						}
 						months2.put(m, items);
 					}
@@ -295,51 +282,42 @@ public class MonthHandler extends Handler {
 
 			//генерируем документ
 			run = System.currentTimeMillis();
-			HouseService service = new HouseService();
-	        HouseMap[] houseMap = HouseMap.getMap();
-			for (Map.Entry<Integer, Map<Integer, Map<Long, List<TimeSeriesDataItem>>>> entry : years2.entrySet()) {
+			for (Map.Entry<Integer, Map<Integer, Map<Long, Map<Long, List<TimeSeriesDataItem>>>>> entry : years2.entrySet()) {
 				int y = entry.getKey();
 				String syear = String.valueOf(y);
 				chapter = new ChapterAutoNumber(PDFUtil.printHeader(new Paragraph(), syear, null));
 				chapter.setNumberDepth(0);
 
-				Map<Integer, Map<Long, List<TimeSeriesDataItem>>> months2 = years2.get(y);
+				Map<Integer, Map<Long, Map<Long, List<TimeSeriesDataItem>>>> months2 = years2.get(y);
 
-				for (Map.Entry<Integer, Map<Long, List<TimeSeriesDataItem>>> entry2 : months2.entrySet()) {
+				for (Map.Entry<Integer, Map<Long, Map<Long, List<TimeSeriesDataItem>>>> entry2 : months2.entrySet()) {
 					int m = entry2.getKey();
 					Calendar calendar = Calendar.getInstance();
 					calendar.set(y, m, 1);
 					Section section = PDFUtil.printSection(chapter, new SimpleDateFormat("LLLL").format(calendar.getTime()) + " " + y, null);
 
-					Map<Long, List<TimeSeriesDataItem>> items = entry2.getValue();
+					Map<Long, Map<Long, List<TimeSeriesDataItem>>> items = entry2.getValue();
 			        Font hfont = new Font(baseFont, 16, Font.BOLD, PDFUtil.FONTCOLOR);
-			        for (HouseMap hmap : houseMap) {
-						List<String> descrs = new ArrayList<String>();
-						TimeSeriesCollection dataset = new TimeSeriesCollection();
-			        	for (int i = 0; i < 3; i++) {
-			        		long houseid = hmap.houseids[i];
-			        		List<TimeSeriesDataItem> series = items.containsKey(houseid) ? items.get(houseid) : new ArrayList<TimeSeriesDataItem>();
+					TimeSeriesCollection dataset = new TimeSeriesCollection();
+					for (Map.Entry<Long, Map<Long, List<TimeSeriesDataItem>>> entryh : items.entrySet()) {
+						long houseid = entryh.getKey();
+						House house = houses.get(houseid);
+						Map<Long, List<TimeSeriesDataItem>> map = entryh.getValue();
+						for (Map.Entry<Long, List<TimeSeriesDataItem>> entry3 : map.entrySet()) {
+			        		List<TimeSeriesDataItem> series = entry3.getValue();
 			        		if (null == series || 0 == series.size())
 			        			continue;
-							House house = (House)service.find(houseid);
-							TimeSeries timeSeries = new TimeSeries(house.getName());
-							descrs.add(house.getName() + ": " + house.getDescription());
+			        		Long aid = entry3.getKey();
+							TimeSeries timeSeries = new TimeSeries(aid < 2 ? "Нейтрал" : (aid < 3 ? "Негатив" : "Позитив"));
 							for (TimeSeriesDataItem tsdi : series)
 								timeSeries.add(tsdi);
 							dataset.addSeries(timeSeries);
 			        	}
 			        	if (dataset.getSeriesCount() > 0) {
-				        	section.addSection(new Paragraph(hmap.name, hfont));
-						    com.itextpdf.text.Image image = PDFUtil.printTimeChart(writer, "", "Даты", "Баллы", dataset, 500, 0, true);
+				        	section.addSection(new Paragraph(house.getName(), hfont));
+				        	section.add(new Paragraph(y + ": " + house.getDescription(), font));
+						    com.itextpdf.text.Image image = PDFUtil.printTimeChart(writer, house.getName(), "Даты", "Баллы", dataset, 500, 0, true);
 							section.add(image);
-	
-							list = new com.itextpdf.text.List(false, false, 10);
-							for (String descr : descrs) {
-								li = new ListItem();
-								li.add(new Chunk(descr, font));
-								list.add(li);
-							}
-							section.add(list);
 							section.add(Chunk.NEWLINE);
 			        	}
 					}
