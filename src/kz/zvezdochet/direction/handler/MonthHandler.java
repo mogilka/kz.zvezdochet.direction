@@ -298,21 +298,25 @@ public class MonthHandler extends Handler {
 
 					Map<Long, Map<Long, List<TimeSeriesDataItem>>> items = entry2.getValue();
 			        Font hfont = new Font(baseFont, 16, Font.BOLD, PDFUtil.FONTCOLOR);
-					TimeSeriesCollection dataset = new TimeSeriesCollection();
 					for (Map.Entry<Long, Map<Long, List<TimeSeriesDataItem>>> entryh : items.entrySet()) {
 						long houseid = entryh.getKey();
 						House house = houses.get(houseid);
 						Map<Long, List<TimeSeriesDataItem>> map = entryh.getValue();
+						Map<Long, TimeSeries> smap = new HashMap<>();
 						for (Map.Entry<Long, List<TimeSeriesDataItem>> entry3 : map.entrySet()) {
 			        		List<TimeSeriesDataItem> series = entry3.getValue();
 			        		if (null == series || 0 == series.size())
 			        			continue;
 			        		Long aid = entry3.getKey();
-							TimeSeries timeSeries = new TimeSeries(aid < 2 ? "Нейтрал" : (aid < 3 ? "Негатив" : "Позитив"));
+							TimeSeries timeSeries = smap.containsKey(aid) ? smap.get(aid) : new TimeSeries(aid < 2 ? "Нейтрал" : (aid < 3 ? "Негатив" : "Позитив"));
 							for (TimeSeriesDataItem tsdi : series)
 								timeSeries.add(tsdi);
-							dataset.addSeries(timeSeries);
+							smap.put(aid, timeSeries);
 			        	}
+						TimeSeriesCollection dataset = new TimeSeriesCollection();
+						for (Map.Entry<Long, TimeSeries> entry4 : smap.entrySet())
+							dataset.addSeries(entry4.getValue());
+							
 			        	if (dataset.getSeriesCount() > 0) {
 				        	section.addSection(new Paragraph(house.getName(), hfont));
 				        	section.add(new Paragraph(y + ": " + house.getDescription(), font));
