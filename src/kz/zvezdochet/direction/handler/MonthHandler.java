@@ -20,12 +20,14 @@ import org.jfree.data.time.TimeSeries;
 import org.jfree.data.time.TimeSeriesCollection;
 import org.jfree.data.time.TimeSeriesDataItem;
 
+import com.itextpdf.text.BaseColor;
 import com.itextpdf.text.Chapter;
 import com.itextpdf.text.ChapterAutoNumber;
 import com.itextpdf.text.Chunk;
 import com.itextpdf.text.Document;
 import com.itextpdf.text.Element;
 import com.itextpdf.text.Font;
+import com.itextpdf.text.ListItem;
 import com.itextpdf.text.Paragraph;
 import com.itextpdf.text.Section;
 import com.itextpdf.text.pdf.BaseFont;
@@ -168,15 +170,34 @@ public class MonthHandler extends Handler {
 
 			chapter.add(new Paragraph("Данный прогноз сделан с учётом указанного вами места проживания. "
 				+ "Если вы в течение данного периода переедете в более отдалённое место, то с того момента прогноз будет недействителен, "
-				+ "т.к. привязка идёт к конкретному местонахождению. В случае переезда можно будет составить прогноз на тот же период на новом месте", font));
+				+ "т.к. привязка идёт к конкретному местонахождению. В случае переезда можно будет составить прогноз на тот же период на новом месте.", font));
 
 			chapter.add(Chunk.NEWLINE);
 			chapter.add(new Paragraph("При этом, если ранее вы получали от меня прогноз по годам, индивидуальный гороскоп или гороскоп совместимости, "
-				+ "то они будут действовать независимо от вашего местонахождения", font));
+				+ "то они будут действовать независимо от вашего местонахождения.", font));
 			chapter.add(Chunk.NEWLINE);
 
 			chapter.add(new Paragraph("Диаграммы показывают динамику событий в сферах жизни. "
-				+ "По ним можно смотреть, где всё сложится относительно ровно, а где ожидаются резкие перепады", font));
+				+ "По ним можно смотреть, где всё сложится относительно ровно, а где ожидаются резкие перепады:", font));
+
+			com.itextpdf.text.List list = new com.itextpdf.text.List(false, false, 10);
+			ListItem li = new ListItem();
+	        li.add(new Chunk("сферы жизни из категории «Позитив» указывают на благоприятные возможности, которые надо использовать по максимуму,", new Font(baseFont, 12, Font.NORMAL, new BaseColor(0, 102, 102))));
+	        list.add(li);
+
+			li = new ListItem();
+	        li.add(new Chunk("сферы жизни из категории «Негатив» указывают на трудность и напряжение, к которым желательно быть готовым и продумать тактику решения проблемы", new Font(baseFont, 12, Font.NORMAL, new BaseColor(102, 0, 51))));
+	        list.add(li);
+
+			li = new ListItem();
+	        li.add(new Chunk("сферы жизни из категории «Важное» окажутся наиболее значимыми в указанный период, ощутимо повлияют на ваше поведение и решения,", font));
+	        list.add(li);
+	        chapter.add(list);
+
+			p = new Paragraph("Если график представляет собой точку, значит актуальность данной сферы жизни будет ограничена одним днём. " +
+				"Если график изображён в виде линии, значит в течение нескольких дней произойдёт череда событий в данной сфере", font);
+			p.setSpacingBefore(20);
+			chapter.add(p);
 			doc.add(chapter);
 
 			Map<Integer, Map<Integer, List<Long>>> years = new TreeMap<Integer, Map<Integer, List<Long>>>();
@@ -282,6 +303,8 @@ public class MonthHandler extends Handler {
 
 			//генерируем документ
 			run = System.currentTimeMillis();
+	        Font hfont = new Font(baseFont, 16, Font.BOLD, PDFUtil.FONTCOLOR);
+			Font bfont = new Font(baseFont, 12, Font.BOLD);
 			for (Map.Entry<Integer, Map<Integer, Map<Long, Map<Long, List<TimeSeriesDataItem>>>>> entry : years2.entrySet()) {
 				int y = entry.getKey();
 				String syear = String.valueOf(y);
@@ -294,33 +317,37 @@ public class MonthHandler extends Handler {
 					int m = entry2.getKey();
 					Calendar calendar = Calendar.getInstance();
 					calendar.set(y, m, 1);
-					Section section = PDFUtil.printSection(chapter, new SimpleDateFormat("LLLL").format(calendar.getTime()) + " " + y, null);
+					String ym = new SimpleDateFormat("LLLL").format(calendar.getTime()) + " " + y;
+					Section section = PDFUtil.printSection(chapter, ym, null);
 
 					Map<Long, Map<Long, List<TimeSeriesDataItem>>> items = entry2.getValue();
-			        Font hfont = new Font(baseFont, 16, Font.BOLD, PDFUtil.FONTCOLOR);
+			        int i = -1;
 					for (Map.Entry<Long, Map<Long, List<TimeSeriesDataItem>>> entryh : items.entrySet()) {
 						long houseid = entryh.getKey();
 						House house = houses.get(houseid);
 						Map<Long, List<TimeSeriesDataItem>> map = entryh.getValue();
-						Map<Long, TimeSeries> smap = new HashMap<>();
+						TimeSeriesCollection dataset = new TimeSeriesCollection();
 						for (Map.Entry<Long, List<TimeSeriesDataItem>> entry3 : map.entrySet()) {
 			        		List<TimeSeriesDataItem> series = entry3.getValue();
 			        		if (null == series || 0 == series.size())
 			        			continue;
 			        		Long aid = entry3.getKey();
-							TimeSeries timeSeries = smap.containsKey(aid) ? smap.get(aid) : new TimeSeries(aid < 2 ? "Нейтрал" : (aid < 3 ? "Негатив" : "Позитив"));
+							TimeSeries timeSeries = new TimeSeries(aid < 2 ? "Важное" : (aid < 3 ? "Негатив" : "Позитив"));
 							for (TimeSeriesDataItem tsdi : series)
 								timeSeries.add(tsdi);
-							smap.put(aid, timeSeries);
+							dataset.addSeries(timeSeries);
 			        	}
-						TimeSeriesCollection dataset = new TimeSeriesCollection();
-						for (Map.Entry<Long, TimeSeries> entry4 : smap.entrySet())
-							dataset.addSeries(entry4.getValue());
-							
 			        	if (dataset.getSeriesCount() > 0) {
+			        		if (++i > 1) {
+			        			i = -1;
+			        			section.add(Chunk.NEXTPAGE);
+			        		}
 				        	section.addSection(new Paragraph(house.getName(), hfont));
-				        	section.add(new Paragraph(y + ": " + house.getDescription(), font));
-						    com.itextpdf.text.Image image = PDFUtil.printTimeChart(writer, house.getName(), "Даты", "Баллы", dataset, 500, 0, true);
+				        	p = new Paragraph();
+				        	p.add(new Chunk(ym + ": ", bfont));
+				        	p.add(new Chunk(house.getDescription(), font));
+				        	section.add(p);
+						    com.itextpdf.text.Image image = PDFUtil.printTimeChart(writer, "", "Даты", "Баллы", dataset, 500, 0, true);
 							section.add(image);
 							section.add(Chunk.NEWLINE);
 			        	}
