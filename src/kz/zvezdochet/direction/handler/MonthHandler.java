@@ -304,7 +304,6 @@ public class MonthHandler extends Handler {
 			//генерируем документ
 			run = System.currentTimeMillis();
 	        Font hfont = new Font(baseFont, 16, Font.BOLD, PDFUtil.FONTCOLOR);
-			Font bfont = new Font(baseFont, 12, Font.BOLD);
 			for (Map.Entry<Integer, Map<Integer, Map<Long, Map<Long, List<TimeSeriesDataItem>>>>> entry : years2.entrySet()) {
 				int y = entry.getKey();
 				String syear = String.valueOf(y);
@@ -339,15 +338,12 @@ public class MonthHandler extends Handler {
 			        	}
 			        	if (dataset.getSeriesCount() > 0) {
 			        		if (++i > 1) {
-			        			i = -1;
+			        			i = 0;
 			        			section.add(Chunk.NEXTPAGE);
 			        		}
 				        	section.addSection(new Paragraph(house.getName(), hfont));
-				        	p = new Paragraph();
-				        	p.add(new Chunk(ym + ": ", bfont));
-				        	p.add(new Chunk(house.getDescription(), font));
-				        	section.add(p);
-						    com.itextpdf.text.Image image = PDFUtil.printTimeChart(writer, "", "Даты", "Баллы", dataset, 500, 0, true);
+				        	section.add(new Paragraph(ym + ": " + house.getDescription(), font));
+						    com.itextpdf.text.Image image = PDFUtil.printTimeChart(writer, "", "", "Баллы", dataset, 500, 0, true);
 							section.add(image);
 							section.add(Chunk.NEWLINE);
 			        	}
