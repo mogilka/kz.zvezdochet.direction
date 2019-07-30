@@ -520,6 +520,7 @@ public class PDFExporter {
 			DirectionAspectService servicea = new DirectionAspectService();
 			boolean child = age < event.MAX_TEEN_AGE;
 			Map<Long, Planet> planets = event.getPlanets();
+			Map<Long, List<Long>> pairs = new HashMap<>();
 
 			for (SkyPointAspect spa : spas) {
 				AspectType type = spa.getAspect().getType();
@@ -586,6 +587,17 @@ public class PDFExporter {
 						section.add(new Paragraph(PDFUtil.removeTags(rule.getText(), font)));
 
 				} else if (skyPoint instanceof Planet) {
+					//не дублируем аспект, если в реверсивном сочетании он уже был упомянут
+					List<Long> plist = pairs.get(skyPoint.getId());
+					if (plist != null && plist.size() > 0) {
+						if (plist.contains(spa.getSkyPoint1().getId()))
+							continue;
+					}
+					if (null == plist)
+						plist = new ArrayList<>();
+					plist.add(skyPoint.getId());
+					pairs.put(spa.getSkyPoint1().getId(), plist);
+
 					Planet planet2 = (Planet)skyPoint;
 					List<Model> texts = servicea.finds(spa);
 					if (0 == texts.size())
