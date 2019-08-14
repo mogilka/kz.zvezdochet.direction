@@ -168,6 +168,19 @@ public class MonthHandler extends Handler {
 	        p.add(chunk);
 	        chapter.add(p);
 
+
+			chapter.add(new Paragraph("Прогноз на сферы жизни:", font));
+			com.itextpdf.text.List list = new com.itextpdf.text.List(false, false, 10);
+			for (Object object : spheres) {
+				ListItem li = new ListItem();
+				Sphere sphere = (Sphere)object;
+				li.add(new Chunk(sphere.getName(), font));
+				list.add(li);
+			}
+		    chapter.add(list);
+			chapter.add(Chunk.NEWLINE);
+
+
 			chapter.add(new Paragraph("Данный прогноз сделан с учётом указанного вами места проживания. "
 				+ "Если вы в течение данного периода переедете в более отдалённое место, то с того момента прогноз будет недействителен, "
 				+ "т.к. привязка идёт к конкретному местонахождению. В случае переезда можно будет составить прогноз на тот же период на новом месте.", font));
@@ -180,25 +193,35 @@ public class MonthHandler extends Handler {
 			chapter.add(new Paragraph("Диаграммы показывают динамику событий в сферах жизни. "
 				+ "По ним можно смотреть, где всё сложится относительно ровно, а где ожидаются резкие перепады:", font));
 
-			com.itextpdf.text.List list = new com.itextpdf.text.List(false, false, 10);
+			list = new com.itextpdf.text.List(false, false, 10);
 			ListItem li = new ListItem();
 	        li.add(new Chunk("сферы жизни из категории «Позитив» указывают на благоприятные возможности, которые надо использовать по максимуму,", new Font(baseFont, 12, Font.NORMAL, new BaseColor(0, 102, 102))));
 	        list.add(li);
 
 			li = new ListItem();
-	        li.add(new Chunk("сферы жизни из категории «Негатив» указывают на трудность и напряжение, к которым желательно быть готовым и продумать тактику решения проблемы,", new Font(baseFont, 12, Font.NORMAL, new BaseColor(102, 0, 51))));
+	        li.add(new Chunk("сферы жизни из категории «Негатив» указывают на трудность и напряжение, к которым надо быть готовым и продумать тактику решения проблемы,", new Font(baseFont, 12, Font.NORMAL, new BaseColor(102, 0, 51))));
 	        list.add(li);
 
 			li = new ListItem();
-	        li.add(new Chunk("сферы жизни из категории «Важное» наиболее ощутимо повлияют на ваше поведение и решения в указанный период. Решения нужно принимать продуманно, т.к. они окажутся значимыми для вас и ваших близких и могут иметь последствия", font));
+	        li.add(new Chunk("сферы жизни из категории «Важное» наиболее ощутимо повлияют на ваше поведение в указанный период. Решения нужно принимать продуманно, т.к. они окажутся значимыми для вас и ваших близких и могут иметь последствия", font));
 	        list.add(li);
 	        chapter.add(list);
+			chapter.add(Chunk.NEWLINE);
 
-			p = new Paragraph("Если график представляет собой точку, значит актуальность данной сферы жизни будет ограничена одним днём. " +
-				"Если график изображён в виде линии, значит в течение нескольких дней произойдёт череда событий в данной сфере", font);
-			p.setSpacingBefore(20);
-			chapter.add(p);
-			doc.add(chapter);
+
+			chapter.add(new Paragraph("Погрешность прогноза составляет ±2 дня", new Font(baseFont, 12, Font.NORMAL, new BaseColor(102, 0, 51))));
+
+			list = new com.itextpdf.text.List(false, false, 10);
+			li = new ListItem();
+	        li.add(new Chunk("Если график представляет собой точку, значит актуальность данной сферы жизни будет ограничена одним днём.", font));
+	        list.add(li);
+
+			li = new ListItem();
+	        li.add(new Chunk("Если график изображён в виде линии, то точки на нём укажут на важные дни периода в данной сфере.", font));
+	        list.add(li);
+	        chapter.add(list);
+	        doc.add(chapter);
+
 
 			Map<Integer, Map<Integer, List<Long>>> years = new TreeMap<Integer, Map<Integer, List<Long>>>();
 			Map<Integer, Map<Integer, Map<Long, Map<Long, List<TimeSeriesDataItem>>>>> years2 = new TreeMap<Integer, Map<Integer, Map<Long, Map<Long, List<TimeSeriesDataItem>>>>>();
