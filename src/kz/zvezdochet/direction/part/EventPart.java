@@ -561,7 +561,7 @@ public class EventPart extends ModelListView implements ICalculable {
 
 			if (Handler.MODE_SAVE == mode) {
 				trevent.setName(txName.getText());
-				trevent.setText(txDescr.getText());
+				trevent.setBio(txDescr.getText());
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
