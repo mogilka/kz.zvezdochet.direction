@@ -79,25 +79,26 @@ public class TransitCalcHandler extends Handler {
 
 				Collection<Planet> eplanets = event.getPlanets().values();
 				for (Planet eplanet : eplanets) {
-					if (eplanet.getCode().equals("Moon"))
-						continue;
-
 					if (null == selhouse)
 						for (Planet planet : planets) {
-							if (selplanet != null && !planet.getId().equals(selplanet.getId()))
+							if (selplanet != null
+									&& !eplanet.getId().equals(selplanet.getId())
+									&& !planet.getId().equals(selplanet.getId()))
 								continue;
-	
+		
 							SkyPointAspect spa = calc(eplanet, planet, aspects);
 							if (null == spa)
 								continue;
 							spa.setDescr(pdate);
-//							((Planet)spa.getSkyPoint1()).setHouse(item.house);
+	//						((Planet)spa.getSkyPoint1()).setHouse(item.house);
 							items.add(spa);
 						}
 
-					if (selplanet != null) {
-						//
-					} else if (person.isHousable())
+					if (selplanet != null
+							&& !eplanet.getId().equals(selplanet.getId()))
+						continue;
+
+					if (person.isHousable())
 						for (Model model : houses) {
 							if (selhouse != null && !model.getId().equals(selhouse.getId()))
 								continue;
