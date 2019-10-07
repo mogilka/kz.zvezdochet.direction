@@ -77,7 +77,8 @@ import kz.zvezdochet.service.AspectService;
 import kz.zvezdochet.service.EventService;
 
 /**
- * Представление транзитов
+ * Представление для расчёта транзита на день
+ * и отображения сохранённых транзитов персоны
  * @author Natalie Didenko
  *
  */

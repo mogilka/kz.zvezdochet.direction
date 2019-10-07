@@ -141,16 +141,16 @@ public class PDFExporter {
 	        chapter.add(p);
 
 	        int ages = finalage - initage + 1;
-	        p = new Paragraph("Прогноз описывает самые значительные тенденции развития вашей жизни в ближайшие " + CoreUtil.getAgeString(ages)
+	        p = new Paragraph("Прогноз описывает самые значительные тенденции вашей жизни в ближайшие " + CoreUtil.getAgeString(ages)
         		+ " независимо от переездов и местоположения."
 	        	+ " Негативные тенденции – признак того, что вам необходим отдых, переосмысление и мобилизация ресурсов для решения проблемы. "
 				+ "А также это возможность смягчить напряжение, ведь вы будете знать о нём заранее. "
-				+ "Не зацикливайтесь на негативе, используйте свои сильные стороны и благоприятные события, которые есть в прогнозе.", font);
+				+ "Не зацикливайтесь на негативе, используйте по максимуму свои сильные стороны и благоприятные события, которые упомянуты в прогнозе.", font);
 	        p.setSpacingAfter(10);
 			chapter.add(p);
 
 			chapter.add(new Paragraph("Если из возраста в возраст событие повторяется, значит оно создаст большой резонанс.", font));
-			chapter.add(new Paragraph("Максимальная погрешность прогноза ±3 месяца.", font));
+			chapter.add(new Paragraph("Максимальная погрешность прогноза ±6 месяцев.", font));
 
 			p = new Paragraph("Если в прогнозе упомянуты люди, которых уже нет в живых (родители, супруги, родственники), "
 				+ "значит речь идёт о людях, их заменяющих (опекуны, крёстные) или похожих на них по характеру.", font);
@@ -255,8 +255,8 @@ public class PDFExporter {
 			for (int i = 0; i < ages; i++) {
 				int nextage = initage + i;
 				String strage = CoreUtil.getAgeString(nextage);
-				bars[i] = new Bar(strage, positive.get(nextage), null, "Позитивные события");
-				bars[i + ages] = new Bar(strage, negative.get(nextage) * (-1), null, "Негативные события");
+				bars[i] = new Bar(strage, positive.get(nextage), null, "Позитивные события", null);
+				bars[i + ages] = new Bar(strage, negative.get(nextage) * (-1), null, "Негативные события", null);
 			}
 			int height = 400;
 			if (ages < 2)
@@ -325,8 +325,8 @@ public class PDFExporter {
 			p = new Paragraph("Основные вехи периода", fonth5);
 			p.setSpacingAfter(10);
 			chapter.add(p);
-			p = new Paragraph("Чтобы увидеть самые важные моменты вашего дальнейшего развития, "
-				+ "почитайте разделы «Значимые события» каждого года периода", font);
+			p = new Paragraph("Чтобы увидеть самые важные моменты ближайших лет, "
+				+ "почитайте раздел «Значимые события» каждого года периода", font);
 			chapter.add(p);
 	        doc.add(chapter);
 
