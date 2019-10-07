@@ -87,8 +87,9 @@ public class TransitService extends ModelService {
 			ps = Connector.getInstance().getConnection().prepareStatement(sql);
 			ps.setLong(1, personid);
 			rs = ps.executeQuery();
+			EventService service = new EventService();
 			while (rs.next())
-				list.add((Event)new EventService().find(rs.getLong("eventid")));
+				list.add((Event)service.find(rs.getLong("eventid")));
 		} catch (Exception e) {
 			e.printStackTrace();
 		} finally {
