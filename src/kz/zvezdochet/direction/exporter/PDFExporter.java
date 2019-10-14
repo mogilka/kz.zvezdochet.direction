@@ -326,7 +326,7 @@ public class PDFExporter {
 			p.setSpacingAfter(10);
 			chapter.add(p);
 			p = new Paragraph("Чтобы увидеть самые важные моменты ближайших лет, "
-				+ "почитайте раздел «Значимые события» каждого года периода", font);
+				+ "почитайте раздел «Значимые события» каждого года", font);
 			chapter.add(p);
 	        doc.add(chapter);
 
