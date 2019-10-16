@@ -3,6 +3,7 @@ package kz.zvezdochet.direction.handler;
 import java.io.FileOutputStream;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.Collections;
@@ -20,13 +21,13 @@ import org.jfree.data.time.TimeSeries;
 import org.jfree.data.time.TimeSeriesCollection;
 import org.jfree.data.time.TimeSeriesDataItem;
 
-import com.itextpdf.text.BaseColor;
 import com.itextpdf.text.Chapter;
 import com.itextpdf.text.ChapterAutoNumber;
 import com.itextpdf.text.Chunk;
 import com.itextpdf.text.Document;
 import com.itextpdf.text.Element;
 import com.itextpdf.text.Font;
+import com.itextpdf.text.Image;
 import com.itextpdf.text.ListItem;
 import com.itextpdf.text.Paragraph;
 import com.itextpdf.text.Section;
@@ -50,6 +51,7 @@ import kz.zvezdochet.core.util.PlatformUtil;
 import kz.zvezdochet.direction.Activator;
 import kz.zvezdochet.direction.bean.PeriodItem;
 import kz.zvezdochet.direction.part.TransitPart;
+import kz.zvezdochet.export.bean.Bar;
 import kz.zvezdochet.export.handler.PageEventHandler;
 import kz.zvezdochet.export.util.PDFUtil;
 import kz.zvezdochet.service.AspectService;
@@ -97,8 +99,17 @@ public class MonthHandler extends Handler {
 				DialogUtil.alertError("Отметьте галочкой хотя бы одну сферу жизни");
 				return;
 			}
+			List<Long> selplanets = new ArrayList<>();
+			for (Object item : spheres) {
+				Sphere sphere = (Sphere)item;
+				List<Model> planets = sphereService.getPlanets(sphere.getId());
+				for (Model model : planets)
+					if (!selplanets.contains(model.getId()))
+						selplanets.add(model.getId());
+			}
 
 			Map<Long, House> houses = person.getHouses();
+			Map<Long, Planet> planets = person.getPlanets();
 	
 			updateStatus("Расчёт транзитов на период", false);
 
@@ -168,8 +179,8 @@ public class MonthHandler extends Handler {
 	        p.add(chunk);
 	        chapter.add(p);
 
-
-			chapter.add(new Paragraph("Прогноз на сферы жизни:", font));
+			Font bold = new Font(baseFont, 12, Font.BOLD);
+			chapter.add(new Paragraph("Прогноз на сферы жизни:", bold));
 			com.itextpdf.text.List list = new com.itextpdf.text.List(false, false, 10);
 			for (Object object : spheres) {
 				ListItem li = new ListItem();
@@ -180,36 +191,43 @@ public class MonthHandler extends Handler {
 		    chapter.add(list);
 			chapter.add(Chunk.NEWLINE);
 
-
-			chapter.add(new Paragraph("Данный прогноз сделан с учётом указанного вами места проживания. "
-				+ "Если вы в течение данного периода переедете в более отдалённое место, то с того момента прогноз будет недействителен, "
-				+ "т.к. привязка идёт к конкретному местонахождению. В случае переезда можно будет составить прогноз на тот же период на новом месте.", font));
-
-			chapter.add(Chunk.NEWLINE);
-			chapter.add(new Paragraph("При этом, если ранее вы получали от меня прогноз по годам, индивидуальный гороскоп или гороскоп совместимости, "
-				+ "то они будут действовать независимо от вашего местонахождения.", font));
+			chapter.add(new Paragraph("Данный прогноз сделан с учётом вашего текущего местонахождения. "
+				+ "Если вы в течение прогнозного периода переедете в более отдалённое место (в другой часовой пояс или с ощутимой сменой географической широты), "
+				+ "то там прогноз будет недостоверен. Но можно составить аналогичный прогноз на тот же период на новом месте.", font));
 			chapter.add(Chunk.NEWLINE);
 
-			chapter.add(new Paragraph("Диаграммы показывают динамику событий в сферах жизни. "
-				+ "По ним можно смотреть, где всё сложится относительно ровно, а где ожидаются резкие перепады:", font));
+			chapter.add(new Paragraph("Диаграммы показывают динамику событий по месяцам в трёх категориях: позитив, негатив и важное.", font));
+			chapter.add(new Paragraph("Позитив и негатив:", bold));
 
 			list = new com.itextpdf.text.List(false, false, 10);
 			ListItem li = new ListItem();
-	        li.add(new Chunk("сферы жизни из категории «Позитив» указывают на благоприятные возможности, которые надо использовать по максимуму,", new Font(baseFont, 12, Font.NORMAL, new BaseColor(0, 102, 102))));
+	        li.add(new Chunk("«Позитив» – это благоприятные возможности, которые нужно использовать по максимуму.", new Font(baseFont, 12, Font.NORMAL, PDFUtil.FONTGREEN)));
 	        list.add(li);
 
 			li = new ListItem();
-	        li.add(new Chunk("сферы жизни из категории «Негатив» указывают на трудность и напряжение, к которым надо быть готовым и продумать тактику решения проблемы,", new Font(baseFont, 12, Font.NORMAL, new BaseColor(102, 0, 51))));
+	        li.add(new Chunk("«Негатив» – это напряжение и отсутствие удачи, к которым надо быть готовым. Выработайте тактику решения проблемы и не предпринимайте рисковых действий.", new Font(baseFont, 12, Font.NORMAL, PDFUtil.FONTCOLORED)));
 	        list.add(li);
 
 			li = new ListItem();
-	        li.add(new Chunk("сферы жизни из категории «Важное» наиболее ощутимо повлияют на ваше поведение в указанный период. Решения нужно принимать продуманно, т.к. они окажутся значимыми для вас и ваших близких и могут иметь последствия", font));
+	        li.add(new Chunk("Особого внимания заслуживают ломаные графики, – они указывают на значимые для вас события, особенно в сочетании с «Важным».", font));
+	        list.add(li);
+	        chapter.add(list);
+			chapter.add(Chunk.NEWLINE);
+			
+			chapter.add(new Paragraph("Важное:", bold));
+			list = new com.itextpdf.text.List(false, false, 10);
+			li = new ListItem();
+	        li.add(new Chunk("«Важное» – сильнее всего влияет на ваше поведение в указанный период, особенно в сочетании с «Позитивом» или «Негативом».", font));
+	        list.add(li);
+
+			li = new ListItem();
+	        li.add(new Chunk("Если рядом с «Важным» отсутствует «Позитив», значит решения нужно принимать обдуманно, "
+	        	+ "т.к. они окажутся значимыми для вас и ваших близких и могут иметь непредвиденные последствия", new Font(baseFont, 12, Font.NORMAL, PDFUtil.FONTCOLORED)));
 	        list.add(li);
 	        chapter.add(list);
 			chapter.add(Chunk.NEWLINE);
 
-
-			chapter.add(new Paragraph("Погрешность прогноза составляет ±2 дня", new Font(baseFont, 12, Font.NORMAL, new BaseColor(102, 0, 51))));
+			chapter.add(new Paragraph("Погрешность прогноза составляет ±2 дня.", bold));
 
 			list = new com.itextpdf.text.List(false, false, 10);
 			li = new ListItem();
@@ -221,7 +239,6 @@ public class MonthHandler extends Handler {
 	        list.add(li);
 	        chapter.add(list);
 	        doc.add(chapter);
-
 
 			Map<Integer, Map<Integer, List<Long>>> years = new TreeMap<Integer, Map<Integer, List<Long>>>();
 			Map<Integer, Map<Integer, Map<Long, Map<Long, List<TimeSeriesDataItem>>>>> years2 = new TreeMap<Integer, Map<Integer, Map<Long, Map<Long, List<TimeSeriesDataItem>>>>>();
@@ -250,13 +267,27 @@ public class MonthHandler extends Handler {
 				years2.put(y, months2);
 			}
 
+			Map<Long, List<Date>> revolutions = new HashMap<Long, List<Date>>();
+			Map<Integer, Map<String, Map<Integer,Integer>>> yitems = new TreeMap<Integer, Map<String,Map<Integer,Integer>>>();
+
 			//создаём аналогичный массив, но с домами вместо дат
 			for (Map.Entry<Integer, Map<Integer, List<Long>>> entry : years.entrySet()) {
 				int y = entry.getKey();
 				Map<Integer, List<Long>> months = years.get(y);
 
+				//данные для графика года
+				Map<Integer,Integer> positive = new HashMap<Integer,Integer>();
+				Map<Integer,Integer> negative = new HashMap<Integer,Integer>();
+
+				for (int i = 1; i <= 12; i++) {
+					positive.put(i, 0);
+					negative.put(i, 0);
+				}
+
+				//считаем транзиты
 				for (Map.Entry<Integer, List<Long>> entry2 : months.entrySet()) {
 					int m = entry2.getKey();
+					int month = m + 1;
 
 					List<Long> dates = months.get(m);
 					for (Long time : dates) {
@@ -292,12 +323,46 @@ public class MonthHandler extends Handler {
 									continue;
 								long id = house.getId();
 								Map<Long, Integer> amap = hitems.containsKey(id) ? hitems.get(id) : new HashMap<Long, Integer>();
-								long aid = item.aspect.getType().getCode().equals("NEUTRAL")
+								String code = item.aspect.getType().getCode();
+								long aid = code.equals("NEUTRAL")
 										&& (eplanet.getCode().equals("Lilith") || eplanet.getCode().equals("Kethu"))
 									? 2 : item.aspect.getTypeid();
 								int val = amap.containsKey(aid) ? amap.get(aid) : 0;
 								amap.put(aid, val + 1);
 								hitems.put(id, amap);
+
+								if (code.equals("NEUTRAL")) {
+									if (eplanet.getCode().equals("Lilith") || eplanet.getCode().equals("Kethu"))
+										negative.put(month, negative.get(month) + 1);
+									else
+										positive.put(month, positive.get(month) + 1);
+								} else if (code.equals("POSITIVE"))
+									positive.put(month, positive.get(month) + 1);
+								else if (code.equals("NEGATIVE"))
+									negative.put(month, negative.get(month) + 1);							
+							}
+
+							if (!selplanets.contains(eplanet.getId()))
+								continue;
+							for (Model model : planets.values()) {
+								if (!selplanets.contains(model.getId()))
+									continue;
+
+								//пока что считаем только революции
+								if (eplanet.getId().equals(model.getId())) {
+									Planet planet = (Planet)model;
+									PeriodItem item = calc(eplanet, planet, aspects);
+									if (null == item)
+										continue;
+									if (!item.aspect.getCode().equals("CONJUNCTION"))
+										continue;
+
+									List<Date> dlist = revolutions.get(model.getId());
+									if (null == dlist)
+										dlist = new ArrayList<Date>();
+									dlist.add(edate);
+									revolutions.put(model.getId(), dlist);
+								}
 							}
 						}
 
@@ -320,6 +385,10 @@ public class MonthHandler extends Handler {
 						months2.put(m, items);
 					}
 				}
+				Map<String, Map<Integer,Integer>> ymap = new HashMap<String, Map<Integer,Integer>>();
+				ymap.put("positive", positive);
+				ymap.put("negative", negative);
+				yitems.put(y, ymap);
 			}
 			years = null;
 			System.out.println("Composed for: " + (System.currentTimeMillis() - run));
@@ -327,12 +396,66 @@ public class MonthHandler extends Handler {
 			//генерируем документ
 			run = System.currentTimeMillis();
 	        Font hfont = new Font(baseFont, 16, Font.BOLD, PDFUtil.FONTCOLOR);
+
+			//обращения планет
+	        System.out.println(revolutions);
+	        if (!revolutions.isEmpty()) {
+				chapter = new ChapterAutoNumber(PDFUtil.printHeader(new Paragraph(), "Важные циклы", null));
+				chapter.setNumberDepth(0);
+				chapter.add(new Paragraph("Приведённые ниже даты, связаны с завершением одного большого жизненного цикла и началом другого", font));
+
+				List<String> negative = Arrays.asList(new String[] {"Kethu", "Lilith"});
+				for (Map.Entry<Long, List<Date>> entry : revolutions.entrySet()) {
+					long planetid = entry.getKey();
+					Planet planet = planets.get(planetid);
+					Section section = PDFUtil.printSection(chapter, planet.getShortName(), null);
+
+					list = new com.itextpdf.text.List(false, false, 10);
+					List<Date> dlist = entry.getValue();
+					for (Date date : dlist) {
+						li = new ListItem();
+				        li.add(new Chunk(sdf.format(date), font));
+				        list.add(li);
+					}
+			        section.add(list);
+			        section.add(Chunk.NEWLINE);
+
+					p = new Paragraph();
+					p.setFont(font);
+					p.add("В указанные дни произойдёт начало нового цикла в сфере «" + planet.getShortName() + "». "
+						+ "Это означает, что вас ожидает яркое событие или переживание, связанное со следующими сферами жизни: ");
+					p.add(new Chunk(planet.getDescription(), new Font(baseFont, 12, Font.NORMAL, negative.contains(planet.getCode()) ? PDFUtil.FONTCOLORED : PDFUtil.FONTGREEN)));
+					section.add(p);
+				}
+				chapter.add(Chunk.NEXTPAGE);
+				doc.add(chapter);
+	        }
+
+	        //дома
 			for (Map.Entry<Integer, Map<Integer, Map<Long, Map<Long, List<TimeSeriesDataItem>>>>> entry : years2.entrySet()) {
 				int y = entry.getKey();
 				String syear = String.valueOf(y);
 				chapter = new ChapterAutoNumber(PDFUtil.printHeader(new Paragraph(), syear, null));
 				chapter.setNumberDepth(0);
 
+				//диаграмма года
+				Section section = PDFUtil.printSection(chapter, "Соотношение событий года", null);
+				Map<String, Map<Integer,Integer>> ymap = yitems.get(y);
+				Map<Integer,Integer> positive = ymap.get("positive");
+				Map<Integer,Integer> negative = ymap.get("negative");
+
+				Bar[] bars = new Bar[24];
+				for (int i = 0; i < 12; i++) {
+					int month = i + 1;
+					String smonth = DateUtil.getMonthName(month);
+					bars[i] = new Bar(smonth, positive.get(month), null, "Позитивные события", null);
+					bars[i + 12] = new Bar(smonth, negative.get(month) * (-1), null, "Негативные события", null);
+				}
+				Image image = PDFUtil.printStackChart(writer, "Месяцы года", "Возраст", "Количество", bars, 500, 400, true);
+				section.add(image);
+				section.add(Chunk.NEXTPAGE);
+
+				//графики по месяцам
 				Map<Integer, Map<Long, Map<Long, List<TimeSeriesDataItem>>>> months2 = years2.get(y);
 
 				for (Map.Entry<Integer, Map<Long, Map<Long, List<TimeSeriesDataItem>>>> entry2 : months2.entrySet()) {
@@ -340,7 +463,7 @@ public class MonthHandler extends Handler {
 					Calendar calendar = Calendar.getInstance();
 					calendar.set(y, m, 1);
 					String ym = new SimpleDateFormat("LLLL").format(calendar.getTime()) + " " + y;
-					Section section = PDFUtil.printSection(chapter, ym, null);
+					section = PDFUtil.printSection(chapter, ym, null);
 
 					Map<Long, Map<Long, List<TimeSeriesDataItem>>> items = entry2.getValue();
 			        int i = -1;
@@ -366,7 +489,7 @@ public class MonthHandler extends Handler {
 			        		}
 				        	section.addSection(new Paragraph(house.getName(), hfont));
 				        	section.add(new Paragraph(ym + ": " + house.getDescription(), font));
-						    com.itextpdf.text.Image image = PDFUtil.printTimeChart(writer, "", "", "Баллы", dataset, 500, 0, true);
+						    image = PDFUtil.printTimeChart(writer, "", "", "Баллы", dataset, 500, 0, true);
 							section.add(image);
 							section.add(Chunk.NEWLINE);
 			        	}
