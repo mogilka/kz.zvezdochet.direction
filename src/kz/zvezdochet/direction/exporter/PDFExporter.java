@@ -150,7 +150,7 @@ public class PDFExporter {
 			chapter.add(p);
 
 			chapter.add(new Paragraph("Если из возраста в возраст событие повторяется, значит оно создаст большой резонанс.", font));
-			chapter.add(new Paragraph("Максимальная погрешность прогноза ±6 месяцев.", font));
+			chapter.add(new Paragraph("Максимальная погрешность прогноза ±3 месяца.", font));
 
 			p = new Paragraph("Если в прогнозе упомянуты люди, которых уже нет в живых (родители, супруги, родственники), "
 				+ "значит речь идёт о людях, их заменяющих (опекуны, крёстные) или похожих на них по характеру.", font);
@@ -577,10 +577,13 @@ public class PDFExporter {
 						section.add(new Paragraph("Уровень успеха: средний", PDFUtil.getWarningFont()));
 
 					if (dirText != null) {
-						String typeColor = type.getFontColor();
-						BaseColor color = PDFUtil.htmlColor2Base(typeColor);
-						section.add(new Paragraph(PDFUtil.removeTags(dirText.getText(), new Font(baseFont, 12, Font.NORMAL, color))));
-						PDFUtil.printGender(section, dirText, female, child, true);
+						String text = dirText.getText();
+						if (text != null) {
+							String typeColor = type.getFontColor();
+							BaseColor color = PDFUtil.htmlColor2Base(typeColor);
+							section.add(new Paragraph(PDFUtil.removeTags(text, new Font(baseFont, 12, Font.NORMAL, color))));
+							PDFUtil.printGender(section, dirText, female, child, true);
+						}
 					}
 					Rule rule = EventRules.ruleHouseDirection(spa, female);
 					if (rule != null)
@@ -650,10 +653,13 @@ public class PDFExporter {
 							section.add(new Paragraph("Уровень успеха: средний", PDFUtil.getWarningFont()));
 
 						if (dirText != null) {
-			    			String typeColor = type.getFontColor();
-							BaseColor color = PDFUtil.htmlColor2Base(typeColor);
-							section.add(new Paragraph(PDFUtil.removeTags(dirText.getText(), new Font(baseFont, 12, Font.NORMAL, color))));
-							PDFUtil.printGender(section, dirText, female, child, true);
+							String text = dirText.getText();
+							if (text != null) {
+				    			String typeColor = type.getFontColor();
+								BaseColor color = PDFUtil.htmlColor2Base(typeColor);
+								section.add(new Paragraph(PDFUtil.removeTags(text, new Font(baseFont, 12, Font.NORMAL, color))));
+								PDFUtil.printGender(section, dirText, female, child, true);
+							}
 						}
 					}
 				}
