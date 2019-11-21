@@ -2,6 +2,7 @@ package kz.zvezdochet.direction.handler;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -35,15 +36,18 @@ public class AgeCalcHandler extends Handler {
 	private boolean agedp[][][] = null;
 	private boolean agedh[][][] = null;
 	private TreeMap<Integer, List<SkyPointAspect>> aged = null;
+	private TreeMap<Integer, TreeMap<Long, Map<Long, SkyPointAspect>>> ageh = null;
 	private String aspectype;
 	private boolean retro = false;
 	List<Model> aspects = null;
 	Event event;
+	int initage, finage;
 
 	@Execute
 	public void execute(@Active MPart activePart) {
 		try {
 			aged = new TreeMap<>();
+			ageh = new TreeMap<>();
 			AgePart agePart = (AgePart)activePart.getObject();
 			if (!agePart.check(0)) return;
 			event = agePart.getEvent();
@@ -83,8 +87,8 @@ public class AgeCalcHandler extends Handler {
 			
 			retro = agePart.getRetro();
 
-			int initage = agePart.getInitialAge();
-			int finage = agePart.getFinalAge();
+			initage = agePart.getInitialAge();
+			finage = agePart.getFinalAge();
 			agedp = new boolean[finage + 2][16][16];
 			agedh = new boolean[finage + 2][16][36];
 			//инициализируем аспекты
@@ -110,9 +114,16 @@ public class AgeCalcHandler extends Handler {
 			}
 			updateStatus("Расчёт дирекций завершён", false);
 			List<SkyPointAspect> list = new ArrayList<SkyPointAspect>();
-			for (Entry<Integer, List<SkyPointAspect>> entry : aged.entrySet()) {
-				if (entry.getKey() >= initage && entry.getKey() <= finage)
+			for (Entry<Integer, List<SkyPointAspect>> entry : aged.entrySet())
 				list.addAll(entry.getValue());
+
+			for (Entry<Integer, TreeMap<Long, Map<Long, SkyPointAspect>>> entry : ageh.entrySet()) {
+				TreeMap<Long, Map<Long, SkyPointAspect>> hmap = entry.getValue();
+				for (Entry<Long, Map<Long, SkyPointAspect>> entryh : hmap.entrySet()) {
+					Map<Long, SkyPointAspect> pmap = entryh.getValue();
+					for (Entry<Long, SkyPointAspect> entryp : pmap.entrySet())
+						list.add(entryp.getValue());
+				}
 			}
 		    agePart.setData(list);
 		    agePart.onCalc(false);
@@ -185,34 +196,46 @@ public class AgeCalcHandler extends Handler {
 				if (a.isExact(res)) {
 //					if (21 == point1.getId() && 153 == point2.getId())
 //						System.out.println(one + " - " + two + " = " + res);
-					SkyPointAspect aspect = new SkyPointAspect();
-					point1.setLongitude(one);
-					initPlanetHouse(point1);
-					initPlanetSign(point1);
-					aspect.setSkyPoint1(point1);
-					aspect.setSkyPoint2(point2);
 					if (point2 instanceof House && CalcUtil.compareAngles(one, two)) {
 						++res;
 						--age;
 					}
 					if (age < 0)
 						continue;
+					if (age < initage || age > finage)
+						continue;
+
+					SkyPointAspect aspect = new SkyPointAspect();
+					point1.setLongitude(one);
+					initPlanetHouse(point1);
+					initPlanetSign(point1);
+					aspect.setSkyPoint1(point1);
+					aspect.setSkyPoint2(point2);
 					aspect.setScore(res);
 					aspect.setAge(age);
 					aspect.setAspect(a);
 					aspect.setRetro(retro);
 					aspect.setExact(true);
 
-					List<SkyPointAspect> list = aged.get(age);
-					if (null == list)
-						list = new ArrayList<SkyPointAspect>();
-					list.add(aspect);
-					aged.put(age, list);
-
-					if (point2 instanceof Planet && point1 instanceof Planet)
+					if (point2 instanceof Planet) {
+						List<SkyPointAspect> list = aged.get(age);
+						if (null == list)
+							list = new ArrayList<SkyPointAspect>();
+						list.add(aspect);
+						aged.put(age, list);
 						agedp[age][point1.getNumber() - 1][point2.getNumber() - 1] = true;
-					else
+					} else {
+						TreeMap<Long, Map<Long, SkyPointAspect>> hmap = ageh.get(age);
+						if (null == hmap)
+							hmap = new TreeMap<Long, Map<Long,SkyPointAspect>>();
+						Map<Long, SkyPointAspect> pmap = hmap.get(point2.getId());
+						if (null == pmap)
+							pmap = new HashMap<Long, SkyPointAspect>();
+						pmap.put(point1.getId(), aspect);
+						hmap.put(point2.getId(), pmap);
+						ageh.put(age, hmap);
 						agedh[age][point1.getNumber() - 1][point2.getNumber() - 1] = true;
+					}
 				}
 			}
 		} catch (Exception e) {
