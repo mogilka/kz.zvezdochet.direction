@@ -607,12 +607,15 @@ public class PDFExporter {
 	    				section.addSection(new Paragraph(planet.getShortName() + " " + type.getSymbol() + " " + planet2.getShortName(), fonth5));
 					else for (Model model : texts) {
 						PlanetAspectText dirText = (PlanetAspectText)model;
+						dirText.setPlanet1(planet);
+
 		    			if (term) {
 		    				Planet aspl2 = (Planet)planets.get(planet2.getId());
+							dirText.setPlanet2(aspl2);
 
 		    				p = new Paragraph();
 		    				if (dirText != null)
-		    					p.add(new Chunk(dirText.getMark(planet, aspl2), fonth5));
+		    					p.add(new Chunk(dirText.getMark(), fonth5));
 		    				p.add(new Chunk(planet.getSymbol(), PDFUtil.getHeaderAstroFont()));
 		    				p.add(new Chunk(" " + planet.getName() + " (", fonth5));
 	
