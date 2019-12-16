@@ -125,7 +125,7 @@ public class MonthHandler extends Handler {
 
 			String filename = PlatformUtil.getPath(Activator.PLUGIN_ID, "/out/month.pdf").getPath();
 			PdfWriter writer = PdfWriter.getInstance(doc, new FileOutputStream(filename));
-	        writer.setPageEvent(new PageEventHandler(doc));
+	        writer.setPageEvent(new PageEventHandler());
 	        doc.open();
 
 	    	Font font = PDFUtil.getRegularFont();

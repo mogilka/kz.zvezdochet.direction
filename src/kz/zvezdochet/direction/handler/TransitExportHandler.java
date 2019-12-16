@@ -116,7 +116,7 @@ public class TransitExportHandler extends Handler {
 
 			String filename = PlatformUtil.getPath(Activator.PLUGIN_ID, "/out/period.pdf").getPath();
 			writer = PdfWriter.getInstance(doc, new FileOutputStream(filename));
-	        writer.setPageEvent(new PageEventHandler(doc));
+	        writer.setPageEvent(new PageEventHandler());
 	        doc.open();
 
 			font = PDFUtil.getRegularFont();
