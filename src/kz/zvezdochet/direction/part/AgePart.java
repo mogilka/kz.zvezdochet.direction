@@ -52,7 +52,7 @@ public class AgePart extends ModelListView implements ICalculable {
 	private ComboViewer cvPlanet;
 	private ComboViewer cvHouse;
 	private ComboViewer cvAspect;
-	private Button btRetro;
+	private Button btHouse;
 
 	@Inject
 	public AgePart() {}
@@ -87,10 +87,9 @@ public class AgePart extends ModelListView implements ICalculable {
 		lb.setText("Аспекты");
 		cvAspect = new ComboViewer(grFilter, SWT.READ_ONLY | SWT.BORDER);
 
-		btRetro = new Button(grFilter, SWT.BORDER | SWT.CHECK);
+		btHouse = new Button(grFilter, SWT.BORDER | SWT.CHECK);
 		lb = new Label(grFilter, SWT.NONE);
-		lb.setText("R");
-		lb.setToolTipText("Включая ретроградные аспекты");
+		lb.setText("Дирекции домов");
 
 		GridLayoutFactory.swtDefaults().numColumns(10).applyTo(grFilter);
 		GridDataFactory.fillDefaults().grab(true, false).applyTo(grFilter);
@@ -105,7 +104,7 @@ public class AgePart extends ModelListView implements ICalculable {
 		GridDataFactory.fillDefaults().align(SWT.FILL, SWT.CENTER).
 			grab(true, false).applyTo(cvAspect.getCombo());
 		GridDataFactory.fillDefaults().align(SWT.LEFT, SWT.CENTER).
-			grab(false, false).applyTo(btRetro);
+			grab(false, false).applyTo(btHouse);
 	}
 
 	@Override
@@ -244,11 +243,11 @@ public class AgePart extends ModelListView implements ICalculable {
 	}
 
 	/**
-	 * Возвращает выбранное направление аспектов
-	 * @return true|false только директные|включая попятные
+	 * Проверяет, считаем ли дирекции от домов
+	 * @return true|false
 	 */
-	public boolean getRetro() {
-		return btRetro.getSelection();
+	public boolean useHouse() {
+		return btHouse.getSelection();
 	}
 
 	@Override

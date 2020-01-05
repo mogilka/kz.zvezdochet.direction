@@ -629,9 +629,9 @@ public class EventPart extends ModelListView implements ICalculable {
 	public static String[] getTableColumns() {
 		return new String[] {
 			"Возраст",
-			"Точка 1",
+			"Транзитная точка",
 			"Аспект",
-			"Точка 2",
+			"Натальная точка",
 			"Направление",
 			"Величина аспекта",
 			"Знак Зодиака",

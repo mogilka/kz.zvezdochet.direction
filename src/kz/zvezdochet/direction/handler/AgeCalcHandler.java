@@ -33,12 +33,10 @@ import kz.zvezdochet.service.AspectService;
  * @author Natalie Didenko
  */
 public class AgeCalcHandler extends Handler {
-	private boolean agedp[][][] = null;
-	private boolean agedh[][][] = null;
 	private TreeMap<Integer, List<SkyPointAspect>> aged = null;
 	private TreeMap<Integer, TreeMap<Long, Map<Long, SkyPointAspect>>> ageh = null;
 	private String aspectype;
-	private boolean retro = false;
+	private boolean houseFrom = false;
 	List<Model> aspects = null;
 	Event event;
 	int initage, finage;
@@ -85,12 +83,11 @@ public class AgeCalcHandler extends Handler {
 			else
 				aspectype = selaspect.getCode();
 			
-			retro = agePart.getRetro();
+			houseFrom = agePart.useHouse();
 
 			initage = agePart.getInitialAge();
 			finage = agePart.getFinalAge();
-			agedp = new boolean[finage + 2][16][16];
-			agedh = new boolean[finage + 2][16][36];
+
 			//инициализируем аспекты
 			try {
 				aspects = new AspectService().getList();
@@ -100,16 +97,28 @@ public class AgeCalcHandler extends Handler {
 
 			for (int age = initage; age <= finage + 1; age++) {
 				//дирекции планеты к другим планетам
-				if (null == selhouse) {
+				if (null == selhouse && !houseFrom) {
 					for (Planet selp : selplanets)
 						for (Planet selp2 : planets)
 							manageCalc(selp, selp2, age);
 				}
-				//дирекции планеты к куспидам домов
 				if (event.isHousable()) {
-					for (House selp2 : selhouses)
-						for (Planet selp : selplanets)
-							manageCalc(selp, selp2, age);
+					if (houseFrom) {
+						//дирекции домов к планетам
+						for (House selp : selhouses)
+							for (Planet selp2 : planets)
+								manageCalc(selp, selp2, age);
+	
+						//дирекции домов к домам
+						for (House selp : selhouses)
+							for (House selp2 : selhouses)
+								manageCalc(selp, selp2, age);
+					} else {
+						//дирекции планеты к куспидам домов
+						for (House selp2 : selhouses)
+							for (Planet selp : selplanets)
+								manageCalc(selp, selp2, age);
+					}
 				}
 			}
 			updateStatus("Расчёт дирекций завершён", false);
@@ -143,18 +152,11 @@ public class AgeCalcHandler extends Handler {
 	 */
 	private void manageCalc(SkyPoint point1, SkyPoint point2, int age) {
 		if (point1.getCode().equals(point2.getCode())) return;
-		calc(new Planet((Planet)point1), point2, age, false);
-		if (retro) {
-			if (point2 instanceof Planet && point1 instanceof Planet) {
-				//если неретроградная итерация выявила дирекцию по аспекту,
-				//пропускаем расчёт ретроградного транзита
-				if (!agedp[age][point1.getNumber() - 1][point2.getNumber() - 1])
-					calc(new Planet((Planet)point1), point2, age, true);
-			} else {
-				if (!agedh[age][point1.getNumber() - 1][point2.getNumber() - 1])
-					calc(new Planet((Planet)point1), point2, age, true);
-			}
-		}
+
+		if (point1 instanceof Planet)
+			calc(new Planet((Planet)point1), point2, age, false);
+		else
+			calc(new House((House)point1), point2, age, false);
 	}
 
 	/**
@@ -166,14 +168,8 @@ public class AgeCalcHandler extends Handler {
 	 */
 	private void calc(SkyPoint point1, SkyPoint point2, int age, boolean retro) {
 		try {
-			//если дирекция между планетами уже рассчитана в первом (неретроградном) заходе,
-			//игнорируем (ретроградную) итерацию
-			if (retro && point2 instanceof Planet && point1 instanceof Planet
-					&& point1.getNumber() > point2.getNumber())
-				return;
-
 			//находим угол между точками космограммы с учетом возраста
-			double one = CalcUtil.incrementCoord(point1.getLongitude(), age, !retro);
+			double one = CalcUtil.incrementCoord(point1.getLongitude(), age, true);
 			double two = point2.getLongitude();
 			double res = CalcUtil.getDifference(one, two);
 
@@ -217,13 +213,12 @@ public class AgeCalcHandler extends Handler {
 					aspect.setRetro(retro);
 					aspect.setExact(true);
 
-					if (point2 instanceof Planet) {
+					if (point1 instanceof Planet && point2 instanceof Planet) {
 						List<SkyPointAspect> list = aged.get(age);
 						if (null == list)
 							list = new ArrayList<SkyPointAspect>();
 						list.add(aspect);
 						aged.put(age, list);
-						agedp[age][point1.getNumber() - 1][point2.getNumber() - 1] = true;
 					} else {
 						TreeMap<Long, Map<Long, SkyPointAspect>> hmap = ageh.get(age);
 						if (null == hmap)
@@ -234,7 +229,6 @@ public class AgeCalcHandler extends Handler {
 						pmap.put(point1.getId(), aspect);
 						hmap.put(point2.getId(), pmap);
 						ageh.put(age, hmap);
-						agedh[age][point1.getNumber() - 1][point2.getNumber() - 1] = true;
 					}
 				}
 			}
@@ -249,6 +243,7 @@ public class AgeCalcHandler extends Handler {
 	 * @param skyPoint планета
 	 */
 	private void initPlanetHouse(SkyPoint skyPoint) {
+		if (!(skyPoint instanceof Planet)) return;
 		Map<Long, House> houseList = event.getHouses();
 		Planet planet = (Planet)skyPoint;
 		for (House house : houseList.values()) { 
@@ -265,6 +260,7 @@ public class AgeCalcHandler extends Handler {
 	 * @throws DataAccessException 
 	 */
 	private void initPlanetSign(SkyPoint skyPoint) throws DataAccessException {
+		if (!(skyPoint instanceof Planet)) return;
 		Planet planet = (Planet)skyPoint;
 		Sign sign = SkyPoint.getSign(planet.getLongitude(), event.getBirthYear());
 		planet.setSign(sign);
