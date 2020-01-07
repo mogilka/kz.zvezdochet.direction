@@ -602,7 +602,7 @@ public class PDFExporter {
 					pairs.put(spa.getSkyPoint1().getId(), plist);
 
 					Planet planet2 = (Planet)skyPoint;
-					List<Model> texts = servicea.finds(spa);
+					List<Model> texts = servicea.finds(spa, false);
 					if (0 == texts.size())
 	    				section.addSection(new Paragraph(planet.getShortName() + " " + type.getSymbol() + " " + planet2.getShortName(), fonth5));
 					else for (Model model : texts) {
