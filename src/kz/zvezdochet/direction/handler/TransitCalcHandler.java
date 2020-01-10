@@ -75,7 +75,7 @@ public class TransitCalcHandler extends Handler {
 				event.setBirth(edate);
 				event.setPlace(place);
 				event.setZone(zone);
-				event.calc(false);
+				event.calc(true);
 
 				Collection<Planet> eplanets = event.getPlanets().values();
 				for (Planet eplanet : eplanets) {

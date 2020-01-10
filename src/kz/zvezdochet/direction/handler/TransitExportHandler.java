@@ -179,7 +179,7 @@ public class TransitExportHandler extends Handler {
 				event.setBirth(edate);
 				event.setPlace(place);
 				event.setZone(zone);
-				event.calc(false);
+				event.calc(true);
 
 				Map<Long, Set<PeriodItem>> htems = new HashMap<Long, Set<PeriodItem>>();
 				Map<Long, Set<PeriodItem>> atems = new HashMap<Long, Set<PeriodItem>>();

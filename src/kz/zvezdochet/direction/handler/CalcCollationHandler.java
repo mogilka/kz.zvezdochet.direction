@@ -55,7 +55,7 @@ public class CalcCollationHandler extends Handler {
 				return;
 			}
 			if (!event.isCalculated()) {
-				event.calc(true);
+				event.calc(false);
 				updateStatus("Расчётная конфигурация события создана", false);
 			}
 

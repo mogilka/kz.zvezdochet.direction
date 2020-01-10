@@ -299,7 +299,7 @@ public class MonthHandler extends Handler {
 						event.setBirth(edate);
 						event.setPlace(place);
 						event.setZone(zone);
-						event.calc(false);
+						event.calc(true);
 						event.initAspects();
 		
 						List<Planet> iplanets = new ArrayList<Planet>();

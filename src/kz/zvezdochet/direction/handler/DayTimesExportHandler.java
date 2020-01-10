@@ -285,7 +285,7 @@ public class DayTimesExportHandler extends Handler {
 					event.setBirth(edate);
 					event.setPlace(place);
 					event.setZone(zone);
-					event.calc(false);
+					event.calc(true);
 
 					Collection<Planet> eplanets = event.getPlanets().values();
 					Map<Long, Set<PeriodItem>> items = new HashMap<Long, Set<PeriodItem>>();

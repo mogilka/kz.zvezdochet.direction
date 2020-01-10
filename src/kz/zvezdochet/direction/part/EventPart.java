@@ -519,7 +519,7 @@ public class EventPart extends ModelListView implements ICalculable {
 		try {
 			super.addModel(model);
 			if (null == model.getId()) {
-				((Event)model).calc(true);
+				((Event)model).calc(false);
 				model = new EventService().save(model);
 			}
 			//сразу сохраняем транзит в базу
