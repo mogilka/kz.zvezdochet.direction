@@ -110,7 +110,7 @@ public class TransitPart extends ModelListView {
 
 	@Override
 	public void initFilter(Composite parent) {
-		grFilter = new Group(container, SWT.NONE);
+		grFilter = new Group(parent, SWT.NONE);
 		grFilter.setText("Период");
 
 		Label lb = new Label(grFilter, SWT.NONE);
