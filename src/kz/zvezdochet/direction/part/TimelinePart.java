@@ -22,8 +22,7 @@ public class TimelinePart extends ModelListView {
 
 	@PostConstruct @Override
 	public View create(Composite parent) {
-		super.create(parent);
-		return null;
+		return super.create(parent);
 	}
 
 	@Override

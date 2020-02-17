@@ -102,17 +102,23 @@ public class CollationPart extends ModelPart implements ICalculable {
 
 	@PostConstruct @Override
 	public View create(Composite parent) {
+		return super.create(parent);
+	}
+
+	@Override
+	protected void init(Composite parent) {
+		super.init(parent);
 		// событие
-		Label lb = new Label(parent, SWT.NONE);
+		Label lb = new Label(sashForm, SWT.NONE);
 		lb.setText("Событие");
-		txEvent = new Text(parent, SWT.BORDER);
+		txEvent = new Text(sashForm, SWT.BORDER);
 		new InfoDecoration(txEvent, SWT.TOP | SWT.LEFT);
 		txEvent.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false));
 		txEvent.setFocus();
 
-		lb = new Label(parent, SWT.NONE);
+		lb = new Label(sashForm, SWT.NONE);
 		lb.setText("Описание");
-		txDescription = new Text(parent, SWT.BORDER);
+		txDescription = new Text(sashForm, SWT.BORDER);
 		txDescription.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false));
 //		txDescription.addModifyListener(new ModifyListener() {
 //			@Override
@@ -140,7 +146,7 @@ public class CollationPart extends ModelPart implements ICalculable {
 		});
 
 	    // участники
-	    Group grParticipants = new Group(parent, SWT.NONE);
+	    Group grParticipants = new Group(sashForm, SWT.NONE);
 		grParticipants.setText("Участники");
 		grParticipants.setLayout(new GridLayout());
 		grParticipants.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
@@ -208,7 +214,7 @@ public class CollationPart extends ModelPart implements ICalculable {
 		tvParticipants.addDoubleClickListener(listener);
 
 		//вкладки участника
-		Group grTabs = new Group(parent, SWT.NONE);
+		Group grTabs = new Group(sashForm, SWT.NONE);
 		folder = new CTabFolder(grTabs, SWT.BORDER);
 		folder.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 		folder.setSimple(false);
@@ -317,7 +323,7 @@ public class CollationPart extends ModelPart implements ICalculable {
 		GridDataFactory.fillDefaults().grab(true, true).applyTo(grTabs);
 
 		//вкладки фигуранта
-		grTabs = new Group(parent, SWT.NONE);
+		grTabs = new Group(sashForm, SWT.NONE);
 		subfolder = new CTabFolder(grTabs, SWT.BORDER);
 		subfolder.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 		subfolder.setSimple(false);
@@ -332,9 +338,6 @@ public class CollationPart extends ModelPart implements ICalculable {
 		subfolder.pack();
 		GridLayoutFactory.swtDefaults().applyTo(grTabs);
 		GridDataFactory.fillDefaults().grab(true, true).applyTo(grTabs);
-
-		super.create(parent);
-		return null;
 	}
 
 	/**
@@ -496,9 +499,8 @@ public class CollationPart extends ModelPart implements ICalculable {
 	}
 
 	@Override
-	protected void init(Composite parent) {
-		GridLayoutFactory.swtDefaults().applyTo(parent);
-		GridDataFactory.fillDefaults().grab(true, true).applyTo(parent);
+	protected void arrange(Composite parent) {
+		super.arrange(parent);
 		GridDataFactory.fillDefaults().align(SWT.FILL, SWT.FILL).grab(true, true).applyTo(tvParticipants.getTable());
 		GridDataFactory.fillDefaults().align(SWT.FILL, SWT.FILL).grab(true, true).applyTo(tvMembers.getTable());
 	}

@@ -81,8 +81,7 @@ public class TransitPart extends ModelListView {
 	
 	@PostConstruct @Override
 	public View create(Composite parent) {
-		super.create(parent);
-		return null;
+		return super.create(parent);
 	}
 
 	@Override
@@ -279,7 +278,8 @@ public class TransitPart extends ModelListView {
 	}
 
 	@Override
-	protected void initControls() {
+	protected void initControls() throws DataAccessException {
+		super.initControls();
 		setPlaces();
 		try {
 			tableViewer2.setInput(new SphereService().getList());
