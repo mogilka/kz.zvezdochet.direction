@@ -141,7 +141,8 @@ public class PDFExporter {
 	        chapter.add(p);
 
 	        int ages = finalage - initage + 1;
-	        p = new Paragraph("Прогноз описывает самые значительные тенденции вашей жизни в ближайшие " + CoreUtil.getAgeString(ages)
+	        p = new Paragraph("Данный прогноз не содержит конкретных дат, "
+	        	+ "но описывает самые значительные тенденции вашей жизни в ближайшие " + CoreUtil.getAgeString(ages)
         		+ " независимо от переездов и местоположения."
 	        	+ " Негативные тенденции – признак того, что вам необходим отдых, переосмысление и мобилизация ресурсов для решения проблемы. "
 				+ "А также это возможность смягчить напряжение, ведь вы будете знать о нём заранее. "
@@ -274,15 +275,15 @@ public class PDFExporter {
 			chapter.add(new Paragraph("Примечание:", font));
 			com.itextpdf.text.List list = new com.itextpdf.text.List(false, false, 10);
 			ListItem li = new ListItem();
-	        li.add(new Chunk("Зелёным цветом выделены позитивные тенденции", new Font(baseFont, 12, Font.NORMAL, new BaseColor(0, 102, 102))));
+	        li.add(new Chunk("Зелёным цветом выделены позитивные тенденции, которые наполнят вас энергией. Их надо использовать по максимуму", new Font(baseFont, 12, Font.NORMAL, new BaseColor(0, 102, 102))));
 	        list.add(li);
 
 			li = new ListItem();
-	        li.add(new Chunk("Красным цветом выделены негативные тенденции", new Font(baseFont, 12, Font.NORMAL, new BaseColor(102, 0, 51))));
+	        li.add(new Chunk("Красным цветом выделены негативные тенденции, которые потребуют большого расхода энергии. Они указывают на сферы, от которых не нужно ждать многого", new Font(baseFont, 12, Font.NORMAL, new BaseColor(102, 0, 51))));
 	        list.add(li);
 
 			li = new ListItem();
-	        li.add(new Chunk("Чёрным цветом выделены важные тенденции", font));
+	        li.add(new Chunk("Чёрным цветом выделены важные тенденции, которые указывают на основополагающие события периода", font));
 	        list.add(li);
 	        chapter.add(list);
 
@@ -342,11 +343,8 @@ public class PDFExporter {
 				chapter = new ChapterAutoNumber(PDFUtil.printHeader(new Paragraph(), agestr, null));
 				chapter.setNumberDepth(0);
 
-				for (Map.Entry<Integer, List<SkyPointAspect>> subentry : agemap.entrySet())
-					printEvents(event, chapter, age, subentry.getKey(), subentry.getValue());
-
 				//диаграмма возраста
-				Section section = PDFUtil.printSection(chapter, "Диаграмма", null);
+				Section section = PDFUtil.printSection(chapter, "Диаграмма " + agestr, null);
 				printDiagramDescr(section);
 				Map<Long, Double> mapa = seriesa.get(age);
 				Bar[] items = new Bar[mapa.size()];
@@ -360,8 +358,12 @@ public class PDFExporter {
 					bar.setCategory(age + "");
 					items[++i] = bar;
 				}
-				image = PDFUtil.printBars(writer, agestr, "Сферы жизни", "Баллы", items, 500, 300, false, false, false);
+				image = PDFUtil.printBars(writer, "", "Сферы жизни", "Баллы", items, 500, 300, false, false, false);
 				section.add(image);
+				chapter.add(Chunk.NEXTPAGE);
+
+				for (Map.Entry<Integer, List<SkyPointAspect>> subentry : agemap.entrySet())
+					printEvents(event, chapter, age, subentry.getKey(), subentry.getValue());
 				doc.add(chapter);
 				doc.add(Chunk.NEXTPAGE);
 			}
@@ -497,17 +499,18 @@ public class PDFExporter {
 			String header = "";
 			Paragraph p = null;
 			String agestr = CoreUtil.getAgeString(age);
+			Font grayfont = PDFUtil.getAnnotationFont(false);
 			if (0 == code) {
-				header += "Значимые события";
+				header += "Значимые события " + agestr;
 				p = new Paragraph("В данном разделе описаны жизненноважные, долгожданные, переломные события, "
-					+ "которые произойдут в возрасте " + agestr + ", надолго запомнятся и повлекут за собой перемены", font);
+					+ "которые произойдут в возрасте " + agestr + ", надолго запомнятся и повлекут за собой перемены", grayfont);
 			} else if (1 == code) {
-				header += "Менее значимые события";
-				p = new Paragraph("В данном разделе описаны краткосрочные события, "
-					+ "которые произойдут в возрасте " + agestr + " и не будут иметь больших последствий", font);
+				header += "Менее значимые события " + agestr;
+				p = new Paragraph("В данном разделе описаны краткосрочные, но важные события, "
+					+ "которые произойдут в возрасте " + agestr + " и не будут иметь последствий дольше одного года", grayfont);
 			} else if (2 == code) {
-				header += "Проявления личности";
-				p = new Paragraph("В данном разделе описаны черты вашей личности, которые станут особенно яркими в возрасте " + agestr, font);
+				header += "Проявления личности в " + agestr;
+				p = new Paragraph("В данном разделе описаны черты вашей личности, которые станут особенно яркими в возрасте " + agestr, grayfont);
 			}
 			Section section = PDFUtil.printSection(chapter, header, null);
 			if (p != null) {
@@ -519,8 +522,6 @@ public class PDFExporter {
 			DirectionService service = new DirectionService();
 			DirectionAspectService servicea = new DirectionAspectService();
 			boolean child = age < event.MAX_TEEN_AGE;
-			Map<Long, Planet> planets = event.getPlanets();
-			Map<Long, List<Long>> pairs = new HashMap<>();
 
 			for (SkyPointAspect spa : spas) {
 				AspectType type = spa.getAspect().getType();
@@ -528,9 +529,6 @@ public class PDFExporter {
 					continue;
 
 				Planet planet = (Planet)spa.getSkyPoint1();
-//				if (planet.isLilithed() && type.getCode().equals("NEUTRAL"))
-//					continue;
-
 				String acode = spa.getAspect().getCode();
 
 				SkyPoint skyPoint = spa.getSkyPoint2();
@@ -590,29 +588,18 @@ public class PDFExporter {
 						section.add(new Paragraph(PDFUtil.removeTags(rule.getText(), font)));
 
 				} else if (skyPoint instanceof Planet) {
-					//не дублируем аспект, если в реверсивном сочетании он уже был упомянут
-					List<Long> plist = pairs.get(skyPoint.getId());
-					if (plist != null && plist.size() > 0) {
-						if (plist.contains(spa.getSkyPoint1().getId()))
-							continue;
-					}
-					if (null == plist)
-						plist = new ArrayList<>();
-					plist.add(skyPoint.getId());
-					pairs.put(spa.getSkyPoint1().getId(), plist);
-
 					Planet planet2 = (Planet)skyPoint;
 					List<Model> texts = servicea.finds(spa, false);
 					if (0 == texts.size())
 	    				section.addSection(new Paragraph(planet.getShortName() + " " + type.getSymbol() + " " + planet2.getShortName(), fonth5));
 					else for (Model model : texts) {
 						PlanetAspectText dirText = (PlanetAspectText)model;
-						dirText.setPlanet1(planet);
-
+						if (dirText != null) {
+							String text = dirText.getText();
+							if (null == text)
+								continue;
+						}
 		    			if (term) {
-		    				Planet aspl2 = (Planet)planets.get(planet2.getId());
-							dirText.setPlanet2(aspl2);
-
 		    				p = new Paragraph();
 		    				if (dirText != null)
 		    					p.add(new Chunk(dirText.getMark(), fonth5));
