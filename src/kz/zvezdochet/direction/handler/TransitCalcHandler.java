@@ -69,7 +69,7 @@ public class TransitCalcHandler extends Handler {
 
 			for (Date date = start.getTime(); start.before(end); start.add(Calendar.DATE, 1), date = start.getTime()) {
 				Event event = new Event();
-				String sdate = DateUtil.formatCustomDateTime(date, "yyyy-MM-dd") + " 00:00:00";
+				String sdate = DateUtil.formatCustomDateTime(date, "yyyy-MM-dd") + " 12:00:00";
 				Date edate = DateUtil.getDatabaseDateTime(sdate);
 				String pdate = sdf.format(edate);
 				event.setBirth(edate);
@@ -139,7 +139,9 @@ public class TransitCalcHandler extends Handler {
 
 			//искусственно устанавливаем нарастающую оппозицию,
 			//чтобы она синхронизировалась с соответствующим ей соединением в этот день
-			if (point2 instanceof House)
+			if (point2 instanceof House
+					|| point2.getCode().equals("Rakhu")
+					|| point2.getCode().equals("Kethu"))
 				if ((res >= 179 && res < 180)
 						|| CalcUtil.compareAngles(one, two))
 					++res;

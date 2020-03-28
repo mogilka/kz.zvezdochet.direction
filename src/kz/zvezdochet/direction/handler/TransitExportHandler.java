@@ -174,7 +174,7 @@ public class TransitExportHandler extends Handler {
 				long time = date.getTime();
 
 				Event event = new Event();
-				String sdate = DateUtil.formatCustomDateTime(date, "yyyy-MM-dd") + " 00:00:00";
+				String sdate = DateUtil.formatCustomDateTime(date, "yyyy-MM-dd") + " 12:00:00";
 				Date edate = DateUtil.getDatabaseDateTime(sdate);
 				event.setBirth(edate);
 				event.setPlace(place);
