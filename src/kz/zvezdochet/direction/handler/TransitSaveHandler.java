@@ -3,7 +3,6 @@ package kz.zvezdochet.direction.handler;
 import java.io.FileOutputStream;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.Collections;
@@ -17,8 +16,6 @@ import org.eclipse.e4.core.contexts.Active;
 import org.eclipse.e4.core.di.annotations.Execute;
 import org.eclipse.e4.ui.model.application.ui.basic.MPart;
 import org.jfree.data.time.Day;
-import org.jfree.data.time.TimeSeries;
-import org.jfree.data.time.TimeSeriesCollection;
 import org.jfree.data.time.TimeSeriesDataItem;
 
 import com.itextpdf.text.Chapter;
@@ -34,23 +31,24 @@ import com.itextpdf.text.Section;
 import com.itextpdf.text.pdf.BaseFont;
 import com.itextpdf.text.pdf.PdfWriter;
 
-import kz.zvezdochet.analytics.bean.Sphere;
-import kz.zvezdochet.analytics.service.SphereService;
 import kz.zvezdochet.bean.Aspect;
+import kz.zvezdochet.bean.AspectType;
 import kz.zvezdochet.bean.Event;
 import kz.zvezdochet.bean.House;
 import kz.zvezdochet.bean.Place;
 import kz.zvezdochet.bean.Planet;
 import kz.zvezdochet.bean.SkyPoint;
+import kz.zvezdochet.bean.SkyPointAspect;
 import kz.zvezdochet.core.bean.Model;
 import kz.zvezdochet.core.handler.Handler;
-import kz.zvezdochet.core.ui.util.DialogUtil;
 import kz.zvezdochet.core.util.CalcUtil;
 import kz.zvezdochet.core.util.DateUtil;
 import kz.zvezdochet.core.util.PlatformUtil;
 import kz.zvezdochet.direction.Activator;
 import kz.zvezdochet.direction.bean.PeriodItem;
 import kz.zvezdochet.direction.part.TransitPart;
+import kz.zvezdochet.direction.service.DirectionAspectService;
+import kz.zvezdochet.direction.service.DirectionService;
 import kz.zvezdochet.export.bean.Bar;
 import kz.zvezdochet.export.handler.PageEventHandler;
 import kz.zvezdochet.export.util.PDFUtil;
@@ -60,10 +58,10 @@ import kz.zvezdochet.service.AspectService;
  * Генерация прогноза за указанный период по месяцам
  * @author Natalie Didenko
  */
-public class MonthHandler extends Handler {
+public class TransitSaveHandler extends Handler {
 	private BaseFont baseFont;
 
-	public MonthHandler() {
+	public TransitSaveHandler() {
 		super();
 		try {
 			baseFont = PDFUtil.getBaseFont();
@@ -85,32 +83,8 @@ public class MonthHandler extends Handler {
 			Place place = periodPart.getPlace();
 			double zone = periodPart.getZone();
 
-			Object[] spheres = periodPart.getSpheres();
-			List<Long> selhouses = new ArrayList<>();
-			SphereService sphereService = new SphereService();
-			for (Object item : spheres) {
-				Sphere sphere = (Sphere)item;
-				List<Model> houses = sphereService.getHouses(sphere.getId());
-				for (Model model : houses)
-					if (!selhouses.contains(model.getId()))
-						selhouses.add(model.getId());
-			}
-			if (selhouses.isEmpty()) {
-				DialogUtil.alertError("Отметьте галочкой хотя бы одну сферу жизни");
-				return;
-			}
-			List<Long> selplanets = new ArrayList<>();
-			for (Object item : spheres) {
-				Sphere sphere = (Sphere)item;
-				List<Model> planets = sphereService.getPlanets(sphere.getId());
-				for (Model model : planets)
-					if (!selplanets.contains(model.getId()))
-						selplanets.add(model.getId());
-			}
-
 			Map<Long, House> houses = person.getHouses();
 			Map<Long, Planet> planets = person.getPlanets();
-	
 			updateStatus("Расчёт транзитов на период", false);
 
 			Date initDate = periodPart.getInitialDate();
@@ -123,7 +97,7 @@ public class MonthHandler extends Handler {
 
 			List<Model> aspects = new AspectService().getMajorList();
 
-			String filename = PlatformUtil.getPath(Activator.PLUGIN_ID, "/out/month.pdf").getPath();
+			String filename = PlatformUtil.getPath(Activator.PLUGIN_ID, "/out/transits.pdf").getPath();
 			PdfWriter writer = PdfWriter.getInstance(doc, new FileOutputStream(filename));
 	        writer.setPageEvent(new PageEventHandler());
 	        doc.open();
@@ -146,8 +120,8 @@ public class MonthHandler extends Handler {
 			SimpleDateFormat sdf = new SimpleDateFormat("EEEE, d MMMM yyyy");
 			text += sdf.format(initDate);
 			boolean days = (DateUtil.getDateFromDate(initDate) != DateUtil.getDateFromDate(finalDate)
-					|| DateUtil.getMonthFromDate(initDate) != DateUtil.getMonthFromDate(finalDate)
-					|| DateUtil.getYearFromDate(initDate) != DateUtil.getYearFromDate(finalDate));
+				|| DateUtil.getMonthFromDate(initDate) != DateUtil.getMonthFromDate(finalDate)
+				|| DateUtil.getYearFromDate(initDate) != DateUtil.getYearFromDate(finalDate));
 			if (days)
 				text += " — " + sdf.format(finalDate);
 			p = new Paragraph(text, font);
@@ -179,26 +153,16 @@ public class MonthHandler extends Handler {
 	        p.add(chunk);
 	        chapter.add(p);
 
-			Font bold = new Font(baseFont, 12, Font.BOLD);
-			chapter.add(new Paragraph("Прогноз на сферы жизни:", bold));
-			com.itextpdf.text.List list = new com.itextpdf.text.List(false, false, 10);
-			for (Object object : spheres) {
-				ListItem li = new ListItem();
-				Sphere sphere = (Sphere)object;
-				li.add(new Chunk(sphere.getName(), font));
-				list.add(li);
-			}
-		    chapter.add(list);
-			chapter.add(Chunk.NEWLINE);
-
 			chapter.add(new Paragraph("Данный прогноз сделан с учётом вашего текущего местонахождения. "
-				+ "Если вы в течение прогнозного периода переедете в более отдалённое место (в другой часовой пояс или с ощутимой сменой географической широты), "
-				+ "то там прогноз будет недостоверен. Но можно составить аналогичный прогноз на тот же период на новом месте.", font));
+				+ "Если в течение прогнозного периода вы переедете в более отдалённое место (в другой часовой пояс или с ощутимой сменой географической широты), "
+				+ "то в некоторых аспектах прогноз будет иметь временны́е погрешности.", font));
 			chapter.add(Chunk.NEWLINE);
 
+			Font bold = new Font(baseFont, 12, Font.BOLD);
 			chapter.add(new Paragraph("Диаграммы показывают динамику событий по месяцам в трёх категориях: позитив, негатив и важное.", font));
 			chapter.add(new Paragraph("Позитив и негатив:", bold));
 
+			com.itextpdf.text.List list = new com.itextpdf.text.List(false, false, 10);
 			list = new com.itextpdf.text.List(false, false, 10);
 			ListItem li = new ListItem();
 	        li.add(new Chunk("«Позитив» – это благоприятные возможности, которые нужно использовать по максимуму.", new Font(baseFont, 12, Font.NORMAL, PDFUtil.FONTGREEN)));
@@ -227,7 +191,7 @@ public class MonthHandler extends Handler {
 	        chapter.add(list);
 			chapter.add(Chunk.NEWLINE);
 
-			chapter.add(new Paragraph("Погрешность прогноза составляет ±2 дня.", bold));
+			chapter.add(new Paragraph("Погрешность прогноза составляет ±1 день.", bold));
 
 			list = new com.itextpdf.text.List(false, false, 10);
 			li = new ListItem();
@@ -241,7 +205,8 @@ public class MonthHandler extends Handler {
 	        doc.add(chapter);
 
 			Map<Integer, Map<Integer, List<Long>>> years = new TreeMap<Integer, Map<Integer, List<Long>>>();
-			Map<Integer, Map<Integer, Map<Long, Map<Long, List<TimeSeriesDataItem>>>>> years2 = new TreeMap<Integer, Map<Integer, Map<Long, Map<Long, List<TimeSeriesDataItem>>>>>();
+			Map<Integer, Map<Integer, Map<Long, Map<Long, List<TimeSeriesDataItem>>>>> hyears = new TreeMap<Integer, Map<Integer, Map<Long, Map<Long, List<TimeSeriesDataItem>>>>>();
+			Map<Integer, Map<Integer, Map<Long, List<SkyPointAspect>>>> texts = new TreeMap<Integer, Map<Integer, Map<Long, List<SkyPointAspect>>>>();
 
 			System.out.println("Prepared for: " + (System.currentTimeMillis() - run));
 			run = System.currentTimeMillis();
@@ -262,18 +227,20 @@ public class MonthHandler extends Handler {
 				months.put(m, dates);
 				years.put(y, months);
 
-				Map<Integer, Map<Long, Map<Long, List<TimeSeriesDataItem>>>> months2 = years2.containsKey(y) ? years2.get(y) : new TreeMap<Integer, Map<Long, Map<Long, List<TimeSeriesDataItem>>>>();
+				Map<Integer, Map<Long, Map<Long, List<TimeSeriesDataItem>>>> months2 = hyears.containsKey(y) ? hyears.get(y) : new TreeMap<Integer, Map<Long, Map<Long, List<TimeSeriesDataItem>>>>();
 				months2.put(m, new TreeMap<Long, Map<Long, List<TimeSeriesDataItem>>>());
-				years2.put(y, months2);
+				hyears.put(y, months2);
 			}
 
-			Map<Long, List<Date>> revolutions = new HashMap<Long, List<Date>>();
 			Map<Integer, Map<String, Map<Integer,Integer>>> yitems = new TreeMap<Integer, Map<String,Map<Integer,Integer>>>();
 
 			//создаём аналогичный массив, но с домами вместо дат
 			for (Map.Entry<Integer, Map<Integer, List<Long>>> entry : years.entrySet()) {
 				int y = entry.getKey();
 				Map<Integer, List<Long>> months = years.get(y);
+				Map<Integer, Map<Long, List<SkyPointAspect>>> mtexts = texts.get(y);
+				if (null == mtexts)
+					mtexts = new TreeMap<Integer, Map<Long,List<SkyPointAspect>>>();
 
 				//данные для графика года
 				Map<Integer,Integer> positive = new HashMap<Integer,Integer>();
@@ -290,9 +257,12 @@ public class MonthHandler extends Handler {
 					int month = m + 1;
 
 					List<Long> dates = months.get(m);
+					Map<Long, List<SkyPointAspect>> dtexts = mtexts.get(m);
+					if (null == dtexts)
+						dtexts = new TreeMap<Long,List<SkyPointAspect>>();
+
 					for (Long time : dates) {
 						Date date = new Date(time);
-
 						String sdate = DateUtil.formatCustomDateTime(date, "yyyy-MM-dd") + " 12:00:00";
 						Event event = new Event();
 						Date edate = DateUtil.getDatabaseDateTime(sdate);
@@ -301,26 +271,43 @@ public class MonthHandler extends Handler {
 						event.setZone(zone);
 						event.calc(true);
 						event.initAspects();
-		
-						List<Planet> iplanets = new ArrayList<Planet>();
-						Collection<Planet> eplanets = event.getPlanets().values();
-						for (Model model : eplanets) {
-							Planet planet = (Planet)model;
-//							List<Object> ingresses = planet.isIngressed(prev, event);
-//							if (ingresses != null && ingresses.size() > 0)
-								iplanets.add(planet);
-						}
+
+						List<SkyPointAspect> spas = dtexts.get(time);
+						if (null == spas)
+							spas = new ArrayList<SkyPointAspect>();
 
 						Map<Long, Map<Long, Integer>> hitems = new HashMap<Long, Map<Long, Integer>>();
-						for (Planet eplanet : iplanets) {
-							for (Model model : houses.values()) {
-								if (!selhouses.contains(model.getId()))
-									continue;
 
+						Collection<Planet> eplanets = event.getPlanets().values();
+						for (Planet eplanet : eplanets) {
+							for (Model model : planets.values()) {
+								Planet planet = (Planet)model;
+								PeriodItem item = calc(eplanet, planet, aspects);
+								if (null == item)
+									continue;
+								spas.add(item.getPlanetAspect());
+
+								String code = item.aspect.getType().getCode();
+								if (code.equals("NEUTRAL")) {
+									if (eplanet.getCode().equals("Lilith") || eplanet.getCode().equals("Kethu")
+											|| planet.getCode().equals("Lilith") || planet.getCode().equals("Kethu"))
+										negative.put(month, negative.get(month) + 1);
+									else
+										positive.put(month, positive.get(month) + 1);
+								} else if (code.equals("POSITIVE"))
+									positive.put(month, positive.get(month) + 1);
+								else if (code.equals("NEGATIVE"))
+									negative.put(month, negative.get(month) + 1);
+							}
+
+							for (Model model : houses.values()) {
 								House house = (House)model;
 								PeriodItem item = calc(eplanet, house, aspects);
 								if (null == item)
 									continue;
+								spas.add(item.getHouseAspect());
+
+								//данные для диаграммы домов
 								long id = house.getId();
 								Map<Long, Integer> amap = hitems.containsKey(id) ? hitems.get(id) : new HashMap<Long, Integer>();
 								String code = item.aspect.getType().getCode();
@@ -341,32 +328,12 @@ public class MonthHandler extends Handler {
 								else if (code.equals("NEGATIVE"))
 									negative.put(month, negative.get(month) + 1);							
 							}
-
-							if (!selplanets.contains(eplanet.getId()))
-								continue;
-							for (Model model : planets.values()) {
-								if (!selplanets.contains(model.getId()))
-									continue;
-
-								//пока что считаем только революции
-								if (eplanet.getId().equals(model.getId())) {
-									Planet planet = (Planet)model;
-									PeriodItem item = calc(eplanet, planet, aspects);
-									if (null == item)
-										continue;
-									if (!item.aspect.getCode().equals("CONJUNCTION"))
-										continue;
-
-									List<Date> dlist = revolutions.get(model.getId());
-									if (null == dlist)
-										dlist = new ArrayList<Date>();
-									dlist.add(edate);
-									revolutions.put(model.getId(), dlist);
-								}
-							}
 						}
+						dtexts.put(time, spas);
+						mtexts.put(m, dtexts);
+						texts.put(y, mtexts);
 
-						Map<Integer, Map<Long, Map<Long, List<TimeSeriesDataItem>>>> months2 = years2.containsKey(y) ? years2.get(y) : new TreeMap<Integer, Map<Long, Map<Long, List<TimeSeriesDataItem>>>>();
+						Map<Integer, Map<Long, Map<Long, List<TimeSeriesDataItem>>>> months2 = hyears.containsKey(y) ? hyears.get(y) : new TreeMap<Integer, Map<Long, Map<Long, List<TimeSeriesDataItem>>>>();
 						Map<Long, Map<Long, List<TimeSeriesDataItem>>> items = months2.containsKey(m) ? months2.get(m) : new TreeMap<Long, Map<Long, List<TimeSeriesDataItem>>>();
 						for (Map.Entry<Long, Map<Long, Integer>> entryh : hitems.entrySet()) {
 							Map<Long, Integer> amap = entryh.getValue();
@@ -397,42 +364,11 @@ public class MonthHandler extends Handler {
 			run = System.currentTimeMillis();
 	        Font hfont = new Font(baseFont, 16, Font.BOLD, PDFUtil.FONTCOLOR);
 
-			//обращения планет
-	        System.out.println(revolutions);
-	        if (!revolutions.isEmpty()) {
-				chapter = new ChapterAutoNumber(PDFUtil.printHeader(new Paragraph(), "Важные циклы", null));
-				chapter.setNumberDepth(0);
-				chapter.add(new Paragraph("Приведённые ниже даты, связаны с завершением одного большого жизненного цикла и началом другого", font));
+			DirectionService service = new DirectionService();
+			DirectionAspectService servicea = new DirectionAspectService();
 
-				List<String> negative = Arrays.asList(new String[] {"Kethu", "Lilith"});
-				for (Map.Entry<Long, List<Date>> entry : revolutions.entrySet()) {
-					long planetid = entry.getKey();
-					Planet planet = planets.get(planetid);
-					Section section = PDFUtil.printSection(chapter, planet.getShortName(), null);
-
-					list = new com.itextpdf.text.List(false, false, 10);
-					List<Date> dlist = entry.getValue();
-					for (Date date : dlist) {
-						li = new ListItem();
-				        li.add(new Chunk(sdf.format(date), font));
-				        list.add(li);
-					}
-			        section.add(list);
-			        section.add(Chunk.NEWLINE);
-
-					p = new Paragraph();
-					p.setFont(font);
-					p.add("В указанные дни произойдёт начало нового цикла в сфере «" + planet.getShortName() + "». "
-						+ "Это означает, что вас ожидает яркое событие или переживание, связанное со следующими сферами жизни: ");
-					p.add(new Chunk(planet.getDescription(), new Font(baseFont, 12, Font.NORMAL, negative.contains(planet.getCode()) ? PDFUtil.FONTCOLORED : PDFUtil.FONTGREEN)));
-					section.add(p);
-				}
-				chapter.add(Chunk.NEXTPAGE);
-				doc.add(chapter);
-	        }
-
-	        //дома
-			for (Map.Entry<Integer, Map<Integer, Map<Long, Map<Long, List<TimeSeriesDataItem>>>>> entry : years2.entrySet()) {
+	        //года
+			for (Map.Entry<Integer, Map<Integer, Map<Long, Map<Long, List<TimeSeriesDataItem>>>>> entry : hyears.entrySet()) {
 				int y = entry.getKey();
 				String syear = String.valueOf(y);
 				chapter = new ChapterAutoNumber(PDFUtil.printHeader(new Paragraph(), syear, null));
@@ -455,9 +391,9 @@ public class MonthHandler extends Handler {
 				section.add(image);
 				section.add(Chunk.NEXTPAGE);
 
-				//графики по месяцам
-				Map<Integer, Map<Long, Map<Long, List<TimeSeriesDataItem>>>> months2 = years2.get(y);
-
+				//месяцы
+				Map<Integer, Map<Long, Map<Long, List<TimeSeriesDataItem>>>> months2 = hyears.get(y);
+				Map<Integer, Map<Long, List<SkyPointAspect>>> mtexts = texts.get(y);
 				for (Map.Entry<Integer, Map<Long, Map<Long, List<TimeSeriesDataItem>>>> entry2 : months2.entrySet()) {
 					int m = entry2.getKey();
 					Calendar calendar = Calendar.getInstance();
@@ -465,35 +401,89 @@ public class MonthHandler extends Handler {
 					String ym = new SimpleDateFormat("LLLL").format(calendar.getTime()) + " " + y;
 					section = PDFUtil.printSection(chapter, ym, null);
 
-					Map<Long, Map<Long, List<TimeSeriesDataItem>>> items = entry2.getValue();
-			        int i = -1;
-					for (Map.Entry<Long, Map<Long, List<TimeSeriesDataItem>>> entryh : items.entrySet()) {
-						long houseid = entryh.getKey();
-						House house = houses.get(houseid);
-						Map<Long, List<TimeSeriesDataItem>> map = entryh.getValue();
-						TimeSeriesCollection dataset = new TimeSeriesCollection();
-						for (Map.Entry<Long, List<TimeSeriesDataItem>> entry3 : map.entrySet()) {
-			        		List<TimeSeriesDataItem> series = entry3.getValue();
-			        		if (null == series || 0 == series.size())
-			        			continue;
-			        		Long aid = entry3.getKey();
-							TimeSeries timeSeries = new TimeSeries(aid < 2 ? "Важное" : (aid < 3 ? "Негатив" : "Позитив"));
-							for (TimeSeriesDataItem tsdi : series)
-								timeSeries.add(tsdi);
-							dataset.addSeries(timeSeries);
-			        	}
-			        	if (dataset.getSeriesCount() > 0) {
-			        		if (++i > 1) {
-			        			i = 0;
-			        			section.add(Chunk.NEXTPAGE);
-			        		}
-				        	section.addSection(new Paragraph(house.getName(), hfont));
-				        	section.add(new Paragraph(ym + ": " + house.getDescription(), font));
-						    image = PDFUtil.printTimeChart(writer, "", "", "Баллы", dataset, 500, 0, true);
-							section.add(image);
-							section.add(Chunk.NEWLINE);
-			        	}
+					//TODO диаграмма месяца перед толкованиями
+					
+					Map<Long, List<SkyPointAspect>> dtexts = mtexts.get(m);
+					for (Map.Entry<Long, List<SkyPointAspect>> dentry : dtexts.entrySet()) {
+						String shortdate = sdf.format(new Date(dentry.getKey()));
+						Section dsection = section.addSection(new Paragraph(shortdate, hfont));
+
+			        	List<SkyPointAspect> spas = dtexts.get(dentry.getKey());
+						for (SkyPointAspect spa : spas) {
+							AspectType type = spa.getAspect().getType();
+							Planet planet = (Planet)spa.getSkyPoint1();
+
+							SkyPoint skyPoint = spa.getSkyPoint2();
+							if (skyPoint instanceof House) {
+								House house = (House)skyPoint;
+//								DirectionText dirText = (DirectionText)service.find(planet, house, type);
+								boolean bad = type.getPoints() < 0;
+			    				String pname = bad ? planet.getNegative() : planet.getPositive();
+								dsection.addSection(new Paragraph(house.getName() + " " + type.getSymbol() + " " + pname, font));
+//								if (dirText != null) {
+//									String text = dirText.getText();
+//									if (text != null) {
+//										String typeColor = type.getFontColor();
+//										BaseColor color = PDFUtil.htmlColor2Base(typeColor);
+//										section.add(new Paragraph(PDFUtil.removeTags(text, new Font(baseFont, 12, Font.NORMAL, color))));
+//										PDFUtil.printGender(section, dirText, female, child, true);
+//									}
+//								}
+							} else if (skyPoint instanceof Planet) {
+								Planet planet2 = (Planet)skyPoint;
+//								PlanetAspectText dirText = (PlanetAspectText)servicea.find(spa, false);
+			    				dsection.addSection(new Paragraph(planet.getShortName() + " " + type.getSymbol() + " " + planet2.getShortName(), font));
+//									if (dirText != null) {
+//										String text = dirText.getText();
+//										if (null == text)
+//											continue;
+//					    				section.addSection(new Paragraph(planet.getShortName() + " " + type.getSymbol() + " " + planet2.getShortName(), fonth5));
+//										if (dirText != null) {
+//											String text = dirText.getText();
+//											if (text != null) {
+//								    			String typeColor = type.getFontColor();
+//												BaseColor color = PDFUtil.htmlColor2Base(typeColor);
+//												section.add(new Paragraph(PDFUtil.removeTags(text, new Font(baseFont, 12, Font.NORMAL, color))));
+//												PDFUtil.printGender(section, dirText, female, child, true);
+//											}
+//										}
+//									}
+							}
+						}
+						dsection.add(Chunk.NEWLINE);
 					}
+
+					//графики по домам
+//					section = PDFUtil.printSection(chapter, ym + " по сферам жизни", null);
+//					Map<Long, Map<Long, List<TimeSeriesDataItem>>> items = entry2.getValue();
+//			        int i = -1;
+//					for (Map.Entry<Long, Map<Long, List<TimeSeriesDataItem>>> entryh : items.entrySet()) {
+//						long houseid = entryh.getKey();
+//						House house = houses.get(houseid);
+//						Map<Long, List<TimeSeriesDataItem>> map = entryh.getValue();
+//						TimeSeriesCollection dataset = new TimeSeriesCollection();
+//						for (Map.Entry<Long, List<TimeSeriesDataItem>> entry3 : map.entrySet()) {
+//			        		List<TimeSeriesDataItem> series = entry3.getValue();
+//			        		if (null == series || 0 == series.size())
+//			        			continue;
+//			        		Long aid = entry3.getKey();
+//							TimeSeries timeSeries = new TimeSeries(aid < 2 ? "Важное" : (aid < 3 ? "Негатив" : "Позитив"));
+//							for (TimeSeriesDataItem tsdi : series)
+//								timeSeries.add(tsdi);
+//							dataset.addSeries(timeSeries);
+//			        	}
+//			        	if (dataset.getSeriesCount() > 0) {
+//			        		if (++i > 1) {
+//			        			i = 0;
+//			        			section.add(Chunk.NEXTPAGE);
+//			        		}
+//				        	section.addSection(new Paragraph(house.getName(), hfont));
+//				        	section.add(new Paragraph(ym + ": " + house.getDescription(), font));
+//						    image = PDFUtil.printTimeChart(writer, "", "", "Баллы", dataset, 500, 0, true);
+//							section.add(image);
+//							section.add(Chunk.NEWLINE);
+//			        	}
+//					}
 			        chapter.add(Chunk.NEXTPAGE);
 				}
 				doc.add(chapter);
@@ -514,6 +504,7 @@ public class MonthHandler extends Handler {
 	 * Определение аспектной дирекции между небесными точками
 	 * @param point1 первая небесная точка
 	 * @param point2 вторая небесная точка
+	 * @param aspects список аспектов
 	 */
 	private PeriodItem calc(SkyPoint point1, SkyPoint point2, List<Model> aspects) {
 		try {
@@ -540,11 +531,11 @@ public class MonthHandler extends Handler {
 				if (a.isExact(res)) {
 					PeriodItem item = new PeriodItem();
 					item.aspect = a;
+					item.planet = (Planet)point1;
 
 					if (point2 instanceof House)
 						item.house = (House)point2;
 					else if (point2 instanceof Planet) {
-						item.planet = (Planet)point1;
 						Planet planet2 = (Planet)point2;
 						item.planet2 = planet2;
 						item.house = planet2.getHouse();

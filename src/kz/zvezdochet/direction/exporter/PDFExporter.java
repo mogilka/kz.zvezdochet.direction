@@ -94,7 +94,7 @@ public class PDFExporter {
 	public void generate(Event event, List<SkyPointAspect> spas, int initage, int finalage) {
 		Document doc = new Document();
 		try {
-			String filename = PlatformUtil.getPath(Activator.PLUGIN_ID, "/out/trends.pdf").getPath();
+			String filename = PlatformUtil.getPath(Activator.PLUGIN_ID, "/out/directions.pdf").getPath();
 			PdfWriter writer = PdfWriter.getInstance(doc, new FileOutputStream(filename));
 	        writer.setPageEvent(new PageEventHandler());
 	        doc.open();
