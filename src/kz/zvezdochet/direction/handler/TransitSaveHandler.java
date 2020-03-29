@@ -4,7 +4,6 @@ import java.io.FileOutputStream;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
@@ -18,6 +17,7 @@ import org.eclipse.e4.ui.model.application.ui.basic.MPart;
 import org.jfree.data.time.Day;
 import org.jfree.data.time.TimeSeriesDataItem;
 
+import com.itextpdf.text.BaseColor;
 import com.itextpdf.text.Chapter;
 import com.itextpdf.text.ChapterAutoNumber;
 import com.itextpdf.text.Chunk;
@@ -31,7 +31,7 @@ import com.itextpdf.text.Section;
 import com.itextpdf.text.pdf.BaseFont;
 import com.itextpdf.text.pdf.PdfWriter;
 
-import kz.zvezdochet.bean.Aspect;
+import kz.zvezdochet.analytics.bean.PlanetAspectText;
 import kz.zvezdochet.bean.AspectType;
 import kz.zvezdochet.bean.Event;
 import kz.zvezdochet.bean.House;
@@ -39,20 +39,18 @@ import kz.zvezdochet.bean.Place;
 import kz.zvezdochet.bean.Planet;
 import kz.zvezdochet.bean.SkyPoint;
 import kz.zvezdochet.bean.SkyPointAspect;
-import kz.zvezdochet.core.bean.Model;
 import kz.zvezdochet.core.handler.Handler;
-import kz.zvezdochet.core.util.CalcUtil;
 import kz.zvezdochet.core.util.DateUtil;
 import kz.zvezdochet.core.util.PlatformUtil;
 import kz.zvezdochet.direction.Activator;
-import kz.zvezdochet.direction.bean.PeriodItem;
+import kz.zvezdochet.direction.bean.DirectionText;
 import kz.zvezdochet.direction.part.TransitPart;
 import kz.zvezdochet.direction.service.DirectionAspectService;
 import kz.zvezdochet.direction.service.DirectionService;
 import kz.zvezdochet.export.bean.Bar;
 import kz.zvezdochet.export.handler.PageEventHandler;
 import kz.zvezdochet.export.util.PDFUtil;
-import kz.zvezdochet.service.AspectService;
+import kz.zvezdochet.service.AspectTypeService;
 
 /**
  * Генерация прогноза за указанный период по месяцам
@@ -82,9 +80,6 @@ public class TransitSaveHandler extends Handler {
 			Event person = periodPart.getPerson();
 			Place place = periodPart.getPlace();
 			double zone = periodPart.getZone();
-
-			Map<Long, House> houses = person.getHouses();
-			Map<Long, Planet> planets = person.getPlanets();
 			updateStatus("Расчёт транзитов на период", false);
 
 			Date initDate = periodPart.getInitialDate();
@@ -94,8 +89,6 @@ public class TransitSaveHandler extends Handler {
 
 			Calendar end = Calendar.getInstance();
 			end.setTime(finalDate);
-
-			List<Model> aspects = new AspectService().getMajorList();
 
 			String filename = PlatformUtil.getPath(Activator.PLUGIN_ID, "/out/transits.pdf").getPath();
 			PdfWriter writer = PdfWriter.getInstance(doc, new FileOutputStream(filename));
@@ -206,7 +199,7 @@ public class TransitSaveHandler extends Handler {
 
 			Map<Integer, Map<Integer, List<Long>>> years = new TreeMap<Integer, Map<Integer, List<Long>>>();
 			Map<Integer, Map<Integer, Map<Long, Map<Long, List<TimeSeriesDataItem>>>>> hyears = new TreeMap<Integer, Map<Integer, Map<Long, Map<Long, List<TimeSeriesDataItem>>>>>();
-			Map<Integer, Map<Integer, Map<Long, List<SkyPointAspect>>>> texts = new TreeMap<Integer, Map<Integer, Map<Long, List<SkyPointAspect>>>>();
+			Map<Integer, Map<Integer, Map<Long, Map<String, List<Object>>>>> texts = new TreeMap<Integer, Map<Integer, Map<Long, Map<String, List<Object>>>>>();
 
 			System.out.println("Prepared for: " + (System.currentTimeMillis() - run));
 			run = System.currentTimeMillis();
@@ -238,9 +231,9 @@ public class TransitSaveHandler extends Handler {
 			for (Map.Entry<Integer, Map<Integer, List<Long>>> entry : years.entrySet()) {
 				int y = entry.getKey();
 				Map<Integer, List<Long>> months = years.get(y);
-				Map<Integer, Map<Long, List<SkyPointAspect>>> mtexts = texts.get(y);
+				Map<Integer, Map<Long, Map<String, List<Object>>>> mtexts = texts.get(y);
 				if (null == mtexts)
-					mtexts = new TreeMap<Integer, Map<Long,List<SkyPointAspect>>>();
+					mtexts = new TreeMap<Integer, Map<Long, Map<String, List<Object>>>>();
 
 				//данные для графика года
 				Map<Integer,Integer> positive = new HashMap<Integer,Integer>();
@@ -257,9 +250,9 @@ public class TransitSaveHandler extends Handler {
 					int month = m + 1;
 
 					List<Long> dates = months.get(m);
-					Map<Long, List<SkyPointAspect>> dtexts = mtexts.get(m);
+					Map<Long, Map<String, List<Object>>> dtexts = mtexts.get(m);
 					if (null == dtexts)
-						dtexts = new TreeMap<Long,List<SkyPointAspect>>();
+						dtexts = new TreeMap<Long, Map<String, List<Object>>>();
 
 					for (Long time : dates) {
 						Date date = new Date(time);
@@ -270,27 +263,25 @@ public class TransitSaveHandler extends Handler {
 						event.setPlace(place);
 						event.setZone(zone);
 						event.calc(true);
-						event.initAspects();
 
-						List<SkyPointAspect> spas = dtexts.get(time);
-						if (null == spas)
-							spas = new ArrayList<SkyPointAspect>();
+						Map<String, List<Object>> ingressList = person.initIngresses(event);
+						dtexts.put(time, ingressList);
+						mtexts.put(m, dtexts);
+						texts.put(y, mtexts);
 
 						Map<Long, Map<Long, Integer>> hitems = new HashMap<Long, Map<Long, Integer>>();
 
-						Collection<Planet> eplanets = event.getPlanets().values();
-						for (Planet eplanet : eplanets) {
-							for (Model model : planets.values()) {
-								Planet planet = (Planet)model;
-								PeriodItem item = calc(eplanet, planet, aspects);
-								if (null == item)
-									continue;
-								spas.add(item.getPlanetAspect());
+						for (Map.Entry<String, List<Object>> ientry : ingressList.entrySet()) {
+							List<Object> ingresses = ientry.getValue();
+							for (Object object : ingresses) {
+								SkyPointAspect spa = (SkyPointAspect)object;
+								SkyPoint skyPoint = spa.getSkyPoint1();
+								SkyPoint skyPoint2 = spa.getSkyPoint2();
 
-								String code = item.aspect.getType().getCode();
+								String code = spa.getAspect().getType().getCode();
 								if (code.equals("NEUTRAL")) {
-									if (eplanet.getCode().equals("Lilith") || eplanet.getCode().equals("Kethu")
-											|| planet.getCode().equals("Lilith") || planet.getCode().equals("Kethu"))
+									if (skyPoint.getCode().equals("Lilith") || skyPoint.getCode().equals("Kethu")
+											|| skyPoint2.getCode().equals("Lilith") || skyPoint2.getCode().equals("Kethu"))
 										negative.put(month, negative.get(month) + 1);
 									else
 										positive.put(month, positive.get(month) + 1);
@@ -298,40 +289,20 @@ public class TransitSaveHandler extends Handler {
 									positive.put(month, positive.get(month) + 1);
 								else if (code.equals("NEGATIVE"))
 									negative.put(month, negative.get(month) + 1);
-							}
-
-							for (Model model : houses.values()) {
-								House house = (House)model;
-								PeriodItem item = calc(eplanet, house, aspects);
-								if (null == item)
-									continue;
-								spas.add(item.getHouseAspect());
 
 								//данные для диаграммы домов
-								long id = house.getId();
-								Map<Long, Integer> amap = hitems.containsKey(id) ? hitems.get(id) : new HashMap<Long, Integer>();
-								String code = item.aspect.getType().getCode();
-								long aid = code.equals("NEUTRAL")
-										&& (eplanet.getCode().equals("Lilith") || eplanet.getCode().equals("Kethu"))
-									? 2 : item.aspect.getTypeid();
-								int val = amap.containsKey(aid) ? amap.get(aid) : 0;
-								amap.put(aid, val + 1);
-								hitems.put(id, amap);
-
-								if (code.equals("NEUTRAL")) {
-									if (eplanet.getCode().equals("Lilith") || eplanet.getCode().equals("Kethu"))
-										negative.put(month, negative.get(month) + 1);
-									else
-										positive.put(month, positive.get(month) + 1);
-								} else if (code.equals("POSITIVE"))
-									positive.put(month, positive.get(month) + 1);
-								else if (code.equals("NEGATIVE"))
-									negative.put(month, negative.get(month) + 1);							
+								if (skyPoint2 instanceof House) {
+									long id = skyPoint2.getId();
+									Map<Long, Integer> amap = hitems.containsKey(id) ? hitems.get(id) : new HashMap<Long, Integer>();
+									long aid = code.equals("NEUTRAL")
+											&& (skyPoint.getCode().equals("Lilith") || skyPoint.getCode().equals("Kethu"))
+										? 2 : spa.getAspect().getTypeid();
+									int val = amap.containsKey(aid) ? amap.get(aid) : 0;
+									amap.put(aid, val + 1);
+									hitems.put(id, amap);
+								}
 							}
 						}
-						dtexts.put(time, spas);
-						mtexts.put(m, dtexts);
-						texts.put(y, mtexts);
 
 						Map<Integer, Map<Long, Map<Long, List<TimeSeriesDataItem>>>> months2 = hyears.containsKey(y) ? hyears.get(y) : new TreeMap<Integer, Map<Long, Map<Long, List<TimeSeriesDataItem>>>>();
 						Map<Long, Map<Long, List<TimeSeriesDataItem>>> items = months2.containsKey(m) ? months2.get(m) : new TreeMap<Long, Map<Long, List<TimeSeriesDataItem>>>();
@@ -367,15 +338,19 @@ public class TransitSaveHandler extends Handler {
 			DirectionService service = new DirectionService();
 			DirectionAspectService servicea = new DirectionAspectService();
 
+			AspectTypeService typeService = new AspectTypeService();
+			AspectType negativeType = (AspectType)typeService.find(2L);
+			AspectType positiveType = (AspectType)typeService.find(3L);
+
 	        //года
 			for (Map.Entry<Integer, Map<Integer, Map<Long, Map<Long, List<TimeSeriesDataItem>>>>> entry : hyears.entrySet()) {
 				int y = entry.getKey();
 				String syear = String.valueOf(y);
-				chapter = new ChapterAutoNumber(PDFUtil.printHeader(new Paragraph(), syear, null));
+				chapter = new ChapterAutoNumber(PDFUtil.printHeader(new Paragraph(), syear + " год", null));
 				chapter.setNumberDepth(0);
 
 				//диаграмма года
-				Section section = PDFUtil.printSection(chapter, "Соотношение событий года", null);
+				Section section = PDFUtil.printSection(chapter, "Соотношение событий " + syear + " года", null);
 				Map<String, Map<Integer,Integer>> ymap = yitems.get(y);
 				Map<Integer,Integer> positive = ymap.get("positive");
 				Map<Integer,Integer> negative = ymap.get("negative");
@@ -393,7 +368,7 @@ public class TransitSaveHandler extends Handler {
 
 				//месяцы
 				Map<Integer, Map<Long, Map<Long, List<TimeSeriesDataItem>>>> months2 = hyears.get(y);
-				Map<Integer, Map<Long, List<SkyPointAspect>>> mtexts = texts.get(y);
+				Map<Integer, Map<Long, Map<String, List<Object>>>> mtexts = texts.get(y);
 				for (Map.Entry<Integer, Map<Long, Map<Long, List<TimeSeriesDataItem>>>> entry2 : months2.entrySet()) {
 					int m = entry2.getKey();
 					Calendar calendar = Calendar.getInstance();
@@ -403,54 +378,127 @@ public class TransitSaveHandler extends Handler {
 
 					//TODO диаграмма месяца перед толкованиями
 					
-					Map<Long, List<SkyPointAspect>> dtexts = mtexts.get(m);
-					for (Map.Entry<Long, List<SkyPointAspect>> dentry : dtexts.entrySet()) {
+					Map<Long, Map<String, List<Object>>> dtexts = mtexts.get(m);
+					for (Map.Entry<Long, Map<String, List<Object>>> dentry : dtexts.entrySet()) {
 						String shortdate = sdf.format(new Date(dentry.getKey()));
-						Section dsection = section.addSection(new Paragraph(shortdate, hfont));
+						Section daysection = section.addSection(new Paragraph(shortdate, hfont));
+						daysection.add(Chunk.NEWLINE);
 
-			        	List<SkyPointAspect> spas = dtexts.get(dentry.getKey());
-						for (SkyPointAspect spa : spas) {
-							AspectType type = spa.getAspect().getType();
-							Planet planet = (Planet)spa.getSkyPoint1();
+						Map<String, List<Object>> imap = dentry.getValue();
+						for (Map.Entry<String, List<Object>> itexts : imap.entrySet()) {
+		    			    if (itexts.getKey().contains("REPEAT"))
+		    			        continue;
 
-							SkyPoint skyPoint = spa.getSkyPoint2();
-							if (skyPoint instanceof House) {
-								House house = (House)skyPoint;
-//								DirectionText dirText = (DirectionText)service.find(planet, house, type);
-								boolean bad = type.getPoints() < 0;
-			    				String pname = bad ? planet.getNegative() : planet.getPositive();
-								dsection.addSection(new Paragraph(house.getName() + " " + type.getSymbol() + " " + pname, font));
-//								if (dirText != null) {
-//									String text = dirText.getText();
-//									if (text != null) {
-//										String typeColor = type.getFontColor();
-//										BaseColor color = PDFUtil.htmlColor2Base(typeColor);
-//										section.add(new Paragraph(PDFUtil.removeTags(text, new Font(baseFont, 12, Font.NORMAL, color))));
-//										PDFUtil.printGender(section, dirText, female, child, true);
-//									}
-//								}
-							} else if (skyPoint instanceof Planet) {
-								Planet planet2 = (Planet)skyPoint;
-//								PlanetAspectText dirText = (PlanetAspectText)servicea.find(spa, false);
-			    				dsection.addSection(new Paragraph(planet.getShortName() + " " + type.getSymbol() + " " + planet2.getShortName(), font));
-//									if (dirText != null) {
-//										String text = dirText.getText();
-//										if (null == text)
-//											continue;
-//					    				section.addSection(new Paragraph(planet.getShortName() + " " + type.getSymbol() + " " + planet2.getShortName(), fonth5));
-//										if (dirText != null) {
-//											String text = dirText.getText();
-//											if (text != null) {
-//								    			String typeColor = type.getFontColor();
-//												BaseColor color = PDFUtil.htmlColor2Base(typeColor);
-//												section.add(new Paragraph(PDFUtil.removeTags(text, new Font(baseFont, 12, Font.NORMAL, color))));
-//												PDFUtil.printGender(section, dirText, female, child, true);
-//											}
-//										}
-//									}
+	    		            boolean main = false;
+	    		            boolean housable = itexts.getKey().contains("HOUSE");
+
+							List<Object> ingresses = itexts.getValue();
+							for (Object object : ingresses) {
+								text = "";
+								String code = "";
+
+								SkyPointAspect spa = (SkyPointAspect)object;
+								Planet planet = (Planet)spa.getSkyPoint1();
+								SkyPoint skyPoint = spa.getSkyPoint2();
+								AspectType type = spa.getAspect().getType();
+								String acode = spa.getAspect().getCode();
+								String typeColor = type.getFontColor();
+								BaseColor color = PDFUtil.htmlColor2Base(typeColor);
+								Font colorbold = new Font(baseFont, 12, Font.BOLD, color);
+			    				String tduration = spa.getTransitDuration();
+
+	    		                main = planet.isMain();
+	    		                if (main && itexts.getKey().contains("SEPARATION"))
+	        		                continue;
+
+		    		            if (housable) {
+		    		                if (planet.getCode().equals("Kethu")
+		    		                        && !acode.equals("CONJUNCTION"))
+		    		                    continue;
+
+		    		                if (planet.getCode().equals("Rakhu")
+		    		                        && acode.equals("OPPOSITION"))
+		    		                    continue;
+		    		            } else {
+		    		                if (planet.getCode().equals("Kethu")
+		    		                        || skyPoint.getCode().equals("Kethu"))
+		       		                    if (!acode.equals("CONJUNCTION"))
+		       		                        continue;
+
+		    		                if (planet.getCode().equals("Rakhu")
+		    		                        || skyPoint.getCode().equals("Rakhu"))
+		       		                    if (acode.equals("OPPOSITION"))
+		       		                        continue;
+		    		            }
+
+								String prefix = "";
+								if (!main) {
+	               	                if (itexts.getKey().contains("EXACT"))
+	               	                	prefix = "Начинается: ";
+									else if (itexts.getKey().contains("REPEAT"))
+										prefix = "Продолжается: ";
+									else if (itexts.getKey().contains("SEPARATION"))
+										prefix = "Заканчивается: ";
+								}
+
+								if (skyPoint instanceof House) {
+									House house = (House)skyPoint;
+
+		    		                if (acode.equals("CONJUNCTION")) {
+										if (planet.getCode().equals("Selena"))
+											type = positiveType;
+										else if (planet.getCode().equals("Lilith")
+		    		                            || planet.getCode().equals("Kethu"))
+											type = negativeType;
+									} else if (planet.getCode().equals("Moon"))
+										continue;
+
+									DirectionText dirText = (DirectionText)service.find(planet, house, type);
+				    				daysection.addSection(new Paragraph(prefix + house.getName(), colorbold));
+				    				if (tduration.length() > 0)
+					    				daysection.add(new Paragraph("Длительность прогноза: " + tduration, PDFUtil.getAnnotationFont(true)));
+									if (dirText != null) {
+										text = dirText.getDescription();
+										code = dirText.getCode();
+									}
+								} else if (skyPoint instanceof Planet) {
+									long aspectid = 0;
+		    		                if (acode.equals("CONJUNCTION")) {
+										if (!planet.getId().equals(skyPoint.getId())) {
+											if (planet.getCode().equals("Selena"))
+												type = positiveType;
+										}
+									} else if (planet.getCode().equals("Moon"))
+							            aspectid = spa.getAspect().getId();
+
+									Planet planet2 = (Planet)skyPoint;
+									PlanetAspectText dirText = (PlanetAspectText)servicea.find(spa, aspectid, false);
+									daysection.addSection(new Paragraph(prefix + planet.getShortName() + " " + type.getSymbol() + " " + planet2.getShortName(), colorbold));
+				    				if (tduration.length() > 0)
+					    				daysection.add(new Paragraph("Длительность прогноза: " + tduration, PDFUtil.getAnnotationFont(true)));
+									if (dirText != null) {
+										text = dirText.getDescription();
+										code = dirText.getCode();
+									}
+								}
+								if (text != null) {
+									String descr = "";
+		               	            if (main)
+		               	                descr = text;
+		               	            else {
+		               	                if (itexts.getKey().contains("EXACT"))
+		               	                    descr = text;
+		               	            	else
+		               	                    descr = code;
+		               	            }
+									p = new Paragraph();
+									p.add(new Chunk(descr, new Font(baseFont, 12, Font.NORMAL, color)));
+									daysection.add(p);
+									daysection.add(Chunk.NEWLINE);
+								}
 							}
 						}
-						dsection.add(Chunk.NEWLINE);
+						daysection.add(Chunk.NEXTPAGE);
 					}
 
 					//графики по домам
@@ -498,55 +546,5 @@ public class TransitSaveHandler extends Handler {
 		} finally {
 	        doc.close();
 		}
-	}
-
-	/**
-	 * Определение аспектной дирекции между небесными точками
-	 * @param point1 первая небесная точка
-	 * @param point2 вторая небесная точка
-	 * @param aspects список аспектов
-	 */
-	private PeriodItem calc(SkyPoint point1, SkyPoint point2, List<Model> aspects) {
-		try {
-			//находим угол между точками космограммы
-			double one = point1.getLongitude();
-			double two = point2.getLongitude();
-			double res = CalcUtil.getDifference(one, two);
-
-			//искусственно устанавливаем нарастающую оппозицию,
-			//чтобы она синхронизировалась с соответствующим ей соединением в этот день
-			if (point2 instanceof House)
-				if ((res >= 179 && res < 180)
-						|| CalcUtil.compareAngles(one, two))
-					++res;
-
-			//определяем, является ли аспект стандартным
-			for (Model realasp : aspects) {
-				Aspect a = (Aspect)realasp;
-
-				//соединения Солнца не рассматриваем
-				if (a.getPlanetid() > 0)
-					continue;
-
-				if (a.isExact(res)) {
-					PeriodItem item = new PeriodItem();
-					item.aspect = a;
-					item.planet = (Planet)point1;
-
-					if (point2 instanceof House)
-						item.house = (House)point2;
-					else if (point2 instanceof Planet) {
-						Planet planet2 = (Planet)point2;
-						item.planet2 = planet2;
-						item.house = planet2.getHouse();
-					}
-//					System.out.println(point1.getName() + " " + type.getSymbol() + " " + point2.getName());
-					return item;
-				}
-			}
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-		return null;
 	}
 }

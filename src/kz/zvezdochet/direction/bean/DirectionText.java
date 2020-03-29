@@ -16,4 +16,29 @@ public class DirectionText extends PlanetHouseText {
 	public ModelService getService() {
 		return new DirectionService();
 	}
+
+	/**
+	 * Толкование транзита
+	 */
+	private String description;
+	/**
+	 * Краткое толкование транзита
+	 */
+	private String code;
+
+	public String getCode() {
+		return code;
+	}
+
+	public void setCode(String code) {
+		this.code = code;
+	}
+
+	public String getDescription() {
+		return description;
+	}
+
+	public void setDescription(String description) {
+		this.description = description;
+	}
 }
