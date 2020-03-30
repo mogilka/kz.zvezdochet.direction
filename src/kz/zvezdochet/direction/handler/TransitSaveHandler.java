@@ -15,6 +15,8 @@ import org.eclipse.e4.core.contexts.Active;
 import org.eclipse.e4.core.di.annotations.Execute;
 import org.eclipse.e4.ui.model.application.ui.basic.MPart;
 import org.jfree.data.time.Day;
+import org.jfree.data.time.TimeSeries;
+import org.jfree.data.time.TimeSeriesCollection;
 import org.jfree.data.time.TimeSeriesDataItem;
 
 import com.itextpdf.text.BaseColor;
@@ -32,6 +34,7 @@ import com.itextpdf.text.pdf.BaseFont;
 import com.itextpdf.text.pdf.PdfWriter;
 
 import kz.zvezdochet.analytics.bean.PlanetAspectText;
+import kz.zvezdochet.bean.Aspect;
 import kz.zvezdochet.bean.AspectType;
 import kz.zvezdochet.bean.Event;
 import kz.zvezdochet.bean.House;
@@ -80,6 +83,8 @@ public class TransitSaveHandler extends Handler {
 			Event person = periodPart.getPerson();
 			Place place = periodPart.getPlace();
 			double zone = periodPart.getZone();
+			Aspect selaspect = periodPart.getAspect();
+			boolean longterm = selaspect != null;
 			updateStatus("Расчёт транзитов на период", false);
 
 			Date initDate = periodPart.getInitialDate();
@@ -151,22 +156,30 @@ public class TransitSaveHandler extends Handler {
 				+ "то в некоторых аспектах прогноз будет иметь временны́е погрешности.", font));
 			chapter.add(Chunk.NEWLINE);
 
-			Font bold = new Font(baseFont, 12, Font.BOLD);
-			chapter.add(new Paragraph("Диаграммы показывают динамику событий по месяцам в трёх категориях: позитив, негатив и важное.", font));
-			chapter.add(new Paragraph("Позитив и негатив:", bold));
+			chapter.add(new Paragraph("Общая погрешность прогноза составляет ±1 день. Это значит, что описанное событие может произойти на день раньше, особенно если длительность прогноза составляет более одного дня (в толковании вы это увидите).", font));
+			chapter.add(Chunk.NEWLINE);
 
+			Font fonth5 = PDFUtil.getHeaderFont();
+			chapter.add(new Paragraph("Диаграммы", fonth5));
+
+			Font bold = new Font(baseFont, 12, Font.BOLD);
+			chapter.add(new Paragraph("Диаграммы показывают динамику событий по дням в трёх категориях: позитив, негатив и важное.", font));
+			chapter.add(Chunk.NEWLINE);
+
+			chapter.add(new Paragraph("Позитив и негатив:", bold));
+			Font red = PDFUtil.getDangerFont();
 			com.itextpdf.text.List list = new com.itextpdf.text.List(false, false, 10);
 			list = new com.itextpdf.text.List(false, false, 10);
 			ListItem li = new ListItem();
-	        li.add(new Chunk("«Позитив» – это благоприятные возможности, которые нужно использовать по максимуму.", new Font(baseFont, 12, Font.NORMAL, PDFUtil.FONTGREEN)));
+	        li.add(new Chunk("«Позитив» – это благоприятные возможности, которые нужно использовать по максимуму.", PDFUtil.getSuccessFont()));
 	        list.add(li);
 
 			li = new ListItem();
-	        li.add(new Chunk("«Негатив» – это напряжение и отсутствие удачи, к которым надо быть готовым. Выработайте тактику решения проблемы и не предпринимайте рисковых действий.", new Font(baseFont, 12, Font.NORMAL, PDFUtil.FONTCOLORED)));
+	        li.add(new Chunk("«Негатив» – это напряжение и отсутствие удачи, к которым надо быть готовым. Выработайте тактику решения проблемы и не предпринимайте рисковых действий.", red));
 	        list.add(li);
 
 			li = new ListItem();
-	        li.add(new Chunk("Особого внимания заслуживают ломаные графики, – они указывают на значимые для вас события, особенно в сочетании с «Важным».", font));
+	        li.add(new Chunk("Особого внимания заслуживают ломаные, а не точечные графики, – они указывают на череду значимых событий, особенно в сочетании с «Важным».", font));
 	        list.add(li);
 	        chapter.add(list);
 			chapter.add(Chunk.NEWLINE);
@@ -179,16 +192,19 @@ public class TransitSaveHandler extends Handler {
 
 			li = new ListItem();
 	        li.add(new Chunk("Если рядом с «Важным» отсутствует «Позитив», значит решения нужно принимать обдуманно, "
-	        	+ "т.к. они окажутся значимыми для вас и ваших близких и могут иметь непредвиденные последствия", new Font(baseFont, 12, Font.NORMAL, PDFUtil.FONTCOLORED)));
+	        	+ "т.к. они окажутся значимыми для вас и ваших близких и могут иметь непредвиденные последствия.", red));
 	        list.add(li);
 	        chapter.add(list);
 			chapter.add(Chunk.NEWLINE);
 
-			chapter.add(new Paragraph("Погрешность прогноза составляет ±1 день.", bold));
-
+			chapter.add(new Paragraph("Примечание для графиков по сферам жизни", bold));
 			list = new com.itextpdf.text.List(false, false, 10);
 			li = new ListItem();
-	        li.add(new Chunk("Если график представляет собой точку, значит актуальность данной сферы жизни будет ограничена одним днём.", font));
+	        li.add(new Chunk("За разделом толкований каждого месяца следует раздел диаграмм месяца, на которых наглядно показана актуальность сфер жизни по дням.", font));
+	        list.add(li);
+
+			li = new ListItem();
+	        li.add(new Chunk("Если график представляет собой точку, значит актуальность данной сферы ограничена одним днём.", font));
 	        list.add(li);
 
 			li = new ListItem();
@@ -199,6 +215,7 @@ public class TransitSaveHandler extends Handler {
 
 			Map<Integer, Map<Integer, List<Long>>> years = new TreeMap<Integer, Map<Integer, List<Long>>>();
 			Map<Integer, Map<Integer, Map<Long, Map<Long, List<TimeSeriesDataItem>>>>> hyears = new TreeMap<Integer, Map<Integer, Map<Long, Map<Long, List<TimeSeriesDataItem>>>>>();
+			Map<Integer, Map<Integer, Map<Long, List<TimeSeriesDataItem>>>> myears = new TreeMap<Integer, Map<Integer, Map<Long, List<TimeSeriesDataItem>>>>();
 			Map<Integer, Map<Integer, Map<Long, Map<String, List<Object>>>>> texts = new TreeMap<Integer, Map<Integer, Map<Long, Map<String, List<Object>>>>>();
 
 			System.out.println("Prepared for: " + (System.currentTimeMillis() - run));
@@ -223,6 +240,10 @@ public class TransitSaveHandler extends Handler {
 				Map<Integer, Map<Long, Map<Long, List<TimeSeriesDataItem>>>> months2 = hyears.containsKey(y) ? hyears.get(y) : new TreeMap<Integer, Map<Long, Map<Long, List<TimeSeriesDataItem>>>>();
 				months2.put(m, new TreeMap<Long, Map<Long, List<TimeSeriesDataItem>>>());
 				hyears.put(y, months2);
+
+				Map<Integer, Map<Long, List<TimeSeriesDataItem>>> months3 = myears.containsKey(y) ? myears.get(y) : new TreeMap<Integer, Map<Long, List<TimeSeriesDataItem>>>();
+				months3.put(m, new TreeMap<Long, List<TimeSeriesDataItem>>());
+				myears.put(y, months3);
 			}
 
 			Map<Integer, Map<String, Map<Integer,Integer>>> yitems = new TreeMap<Integer, Map<String,Map<Integer,Integer>>>();
@@ -264,12 +285,15 @@ public class TransitSaveHandler extends Handler {
 						event.setZone(zone);
 						event.calc(true);
 
-						Map<String, List<Object>> ingressList = person.initIngresses(event);
+						Map<String, List<Object>> ingressList = person.initIngresses(event, longterm);
+						if (ingressList.isEmpty())
+							continue;
 						dtexts.put(time, ingressList);
 						mtexts.put(m, dtexts);
 						texts.put(y, mtexts);
 
 						Map<Long, Map<Long, Integer>> hitems = new HashMap<Long, Map<Long, Integer>>();
+						Map<Long, Integer> mitems = new HashMap<Long, Integer>();
 
 						for (Map.Entry<String, List<Object>> ientry : ingressList.entrySet()) {
 							List<Object> ingresses = ientry.getValue();
@@ -290,20 +314,24 @@ public class TransitSaveHandler extends Handler {
 								else if (code.equals("NEGATIVE"))
 									negative.put(month, negative.get(month) + 1);
 
-								//данные для диаграммы домов
+								//данные для диаграммы месяца
+								long aid = code.equals("NEUTRAL")
+										&& (skyPoint.getCode().equals("Lilith") || skyPoint.getCode().equals("Kethu"))
+									? 2 : spa.getAspect().getTypeid();
+
+								int val = mitems.containsKey(aid) ? mitems.get(aid) : 0;
+								mitems.put(aid, val + 1);
+
+								//данные для диаграммы домов месяца
 								if (skyPoint2 instanceof House) {
 									long id = skyPoint2.getId();
 									Map<Long, Integer> amap = hitems.containsKey(id) ? hitems.get(id) : new HashMap<Long, Integer>();
-									long aid = code.equals("NEUTRAL")
-											&& (skyPoint.getCode().equals("Lilith") || skyPoint.getCode().equals("Kethu"))
-										? 2 : spa.getAspect().getTypeid();
-									int val = amap.containsKey(aid) ? amap.get(aid) : 0;
+									val = amap.containsKey(aid) ? amap.get(aid) : 0;
 									amap.put(aid, val + 1);
 									hitems.put(id, amap);
 								}
 							}
 						}
-
 						Map<Integer, Map<Long, Map<Long, List<TimeSeriesDataItem>>>> months2 = hyears.containsKey(y) ? hyears.get(y) : new TreeMap<Integer, Map<Long, Map<Long, List<TimeSeriesDataItem>>>>();
 						Map<Long, Map<Long, List<TimeSeriesDataItem>>> items = months2.containsKey(m) ? months2.get(m) : new TreeMap<Long, Map<Long, List<TimeSeriesDataItem>>>();
 						for (Map.Entry<Long, Map<Long, Integer>> entryh : hitems.entrySet()) {
@@ -321,6 +349,18 @@ public class TransitSaveHandler extends Handler {
 							}
 						}
 						months2.put(m, items);
+
+						Map<Integer, Map<Long, List<TimeSeriesDataItem>>> months3 = myears.containsKey(y) ? myears.get(y) : new TreeMap<Integer, Map<Long, List<TimeSeriesDataItem>>>();
+						Map<Long, List<TimeSeriesDataItem>> map = months3.containsKey(m) ? months3.get(m) : new TreeMap<Long, List<TimeSeriesDataItem>>();
+						for (Map.Entry<Long, Integer> entry3 : mitems.entrySet()) {
+							long aid = entry3.getKey();
+							List<TimeSeriesDataItem> series = map.containsKey(aid) ? map.get(aid) : new ArrayList<TimeSeriesDataItem>();
+							TimeSeriesDataItem tsdi = new TimeSeriesDataItem(new Day(date), entry3.getValue());
+							if (!series.contains(tsdi))
+								series.add(tsdi);
+							map.put(aid, series);
+						}
+						months3.put(m, map);
 					}
 				}
 				Map<String, Map<Integer,Integer>> ymap = new HashMap<String, Map<Integer,Integer>>();
@@ -368,6 +408,7 @@ public class TransitSaveHandler extends Handler {
 
 				//месяцы
 				Map<Integer, Map<Long, Map<Long, List<TimeSeriesDataItem>>>> months2 = hyears.get(y);
+				Map<Integer, Map<Long, List<TimeSeriesDataItem>>> months3 = myears.get(y);
 				Map<Integer, Map<Long, Map<String, List<Object>>>> mtexts = texts.get(y);
 				for (Map.Entry<Integer, Map<Long, Map<Long, List<TimeSeriesDataItem>>>> entry2 : months2.entrySet()) {
 					int m = entry2.getKey();
@@ -376,13 +417,29 @@ public class TransitSaveHandler extends Handler {
 					String ym = new SimpleDateFormat("LLLL").format(calendar.getTime()) + " " + y;
 					section = PDFUtil.printSection(chapter, ym, null);
 
-					//TODO диаграмма месяца перед толкованиями
+					//диаграмма месяца
+					Map<Long, List<TimeSeriesDataItem>> mitems = months3.get(m);
+					TimeSeriesCollection dataset = new TimeSeriesCollection();
+					for (Map.Entry<Long, List<TimeSeriesDataItem>> entry3 : mitems.entrySet()) {
+		        		List<TimeSeriesDataItem> series = entry3.getValue();
+		        		if (null == series || 0 == series.size())
+		        			continue;
+		        		Long aid = entry3.getKey();
+		        		TimeSeries timeSeries = new TimeSeries(aid < 2 ? "Важное" : (aid < 3 ? "Негатив" : "Позитив"));
+						for (TimeSeriesDataItem tsdi : series)
+							timeSeries.add(tsdi);
+						dataset.addSeries(timeSeries);
+		        	}
+		        	if (dataset.getSeriesCount() > 0) {
+					    image = PDFUtil.printTimeChart(writer, "", "", "Баллы", dataset, 500, 0, true);
+						section.add(image);
+						section.add(Chunk.NEWLINE);
+					}
 					
 					Map<Long, Map<String, List<Object>>> dtexts = mtexts.get(m);
 					for (Map.Entry<Long, Map<String, List<Object>>> dentry : dtexts.entrySet()) {
 						String shortdate = sdf.format(new Date(dentry.getKey()));
-						Section daysection = section.addSection(new Paragraph(shortdate, hfont));
-						daysection.add(Chunk.NEWLINE);
+						Section daysection = PDFUtil.printSubsection(section, shortdate);
 
 						Map<String, List<Object>> imap = dentry.getValue();
 						for (Map.Entry<String, List<Object>> itexts : imap.entrySet()) {
@@ -502,36 +559,37 @@ public class TransitSaveHandler extends Handler {
 					}
 
 					//графики по домам
-//					section = PDFUtil.printSection(chapter, ym + " по сферам жизни", null);
-//					Map<Long, Map<Long, List<TimeSeriesDataItem>>> items = entry2.getValue();
-//			        int i = -1;
-//					for (Map.Entry<Long, Map<Long, List<TimeSeriesDataItem>>> entryh : items.entrySet()) {
-//						long houseid = entryh.getKey();
-//						House house = houses.get(houseid);
-//						Map<Long, List<TimeSeriesDataItem>> map = entryh.getValue();
-//						TimeSeriesCollection dataset = new TimeSeriesCollection();
-//						for (Map.Entry<Long, List<TimeSeriesDataItem>> entry3 : map.entrySet()) {
-//			        		List<TimeSeriesDataItem> series = entry3.getValue();
-//			        		if (null == series || 0 == series.size())
-//			        			continue;
-//			        		Long aid = entry3.getKey();
-//							TimeSeries timeSeries = new TimeSeries(aid < 2 ? "Важное" : (aid < 3 ? "Негатив" : "Позитив"));
-//							for (TimeSeriesDataItem tsdi : series)
-//								timeSeries.add(tsdi);
-//							dataset.addSeries(timeSeries);
-//			        	}
-//			        	if (dataset.getSeriesCount() > 0) {
-//			        		if (++i > 1) {
-//			        			i = 0;
-//			        			section.add(Chunk.NEXTPAGE);
-//			        		}
-//				        	section.addSection(new Paragraph(house.getName(), hfont));
-//				        	section.add(new Paragraph(ym + ": " + house.getDescription(), font));
-//						    image = PDFUtil.printTimeChart(writer, "", "", "Баллы", dataset, 500, 0, true);
-//							section.add(image);
-//							section.add(Chunk.NEWLINE);
-//			        	}
-//					}
+					Map<Long, House> houses = person.getHouses();
+					section = PDFUtil.printSection(chapter, ym + " по сферам жизни", null);
+					Map<Long, Map<Long, List<TimeSeriesDataItem>>> items = entry2.getValue();
+			        int i = -1;
+					for (Map.Entry<Long, Map<Long, List<TimeSeriesDataItem>>> entryh : items.entrySet()) {
+						long houseid = entryh.getKey();
+						House house = houses.get(houseid);
+						Map<Long, List<TimeSeriesDataItem>> map = entryh.getValue();
+						dataset = new TimeSeriesCollection();
+						for (Map.Entry<Long, List<TimeSeriesDataItem>> entry3 : map.entrySet()) {
+			        		List<TimeSeriesDataItem> series = entry3.getValue();
+			        		if (null == series || 0 == series.size())
+			        			continue;
+			        		Long aid = entry3.getKey();
+			        		TimeSeries timeSeries = new TimeSeries(aid < 2 ? "Важное" : (aid < 3 ? "Негатив" : "Позитив"));
+							for (TimeSeriesDataItem tsdi : series)
+								timeSeries.add(tsdi);
+							dataset.addSeries(timeSeries);
+			        	}
+			        	if (dataset.getSeriesCount() > 0) {
+			        		if (++i > 1) {
+			        			i = 0;
+			        			section.add(Chunk.NEXTPAGE);
+			        		}
+				        	section.addSection(new Paragraph(house.getName(), hfont));
+				        	section.add(new Paragraph(ym + ": " + house.getDescription(), font));
+						    image = PDFUtil.printTimeChart(writer, "", "", "Баллы", dataset, 500, 0, true);
+							section.add(image);
+							section.add(Chunk.NEWLINE);
+			        	}
+					}
 			        chapter.add(Chunk.NEXTPAGE);
 				}
 				doc.add(chapter);
