@@ -285,10 +285,30 @@ public class TransitSaveHandler extends Handler {
 						event.setZone(zone);
 						event.calc(true);
 
-						Map<String, List<Object>> ingressList = person.initIngresses(event, longterm);
+						Map<String, List<Object>> ingressList = person.initIngresses(event);
 						if (ingressList.isEmpty())
 							continue;
-						dtexts.put(time, ingressList);
+
+						Map<String, List<Object>> ingressmap = new TreeMap<String, List<Object>>();
+						for (Map.Entry<String, List<Object>> daytexts : ingressList.entrySet()) {
+							String key = daytexts.getKey();
+							if (!key.contains("EXACT"))
+								continue;
+
+							List<Object> objects = daytexts.getValue();
+							if (objects.isEmpty())
+								continue;
+
+							List<Object> objects2 = ingressmap.containsKey(key) ? ingressmap.get(key) : new ArrayList<Object>();
+							for (Object object : objects) {
+								SkyPointAspect spa = (SkyPointAspect)object;
+								if (longterm && !spa.getAspect().getCode().equals("CONJUNCTION"))
+									continue;
+								objects2.add(spa);
+							}
+							ingressmap.put(key, objects2);
+						}
+						dtexts.put(time, ingressmap);
 						mtexts.put(m, dtexts);
 						texts.put(y, mtexts);
 
@@ -410,6 +430,7 @@ public class TransitSaveHandler extends Handler {
 				Map<Integer, Map<Long, Map<Long, List<TimeSeriesDataItem>>>> months2 = hyears.get(y);
 				Map<Integer, Map<Long, List<TimeSeriesDataItem>>> months3 = myears.get(y);
 				Map<Integer, Map<Long, Map<String, List<Object>>>> mtexts = texts.get(y);
+
 				for (Map.Entry<Integer, Map<Long, Map<Long, List<TimeSeriesDataItem>>>> entry2 : months2.entrySet()) {
 					int m = entry2.getKey();
 					Calendar calendar = Calendar.getInstance();
@@ -435,15 +456,29 @@ public class TransitSaveHandler extends Handler {
 						section.add(image);
 						section.add(Chunk.NEWLINE);
 					}
+//		        	myears = null;
 					
 					Map<Long, Map<String, List<Object>>> dtexts = mtexts.get(m);
+					if (dtexts.isEmpty())
+						continue;
 					for (Map.Entry<Long, Map<String, List<Object>>> dentry : dtexts.entrySet()) {
+						Map<String, List<Object>> imap = dentry.getValue();
+						boolean empty = true;
+						for (Map.Entry<String, List<Object>> daytexts : imap.entrySet()) {
+							if (!daytexts.getKey().contains("EXACT"))
+								continue;
+							else if (!daytexts.getValue().isEmpty()) {
+								empty = false;
+								break;
+							}
+						}
+						if (empty) continue;
+
 						String shortdate = sdf.format(new Date(dentry.getKey()));
 						Section daysection = PDFUtil.printSubsection(section, shortdate);
 
-						Map<String, List<Object>> imap = dentry.getValue();
 						for (Map.Entry<String, List<Object>> itexts : imap.entrySet()) {
-		    			    if (itexts.getKey().contains("REPEAT"))
+		    			    if (!itexts.getKey().contains("EXACT"))
 		    			        continue;
 
 	    		            boolean main = false;
@@ -555,10 +590,13 @@ public class TransitSaveHandler extends Handler {
 								}
 							}
 						}
-						daysection.add(Chunk.NEXTPAGE);
+						if (!longterm)
+							daysection.add(Chunk.NEXTPAGE);
 					}
+//					texts = null;
 
 					//графики по домам
+					chapter.add(Chunk.NEXTPAGE);
 					Map<Long, House> houses = person.getHouses();
 					section = PDFUtil.printSection(chapter, ym + " по сферам жизни", null);
 					Map<Long, Map<Long, List<TimeSeriesDataItem>>> items = entry2.getValue();
@@ -594,6 +632,7 @@ public class TransitSaveHandler extends Handler {
 				}
 				doc.add(chapter);
 			}
+			hyears = null;
 	        doc.add(PDFUtil.printCopyright());
 
 	        long time = System.currentTimeMillis();
