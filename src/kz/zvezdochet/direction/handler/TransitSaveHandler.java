@@ -3,6 +3,7 @@ package kz.zvezdochet.direction.handler;
 import java.io.FileOutputStream;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.Date;
@@ -38,6 +39,7 @@ import kz.zvezdochet.bean.Aspect;
 import kz.zvezdochet.bean.AspectType;
 import kz.zvezdochet.bean.Event;
 import kz.zvezdochet.bean.House;
+import kz.zvezdochet.bean.Ingress;
 import kz.zvezdochet.bean.Place;
 import kz.zvezdochet.bean.Planet;
 import kz.zvezdochet.bean.SkyPoint;
@@ -247,6 +249,14 @@ public class TransitSaveHandler extends Handler {
 			}
 
 			Map<Integer, Map<String, Map<Integer,Integer>>> yitems = new TreeMap<Integer, Map<String,Map<Integer,Integer>>>();
+			/**
+			 * коды ингрессий, используемых в отчёте
+			 */
+			String[] icodes = Ingress.getKeys();
+			/**
+			 * коды аспектов, используемых в урезанном отчёте
+			 */
+			String[] paspects = {"CONJUNCTION", "OPPOSITION"};
 
 			//создаём аналогичный массив, но с домами вместо дат
 			for (Map.Entry<Integer, Map<Integer, List<Long>>> entry : years.entrySet()) {
@@ -292,7 +302,7 @@ public class TransitSaveHandler extends Handler {
 						Map<String, List<Object>> ingressmap = new TreeMap<String, List<Object>>();
 						for (Map.Entry<String, List<Object>> daytexts : ingressList.entrySet()) {
 							String key = daytexts.getKey();
-							if (!key.contains("EXACT"))
+							if (!Arrays.asList(icodes).contains(key))
 								continue;
 
 							List<Object> objects = daytexts.getValue();
@@ -302,8 +312,19 @@ public class TransitSaveHandler extends Handler {
 							List<Object> objects2 = ingressmap.containsKey(key) ? ingressmap.get(key) : new ArrayList<Object>();
 							for (Object object : objects) {
 								SkyPointAspect spa = (SkyPointAspect)object;
-								if (longterm && !spa.getAspect().getCode().equals("CONJUNCTION"))
-									continue;
+								if (longterm) {
+									//убираем соединения минорных планет
+									boolean housable = spa.getSkyPoint2() instanceof House;
+									Planet planet = (Planet)spa.getSkyPoint1();
+									if (planet.isMain()
+											&& !housable
+											&& !spa.getAspect().getCode().equals("CONJUNCTION"))
+										continue;
+
+									if (spa.getSkyPoint2() instanceof House
+											&& !Arrays.asList(paspects).contains(spa.getAspect().getCode()))
+										continue;
+								}
 								objects2.add(spa);
 							}
 							ingressmap.put(key, objects2);
@@ -465,9 +486,7 @@ public class TransitSaveHandler extends Handler {
 						Map<String, List<Object>> imap = dentry.getValue();
 						boolean empty = true;
 						for (Map.Entry<String, List<Object>> daytexts : imap.entrySet()) {
-							if (!daytexts.getKey().contains("EXACT"))
-								continue;
-							else if (!daytexts.getValue().isEmpty()) {
+							if (!daytexts.getValue().isEmpty()) {
 								empty = false;
 								break;
 							}
@@ -478,9 +497,6 @@ public class TransitSaveHandler extends Handler {
 						Section daysection = PDFUtil.printSubsection(section, shortdate);
 
 						for (Map.Entry<String, List<Object>> itexts : imap.entrySet()) {
-		    			    if (!itexts.getKey().contains("EXACT"))
-		    			        continue;
-
 	    		            boolean main = false;
 	    		            boolean housable = itexts.getKey().contains("HOUSE");
 
@@ -491,18 +507,13 @@ public class TransitSaveHandler extends Handler {
 
 								SkyPointAspect spa = (SkyPointAspect)object;
 								Planet planet = (Planet)spa.getSkyPoint1();
-								SkyPoint skyPoint = spa.getSkyPoint2();
-								AspectType type = spa.getAspect().getType();
-								String acode = spa.getAspect().getCode();
-								String typeColor = type.getFontColor();
-								BaseColor color = PDFUtil.htmlColor2Base(typeColor);
-								Font colorbold = new Font(baseFont, 12, Font.BOLD, color);
-			    				String tduration = spa.getTransitDuration();
-
 	    		                main = planet.isMain();
-	    		                if (main && itexts.getKey().contains("SEPARATION"))
+	    		                boolean separation = itexts.getKey().contains("SEPARATION");
+	    		                if (main && separation)
 	        		                continue;
 
+								SkyPoint skyPoint = spa.getSkyPoint2();
+								String acode = spa.getAspect().getCode();
 		    		            if (housable) {
 		    		                if (planet.getCode().equals("Kethu")
 		    		                        && !acode.equals("CONJUNCTION"))
@@ -529,9 +540,15 @@ public class TransitSaveHandler extends Handler {
 	               	                	prefix = "Начинается: ";
 									else if (itexts.getKey().contains("REPEAT"))
 										prefix = "Продолжается: ";
-									else if (itexts.getKey().contains("SEPARATION"))
+									else if (separation)
 										prefix = "Заканчивается: ";
 								}
+
+								AspectType type = spa.getAspect().getType();
+								String typeColor = type.getFontColor();
+								BaseColor color = PDFUtil.htmlColor2Base(typeColor);
+								Font colorbold = new Font(baseFont, 12, Font.BOLD, color);
+			    				String tduration = separation ? "" : spa.getTransitDuration();
 
 								if (skyPoint instanceof House) {
 									House house = (House)skyPoint;
@@ -546,33 +563,42 @@ public class TransitSaveHandler extends Handler {
 										continue;
 
 									DirectionText dirText = (DirectionText)service.find(planet, house, type);
-				    				daysection.addSection(new Paragraph(prefix + house.getName(), colorbold));
-				    				if (tduration.length() > 0)
-					    				daysection.add(new Paragraph("Длительность прогноза: " + tduration, PDFUtil.getAnnotationFont(true)));
 									if (dirText != null) {
 										text = dirText.getDescription();
 										code = dirText.getCode();
 									}
+									String ptext = prefix + (separation ? "" : house.getName());
+				    				daysection.addSection(new Paragraph(ptext, colorbold));
+				    				if (tduration.length() > 0)
+					    				daysection.add(new Paragraph("Длительность прогноза: " + tduration, PDFUtil.getAnnotationFont(true)));
 								} else if (skyPoint instanceof Planet) {
 									long aspectid = 0;
+									boolean checktype = false;
 		    		                if (acode.equals("CONJUNCTION")) {
 										if (!planet.getId().equals(skyPoint.getId())) {
-											if (planet.getCode().equals("Selena"))
+											if (planet.getCode().equals("Selena")) {
 												type = positiveType;
+												checktype = true;
+											}
 										}
 									} else if (planet.getCode().equals("Moon"))
 							            aspectid = spa.getAspect().getId();
 
 									Planet planet2 = (Planet)skyPoint;
-									PlanetAspectText dirText = (PlanetAspectText)servicea.find(spa, aspectid, false);
-									daysection.addSection(new Paragraph(prefix + planet.getShortName() + " " + type.getSymbol() + " " + planet2.getShortName(), colorbold));
-				    				if (tduration.length() > 0)
-					    				daysection.add(new Paragraph("Длительность прогноза: " + tduration, PDFUtil.getAnnotationFont(true)));
+									PlanetAspectText dirText = (PlanetAspectText)servicea.find(spa, aspectid, checktype);
 									if (dirText != null) {
 										text = dirText.getDescription();
 										code = dirText.getCode();
 									}
+									String ptext = prefix + (separation ? "" : planet.getShortName());
+									if (!separation)
+										if (!planet.getId().equals(planet2.getId()))
+											ptext +=  " " + type.getSymbol() + " " + planet2.getShortName();
+									daysection.addSection(new Paragraph(ptext, colorbold));
+				    				if (tduration.length() > 0)
+					    				daysection.add(new Paragraph("Длительность прогноза: " + tduration, PDFUtil.getAnnotationFont(true)));
 								}
+
 								if (text != null) {
 									String descr = "";
 		               	            if (main)
@@ -584,6 +610,8 @@ public class TransitSaveHandler extends Handler {
 		               	                    descr = code;
 		               	            }
 									p = new Paragraph();
+									if (null == descr)
+										descr = "";
 									p.add(new Chunk(descr, new Font(baseFont, 12, Font.NORMAL, color)));
 									daysection.add(p);
 									daysection.add(Chunk.NEWLINE);
