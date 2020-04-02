@@ -486,9 +486,20 @@ public class TransitSaveHandler extends Handler {
 						Map<String, List<Object>> imap = dentry.getValue();
 						boolean empty = true;
 						for (Map.Entry<String, List<Object>> daytexts : imap.entrySet()) {
-							if (!daytexts.getValue().isEmpty()) {
-								empty = false;
-								break;
+							List<Object> ingresses = daytexts.getValue();
+							if (!ingresses.isEmpty()) {
+								for (Object object : ingresses) {
+									SkyPointAspect spa = (SkyPointAspect)object;
+									Planet planet = (Planet)spa.getSkyPoint1();
+		    		                boolean main = planet.isMain();
+		    		                boolean separation = daytexts.getKey().contains("SEPARATION");
+		    		                if (main && separation)
+		        		                continue;
+		    		                else {
+										empty = false;
+										break;
+		    		                }
+								}
 							}
 						}
 						if (empty) continue;
@@ -570,7 +581,7 @@ public class TransitSaveHandler extends Handler {
 									String ptext = prefix;
 									if (null == dirText
 											|| (separation && (null == code || code.isEmpty())))
-										ptext += planet.getName() + type.getSymbol() + house.getName();
+										ptext += planet.getShortName() + " " + type.getSymbol() + " " + house.getName();
 									if (!separation)
 										ptext += house.getName();
 
@@ -599,12 +610,12 @@ public class TransitSaveHandler extends Handler {
 									String ptext = prefix;
 									if (null == dirText
 											|| (separation && (null == code || code.isEmpty())))
-										ptext += planet.getName() + type.getSymbol() + skyPoint.getName();
-									if (!separation)
+										ptext += planet.getShortName() + " " + type.getSymbol() + " " + planet2.getShortName();
+									if (!separation) {
 										ptext += planet.getShortName();
-									if (!separation)
 										if (!planet.getId().equals(planet2.getId()))
 											ptext +=  " " + type.getSymbol() + " " + planet2.getShortName();
+									}
 									daysection.addSection(new Paragraph(ptext, colorbold));
 				    				if (tduration.length() > 0)
 					    				daysection.add(new Paragraph("Длительность прогноза: " + tduration, PDFUtil.getAnnotationFont(true)));
