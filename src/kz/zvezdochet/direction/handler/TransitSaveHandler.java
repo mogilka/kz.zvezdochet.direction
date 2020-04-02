@@ -567,7 +567,13 @@ public class TransitSaveHandler extends Handler {
 										text = dirText.getDescription();
 										code = dirText.getCode();
 									}
-									String ptext = prefix + (separation ? "" : house.getName());
+									String ptext = prefix;
+									if (null == dirText
+											|| (separation && (null == code || code.isEmpty())))
+										ptext += planet.getName() + type.getSymbol() + house.getName();
+									if (!separation)
+										ptext += house.getName();
+
 				    				daysection.addSection(new Paragraph(ptext, colorbold));
 				    				if (tduration.length() > 0)
 					    				daysection.add(new Paragraph("Длительность прогноза: " + tduration, PDFUtil.getAnnotationFont(true)));
@@ -590,7 +596,12 @@ public class TransitSaveHandler extends Handler {
 										text = dirText.getDescription();
 										code = dirText.getCode();
 									}
-									String ptext = prefix + (separation ? "" : planet.getShortName());
+									String ptext = prefix;
+									if (null == dirText
+											|| (separation && (null == code || code.isEmpty())))
+										ptext += planet.getName() + type.getSymbol() + skyPoint.getName();
+									if (!separation)
+										ptext += planet.getShortName();
 									if (!separation)
 										if (!planet.getId().equals(planet2.getId()))
 											ptext +=  " " + type.getSymbol() + " " + planet2.getShortName();
