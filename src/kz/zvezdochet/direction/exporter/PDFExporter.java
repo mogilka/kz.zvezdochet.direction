@@ -590,15 +590,10 @@ public class PDFExporter {
 				} else if (skyPoint instanceof Planet) {
 					Planet planet2 = (Planet)skyPoint;
 					List<Model> texts = servicea.finds(spa, false);
-					if (0 == texts.size())
+					if (texts.isEmpty())
 	    				section.addSection(new Paragraph(planet.getShortName() + " " + type.getSymbol() + " " + planet2.getShortName(), fonth5));
 					else for (Model model : texts) {
 						PlanetAspectText dirText = (PlanetAspectText)model;
-						if (dirText != null) {
-							String text = dirText.getText();
-							if (null == text)
-								continue;
-						}
 		    			if (term) {
 		    				p = new Paragraph();
 		    				if (dirText != null)
