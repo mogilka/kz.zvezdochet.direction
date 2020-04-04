@@ -415,6 +415,7 @@ public class TransitSaveHandler extends Handler {
 			//генерируем документ
 			run = System.currentTimeMillis();
 	        Font hfont = new Font(baseFont, 16, Font.BOLD, PDFUtil.FONTCOLOR);
+	        Font grayfont = PDFUtil.getAnnotationFont(false);
 
 			DirectionService service = new DirectionService();
 			DirectionAspectService servicea = new DirectionAspectService();
@@ -544,6 +545,7 @@ public class TransitSaveHandler extends Handler {
 		       		                    if (acode.equals("OPPOSITION"))
 		       		                        continue;
 		    		            }
+		    		            String rduration = spa.isRetro() ? " и более" : "";
 
 								String prefix = "";
 								if (!main) {
@@ -587,7 +589,7 @@ public class TransitSaveHandler extends Handler {
 
 				    				daysection.addSection(new Paragraph(ptext, colorbold));
 				    				if (tduration.length() > 0)
-					    				daysection.add(new Paragraph("Длительность прогноза: " + tduration, PDFUtil.getAnnotationFont(true)));
+					    				daysection.add(new Paragraph("Длительность прогноза: " + tduration + rduration, grayfont));
 								} else if (skyPoint instanceof Planet) {
 									long aspectid = 0;
 									boolean checktype = false;
@@ -618,7 +620,7 @@ public class TransitSaveHandler extends Handler {
 									}
 									daysection.addSection(new Paragraph(ptext, colorbold));
 				    				if (tduration.length() > 0)
-					    				daysection.add(new Paragraph("Длительность прогноза: " + tduration, PDFUtil.getAnnotationFont(true)));
+					    				daysection.add(new Paragraph("Длительность прогноза: " + tduration + rduration, grayfont));
 								}
 
 								if (text != null) {
@@ -636,8 +638,10 @@ public class TransitSaveHandler extends Handler {
 										descr = "";
 									p.add(new Chunk(descr, new Font(baseFont, 12, Font.NORMAL, color)));
 									daysection.add(p);
-									daysection.add(Chunk.NEWLINE);
 								}
+								if (spa.isRetro() && !acode.contains("POSITIVE"))
+									daysection.add(new Paragraph("Т.к. " + planet.getName() + " в этот день находится в ретро-фазе, то длительность данного прогноза может затянуться, а описанные события будут носить необратимый характер", grayfont));
+								daysection.add(Chunk.NEWLINE);
 							}
 						}
 						if (!longterm)
