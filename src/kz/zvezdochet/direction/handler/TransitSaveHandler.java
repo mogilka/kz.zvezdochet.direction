@@ -20,6 +20,7 @@ import org.jfree.data.time.TimeSeries;
 import org.jfree.data.time.TimeSeriesCollection;
 import org.jfree.data.time.TimeSeriesDataItem;
 
+import com.itextpdf.text.Anchor;
 import com.itextpdf.text.BaseColor;
 import com.itextpdf.text.Chapter;
 import com.itextpdf.text.ChapterAutoNumber;
@@ -87,6 +88,7 @@ public class TransitSaveHandler extends Handler {
 			double zone = periodPart.getZone();
 			Aspect selaspect = periodPart.getAspect();
 			boolean longterm = selaspect != null;
+			Map<Long, House> houses = person.getHouses();
 			updateStatus("Расчёт транзитов на период", false);
 
 			Date initDate = periodPart.getInitialDate();
@@ -138,6 +140,11 @@ public class TransitSaveHandler extends Handler {
 	        p.setAlignment(Element.ALIGN_CENTER);
 			chapter.add(p);
 
+			text = "Тип прогноза: " + (longterm ? "самое важное" : "ежедневный");
+			p = new Paragraph(text, font);
+	        p.setAlignment(Element.ALIGN_CENTER);
+			chapter.add(p);
+
 			Font fontgray = PDFUtil.getAnnotationFont(false);
 			text = "Дата составления: " + DateUtil.fulldtf.format(new Date());
 			p = new Paragraph(text, fontgray);
@@ -155,24 +162,40 @@ public class TransitSaveHandler extends Handler {
 
 			chapter.add(new Paragraph("Данный прогноз сделан с учётом вашего текущего местонахождения. "
 				+ "Если в течение прогнозного периода вы переедете в более отдалённое место (в другой часовой пояс или с ощутимой сменой географической широты), "
-				+ "то в некоторых аспектах прогноз будет иметь временны́е погрешности.", font));
+				+ "то в некоторых аспектах прогноз может иметь временны́е погрешности.", font));
 			chapter.add(Chunk.NEWLINE);
 
-			chapter.add(new Paragraph("Общая погрешность прогноза составляет ±1 день. Это значит, что описанное событие может произойти на день раньше, особенно если длительность прогноза составляет более одного дня (в толковании вы это увидите).", font));
+			Font red = PDFUtil.getDangerFont();
+			p = new Paragraph();
+			p.add(new Chunk("Общая погрешность прогноза составляет ±1 день. ", red));
+			p.add(new Chunk("Это значит, что описанное событие может произойти на день раньше, если длительность прогноза составляет более одного дня (в толковании вы это увидите).", font));
+			chapter.add(p);
+			chapter.add(Chunk.NEWLINE);
+
+			Font bold = new Font(baseFont, 12, Font.BOLD);
+			chapter.add(new Paragraph("Длительность прогнозов", bold));
+			com.itextpdf.text.List list = new com.itextpdf.text.List(false, false, 10);
+			ListItem li = new ListItem();
+	        li.add(new Chunk("Если длительность прогноза не указана, значит он рассчитан на конкретную дату.", font));
+	        list.add(li);
+
+			li = new ListItem();
+	        li.add(new Chunk("Если длительность прогноза исчисляется днями, неделями и месяцами, то это не значит, что каждый день будет что-то происходить. "
+	        	+ "Просто вероятность описанных событий будет сохраняться в течение всего периода. "
+	        	+ "Чаще всего прогноз ярко проявляет себя в первый же день периода, но может сбыться и позже.", font));
+	        list.add(li);
+	        chapter.add(list);
 			chapter.add(Chunk.NEWLINE);
 
 			Font fonth5 = PDFUtil.getHeaderFont();
 			chapter.add(new Paragraph("Диаграммы", fonth5));
-
-			Font bold = new Font(baseFont, 12, Font.BOLD);
 			chapter.add(new Paragraph("Диаграммы показывают динамику событий по дням в трёх категориях: позитив, негатив и важное.", font));
 			chapter.add(Chunk.NEWLINE);
 
 			chapter.add(new Paragraph("Позитив и негатив:", bold));
-			Font red = PDFUtil.getDangerFont();
-			com.itextpdf.text.List list = new com.itextpdf.text.List(false, false, 10);
 			list = new com.itextpdf.text.List(false, false, 10);
-			ListItem li = new ListItem();
+			list = new com.itextpdf.text.List(false, false, 10);
+			li = new ListItem();
 	        li.add(new Chunk("«Позитив» – это благоприятные возможности, которые нужно использовать по максимуму.", PDFUtil.getSuccessFont()));
 	        list.add(li);
 
@@ -198,21 +221,6 @@ public class TransitSaveHandler extends Handler {
 	        list.add(li);
 	        chapter.add(list);
 			chapter.add(Chunk.NEWLINE);
-
-			chapter.add(new Paragraph("Примечание для графиков по сферам жизни", bold));
-			list = new com.itextpdf.text.List(false, false, 10);
-			li = new ListItem();
-	        li.add(new Chunk("За разделом толкований каждого месяца следует раздел диаграмм месяца, на которых наглядно показана актуальность сфер жизни по дням.", font));
-	        list.add(li);
-
-			li = new ListItem();
-	        li.add(new Chunk("Если график представляет собой точку, значит актуальность данной сферы ограничена одним днём.", font));
-	        list.add(li);
-
-			li = new ListItem();
-	        li.add(new Chunk("Если график изображён в виде линии, то точки на нём укажут на важные дни периода в данной сфере.", font));
-	        list.add(li);
-	        chapter.add(list);
 	        doc.add(chapter);
 
 			Map<Integer, Map<Integer, List<Long>>> years = new TreeMap<Integer, Map<Integer, List<Long>>>();
@@ -313,17 +321,23 @@ public class TransitSaveHandler extends Handler {
 							for (Object object : objects) {
 								SkyPointAspect spa = (SkyPointAspect)object;
 								if (longterm) {
-									//убираем соединения минорных планет
+									//для домов убираем аспекты кроме соединений и оппозиций 
 									boolean housable = spa.getSkyPoint2() instanceof House;
+									if (housable && !Arrays.asList(paspects).contains(spa.getAspect().getCode()))
+										continue;
+
+									//для минорных планет убираем аспекты кроме соединений
 									Planet planet = (Planet)spa.getSkyPoint1();
-									if (planet.isMain()
-											&& !housable
+									if (!housable
+											&& planet.isMain()
 											&& !spa.getAspect().getCode().equals("CONJUNCTION"))
 										continue;
 
-									if (spa.getSkyPoint2() instanceof House
-											&& !Arrays.asList(paspects).contains(spa.getAspect().getCode()))
-										continue;
+		    		                if (planet.getCode().equals("Rakhu")
+		    		                        || planet.getCode().equals("Kethu"))
+		       		                    if (spa.getAspect().getCode().equals("OPPOSITION"))
+		       		                        continue;
+
 								}
 								objects2.add(spa);
 							}
@@ -337,6 +351,8 @@ public class TransitSaveHandler extends Handler {
 						Map<Long, Integer> mitems = new HashMap<Long, Integer>();
 
 						for (Map.Entry<String, List<Object>> ientry : ingressList.entrySet()) {
+							if (ientry.getKey().contains("SEPARATION"))
+								continue;
 							List<Object> ingresses = ientry.getValue();
 							for (Object object : ingresses) {
 								SkyPointAspect spa = (SkyPointAspect)object;
@@ -416,6 +432,7 @@ public class TransitSaveHandler extends Handler {
 			run = System.currentTimeMillis();
 	        Font hfont = new Font(baseFont, 16, Font.BOLD, PDFUtil.FONTCOLOR);
 	        Font grayfont = PDFUtil.getAnnotationFont(false);
+        	Font fonta = PDFUtil.getLinkFont();
 
 			DirectionService service = new DirectionService();
 			DirectionAspectService servicea = new DirectionAspectService();
@@ -465,7 +482,7 @@ public class TransitSaveHandler extends Handler {
 					TimeSeriesCollection dataset = new TimeSeriesCollection();
 					for (Map.Entry<Long, List<TimeSeriesDataItem>> entry3 : mitems.entrySet()) {
 		        		List<TimeSeriesDataItem> series = entry3.getValue();
-		        		if (null == series || 0 == series.size())
+		        		if (null == series || series.isEmpty())
 		        			continue;
 		        		Long aid = entry3.getKey();
 		        		TimeSeries timeSeries = new TimeSeries(aid < 2 ? "Важное" : (aid < 3 ? "Негатив" : "Позитив"));
@@ -478,6 +495,14 @@ public class TransitSaveHandler extends Handler {
 						section.add(image);
 						section.add(Chunk.NEWLINE);
 					}
+
+		 			p = new Paragraph();
+		 			p.add(new Chunk("Диаграммы месяца по сферам жизни приведены ", font));
+		        	Anchor anchor = new Anchor("ниже", fonta);
+		        	anchor.setReference("#charts" + m + "" + y);
+		 	        p.add(anchor);
+		 			section.add(p);
+					section.add(Chunk.NEWLINE);
 //		        	myears = null;
 					
 					Map<Long, Map<String, List<Object>>> dtexts = mtexts.get(m);
@@ -506,7 +531,8 @@ public class TransitSaveHandler extends Handler {
 						if (empty) continue;
 
 						String shortdate = sdf.format(new Date(dentry.getKey()));
-						Section daysection = PDFUtil.printSubsection(section, shortdate);
+						Section daysection = PDFUtil.printSubsection(section, shortdate, null);
+						//TODO добавить поздравление с днём рождения
 
 						for (Map.Entry<String, List<Object>> itexts : imap.entrySet()) {
 	    		            boolean main = false;
@@ -556,7 +582,19 @@ public class TransitSaveHandler extends Handler {
 									else if (separation)
 										prefix = "Заканчивается: ";
 								}
+/*
+ * 			Anchor anchor = new Anchor("Рисунок вашего гороскопа", fonta);
+            anchor.setReference("#cosmogram");
+			Paragraph p = new Paragraph();
+	        p.add(anchor);
+			p.add(new Chunk(" показывает общую картину, которая не в деталях, а глобально описывает ваше предназначение и опыт прошлого:", font));
+			section.add(p);
+			
+        	Anchor anchorTarget = new Anchor(title, fonth3);
+        	anchorTarget.setName(anchor);
+        	p.add(anchorTarget);
 
+ */
 								AspectType type = spa.getAspect().getType();
 								String typeColor = type.getFontColor();
 								BaseColor color = PDFUtil.htmlColor2Base(typeColor);
@@ -593,9 +631,12 @@ public class TransitSaveHandler extends Handler {
 								} else if (skyPoint instanceof Planet) {
 									long aspectid = 0;
 									boolean checktype = false;
+									Planet planet2 = (Planet)skyPoint;
+									boolean revolution = planet.getId().equals(planet2.getId());
 		    		                if (acode.equals("CONJUNCTION")) {
-										if (!planet.getId().equals(skyPoint.getId())) {
-											if (planet.getCode().equals("Selena")) {
+										if (!revolution) {
+											if (planet.getCode().equals("Selena")
+													|| planet2.getCode().equals("Selena")) {
 												type = positiveType;
 												checktype = true;
 											}
@@ -603,7 +644,6 @@ public class TransitSaveHandler extends Handler {
 									} else if (planet.getCode().equals("Moon"))
 							            aspectid = spa.getAspect().getId();
 
-									Planet planet2 = (Planet)skyPoint;
 									PlanetAspectText dirText = (PlanetAspectText)servicea.find(spa, aspectid, checktype);
 									if (dirText != null) {
 										text = dirText.getDescription();
@@ -611,11 +651,13 @@ public class TransitSaveHandler extends Handler {
 									}
 									String ptext = prefix;
 									if (null == dirText
-											|| (separation && (null == code || code.isEmpty())))
-										ptext += planet.getShortName() + " " + type.getSymbol() + " " + planet2.getShortName();
-									if (!separation) {
+											|| (separation && (null == code || code.isEmpty()))) {
 										ptext += planet.getShortName();
-										if (!planet.getId().equals(planet2.getId()))
+										if (!revolution)
+											ptext += " " + type.getSymbol() + " " + planet2.getShortName();
+									} else if (!separation) {
+										ptext += planet.getShortName();
+										if (!revolution)
 											ptext +=  " " + type.getSymbol() + " " + planet2.getShortName();
 									}
 									daysection.addSection(new Paragraph(ptext, colorbold));
@@ -639,8 +681,17 @@ public class TransitSaveHandler extends Handler {
 									p.add(new Chunk(descr, new Font(baseFont, 12, Font.NORMAL, color)));
 									daysection.add(p);
 								}
-								if (spa.isRetro() && !acode.contains("POSITIVE"))
-									daysection.add(new Paragraph("Т.к. " + planet.getName() + " в этот день находится в ретро-фазе, то длительность данного прогноза может затянуться, а описанные события будут носить необратимый характер", grayfont));
+								if (spa.isRetro()
+										&& !separation
+										&& !planet.isFictitious()
+										&& !type.getCode().contains("POSITIVE")) {
+									String str = "Т.к. в этот период " + planet.getName() + " находится в ретро-фазе, то длительность прогноза затянется, а описанные события ";
+									if (acode.equals("CONJUNCTION"))
+										str += "приобретут для вас особую важность";
+									else
+										str += "будут носить необратимый характер";
+									daysection.add(new Paragraph(str, grayfont));
+								}
 								daysection.add(Chunk.NEWLINE);
 							}
 						}
@@ -650,19 +701,32 @@ public class TransitSaveHandler extends Handler {
 //					texts = null;
 
 					//графики по домам
-					chapter.add(Chunk.NEXTPAGE);
-					Map<Long, House> houses = person.getHouses();
-					section = PDFUtil.printSection(chapter, ym + " по сферам жизни", null);
+					section.add(Chunk.NEXTPAGE);
+					section = PDFUtil.printSubsection(section, ym + " по сферам жизни", "charts" + m + "" + y);
+
+					list = new com.itextpdf.text.List(false, false, 10);
+					li = new ListItem();
+			        li.add(new Chunk("Если график представляет собой точку, значит актуальность данной сферы ограничена одним днём,", font));
+			        list.add(li);
+
+					li = new ListItem();
+			        li.add(new Chunk("если график в виде линии, то точки на нём укажут на важные дни периода в данной сфере", font));
+			        list.add(li);
+			        section.add(list);
+			        section.add(Chunk.NEWLINE);
+
 					Map<Long, Map<Long, List<TimeSeriesDataItem>>> items = entry2.getValue();
 			        int i = -1;
 					for (Map.Entry<Long, Map<Long, List<TimeSeriesDataItem>>> entryh : items.entrySet()) {
 						long houseid = entryh.getKey();
 						House house = houses.get(houseid);
 						Map<Long, List<TimeSeriesDataItem>> map = entryh.getValue();
+						if (map.isEmpty())
+							continue;
 						dataset = new TimeSeriesCollection();
 						for (Map.Entry<Long, List<TimeSeriesDataItem>> entry3 : map.entrySet()) {
 			        		List<TimeSeriesDataItem> series = entry3.getValue();
-			        		if (null == series || 0 == series.size())
+			        		if (null == series || series.isEmpty())
 			        			continue;
 			        		Long aid = entry3.getKey();
 			        		TimeSeries timeSeries = new TimeSeries(aid < 2 ? "Важное" : (aid < 3 ? "Негатив" : "Позитив"));
