@@ -7,7 +7,6 @@ import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
@@ -140,8 +139,8 @@ public class TransitChartHandler extends Handler {
 	        p.add(chunk);
 	        chapter.add(p);
 
-			Map<Integer, List<Long>> years = new TreeMap<Integer, List<Long>>();
-			Map<Integer, Map<Long, Map<Long, List<Long>>>> hyears = new TreeMap<Integer, Map<Long, Map<Long, List<Long>>>>();
+			List<Long> ydates = new ArrayList<Long>();
+			Map<Long, Map<Long, List<Long>>> yhouses = new TreeMap<Long, Map<Long, List<Long>>>();
 
 			System.out.println("Prepared for: " + (System.currentTimeMillis() - run));
 			run = System.currentTimeMillis();
@@ -150,15 +149,10 @@ public class TransitChartHandler extends Handler {
 			for (Date date = start.getTime(); start.before(end); start.add(Calendar.DATE, 1), date = start.getTime()) {
 				Calendar calendar = Calendar.getInstance();
 				calendar.setTime(date);
-				int y = calendar.get(Calendar.YEAR);
-				
-				List<Long> dates = years.containsKey(y) ? years.get(y) : new ArrayList<Long>();
 				long time = date.getTime(); 
-				if (!dates.contains(time))
-					dates.add(time);
-				Collections.sort(dates);
-				years.put(y, dates);
+				ydates.add(time);
 			}
+			Collections.sort(ydates);
 
 			/**
 			 * коды ингрессий, используемых в отчёте
@@ -166,102 +160,84 @@ public class TransitChartHandler extends Handler {
 			String[] icodes = new String[] { Ingress._EXACT_HOUSE, Ingress._REPEAT_HOUSE, Ingress._SEPARATION_HOUSE };
 
 			//создаём аналогичный массив, но с домами вместо дат
-			for (Map.Entry<Integer, List<Long>> entry : years.entrySet()) {
-				int y = entry.getKey();
-				List<Long> dates = years.get(y);
+			for (Long time : ydates) {
+				Date date = new Date(time);
+				String sdate = DateUtil.formatCustomDateTime(date, "yyyy-MM-dd") + " 12:00:00";
+				Event event = new Event();
+				Date edate = DateUtil.getDatabaseDateTime(sdate);
+				event.setBirth(edate);
+				event.setPlace(place);
+				event.setZone(zone);
+				event.calc(true);
 
-				//считаем транзиты
-				for (Long time : dates) {
-					Date date = new Date(time);
-					String sdate = DateUtil.formatCustomDateTime(date, "yyyy-MM-dd") + " 12:00:00";
-					Event event = new Event();
-					Date edate = DateUtil.getDatabaseDateTime(sdate);
-					event.setBirth(edate);
-					event.setPlace(place);
-					event.setZone(zone);
-					event.calc(true);
+				Map<String, List<Object>> ingressList = person.initIngresses(event);
+				if (ingressList.isEmpty())
+					continue;
 
-					Map<String, List<Object>> ingressList = person.initIngresses(event);
-					if (ingressList.isEmpty())
+				for (Map.Entry<String, List<Object>> ientry : ingressList.entrySet()) {
+					if (!Arrays.asList(icodes).contains(ientry.getKey()))
 						continue;
-
-					Map<Long, Map<Long, List<Long>>> items = hyears.containsKey(y) ? hyears.get(y) : new HashMap<Long, Map<Long, List<Long>>>();
-
-					for (Map.Entry<String, List<Object>> ientry : ingressList.entrySet()) {
-						if (!Arrays.asList(icodes).contains(ientry.getKey()))
+					List<Object> ingresses = ientry.getValue();
+					for (Object object : ingresses) {
+						SkyPointAspect spa = (SkyPointAspect)object;
+						if (!spa.getAspect().getCode().equals("CONJUNCTION"))
 							continue;
-						List<Object> ingresses = ientry.getValue();
-						for (Object object : ingresses) {
-							SkyPointAspect spa = (SkyPointAspect)object;
-							if (!spa.getAspect().getCode().equals("CONJUNCTION"))
-								continue;
 
-							SkyPoint skyPoint = spa.getSkyPoint1();
-							if (skyPoint.getCode().equals("Moon"))
-								continue;
+						SkyPoint skyPoint = spa.getSkyPoint1();
+						if (skyPoint.getCode().equals("Moon"))
+							continue;
 
-							SkyPoint skyPoint2 = spa.getSkyPoint2();
-							if (skyPoint2 instanceof Planet)
-								continue;
+						SkyPoint skyPoint2 = spa.getSkyPoint2();
+						if (skyPoint2 instanceof Planet)
+							continue;
 
-							long pid = skyPoint.getId();
-							long hid = skyPoint2.getId();
-							Map<Long, List<Long>> dmap = items.containsKey(hid) ? items.get(hid) : new TreeMap<Long, List<Long>>();
-							List<Long> pmap = dmap.containsKey(time) ? dmap.get(time) :new ArrayList<Long>();
-							pmap.add(pid);
-							dmap.put(time, pmap);
-							items.put(hid, dmap);
-						}
+						long pid = skyPoint.getId();
+						long hid = skyPoint2.getId();
+						Map<Long, List<Long>> dmap = yhouses.containsKey(hid) ? yhouses.get(hid) : new TreeMap<Long, List<Long>>();
+						List<Long> pmap = dmap.containsKey(time) ? dmap.get(time) :new ArrayList<Long>();
+						pmap.add(pid);
+						dmap.put(time, pmap);
+						yhouses.put(hid, dmap);
 					}
-					hyears.put(y, items);
 				}
 			}
-			years = null;
+			ydates = null;
 			System.out.println("Composed for: " + (System.currentTimeMillis() - run));
 
 			//генерируем документ
 			run = System.currentTimeMillis();
-	        Font hfont = PDFUtil.getHeaderFont();
-
-	        //года
 	        sdf = new SimpleDateFormat("dd.MM.yy");
-			for (Map.Entry<Integer, Map<Long, Map<Long, List<Long>>>> entry : hyears.entrySet()) {
-				int y = entry.getKey();
-				String syear = String.valueOf(y);
-				Section section = chapter.addSection(new Paragraph(syear + " год", hfont));
+			int i = -1;
+			for (Map.Entry<Long, Map<Long, List<Long>>> entry : yhouses.entrySet()) {
+				long houseid = entry.getKey();
+				House house = houses.get(houseid);
 
-				Map<Long, Map<Long, List<Long>>> items = entry.getValue();
-				int i = -1;
-				for (Map.Entry<Long, Map<Long, List<Long>>> entryh : items.entrySet()) {
-					long houseid = entryh.getKey();
-					House house = houses.get(houseid);
-					Map<Long, List<Long>> map = entryh.getValue();
-					if (map.isEmpty())
+	        	Map<Long, List<Long>> map = entry.getValue();
+				if (map.isEmpty())
+					continue;
+				DefaultCategoryDataset dataset = new DefaultCategoryDataset();
+				for (Map.Entry<Long, List<Long>> entry3 : map.entrySet()) {
+					List<Long> series = entry3.getValue();
+					if (null == series || series.isEmpty())
 						continue;
-					DefaultCategoryDataset dataset = new DefaultCategoryDataset();
-					for (Map.Entry<Long, List<Long>> entry3 : map.entrySet()) {
-						List<Long> series = entry3.getValue();
-						if (null == series || series.isEmpty())
-							continue;
-						Long d = entry3.getKey();
-						for (int j = 0; j < series.size(); j++) {
-							Long pid = series.get(j);
-							Planet planet = planets.get(pid);
-							dataset.addValue(j + 1, planet.getName(), sdf.format(new Date(d)));
-						}
-					}
-					if (dataset.getColumnCount() > 0) {
-						if (++i > 1) {
-							i = 0;
-							section.add(Chunk.NEXTPAGE);
-						}
-			        	Section ysection = PDFUtil.printSubsection(section, house.getName() + " " + y, null);
-			        	Image image = PDFUtil.printLineChart(writer, "", "", "Баллы", dataset, 500, 0, true);
-			        	ysection.add(image);
+					Long d = entry3.getKey();
+					for (int j = 0; j < series.size(); j++) {
+						Long pid = series.get(j);
+						Planet planet = planets.get(pid);
+						dataset.addValue(planet.getNumber(), planet.getName(), sdf.format(new Date(d)));
 					}
 				}
+				if (dataset.getColumnCount() > 0) {
+					if (++i > 1) {
+						i = 0;
+						chapter.add(Chunk.NEXTPAGE);
+					}
+		        	Section section = PDFUtil.printSection(chapter, house.getName(), null);
+					Image image = PDFUtil.printLineChart(writer, "", "", "Баллы", dataset, 500, 0, true);
+					section.add(image);
+				}
 			}
-			hyears = null;
+			yhouses = null;
 			doc.add(chapter);
 			doc.add(Chunk.NEWLINE);
 	        doc.add(PDFUtil.printCopyright());
