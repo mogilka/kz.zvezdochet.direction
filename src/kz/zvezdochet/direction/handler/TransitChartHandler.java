@@ -185,7 +185,7 @@ public class TransitChartHandler extends Handler {
 					if (ingressList.isEmpty())
 						continue;
 
-					Map<Long, List<Long>> hitems = new HashMap<Long, List<Long>>();
+					Map<Long, Map<Long, List<Long>>> items = hyears.containsKey(y) ? hyears.get(y) : new HashMap<Long, Map<Long, List<Long>>>();
 
 					for (Map.Entry<String, List<Object>> ientry : ingressList.entrySet()) {
 						if (!Arrays.asList(icodes).contains(ientry.getKey()))
@@ -206,22 +206,11 @@ public class TransitChartHandler extends Handler {
 
 							long pid = skyPoint.getId();
 							long hid = skyPoint2.getId();
-							List<Long> amap = hitems.containsKey(hid) ? hitems.get(hid) : new ArrayList<Long>();
-							amap.add(pid);
-							hitems.put(hid, amap);
-						}
-					}
-					Map<Long, Map<Long, List<Long>>> items = hyears.containsKey(y) ? hyears.get(y) : new TreeMap<Long, Map<Long, List<Long>>>();
-					for (Map.Entry<Long, List<Long>> entryh : hitems.entrySet()) {
-						List<Long> amap = entryh.getValue();
-						long hid = entryh.getKey();
-						Map<Long, List<Long>> map = items.containsKey(hid) ? items.get(hid) : new HashMap<Long, List<Long>>();
-						for (Long pid : amap) {
-							List<Long> series = map.containsKey(pid) ? map.get(pid) : new ArrayList<Long>();
-							series.add(date.getTime());
-							Collections.sort(series);
-							map.put(pid, series);
-							items.put(hid, map);
+							Map<Long, List<Long>> dmap = items.containsKey(hid) ? items.get(hid) : new TreeMap<Long, List<Long>>();
+							List<Long> pmap = dmap.containsKey(time) ? dmap.get(time) :new ArrayList<Long>();
+							pmap.add(pid);
+							dmap.put(time, pmap);
+							items.put(hid, dmap);
 						}
 					}
 					hyears.put(y, items);
@@ -254,10 +243,12 @@ public class TransitChartHandler extends Handler {
 						List<Long> series = entry3.getValue();
 						if (null == series || series.isEmpty())
 							continue;
-						Long pid = entry3.getKey();
-						Planet planet = planets.get(pid);
-						for (Long date : series)
-							dataset.addValue(planet.getNumber(), planet.getName(), sdf.format(date));
+						Long d = entry3.getKey();
+						for (int j = 0; j < series.size(); j++) {
+							Long pid = series.get(j);
+							Planet planet = planets.get(pid);
+							dataset.addValue(j + 1, planet.getName(), sdf.format(new Date(d)));
+						}
 					}
 					if (dataset.getColumnCount() > 0) {
 						if (++i > 1) {
