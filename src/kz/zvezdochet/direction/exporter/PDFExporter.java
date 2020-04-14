@@ -144,14 +144,11 @@ public class PDFExporter {
 	        chapter.add(new Paragraph("Данный прогноз не содержит конкретных дат, "
 	        	+ "но описывает самые значительные тенденции вашей жизни в ближайшие " + CoreUtil.getAgeString(ages)
         		+ " независимо от переездов и местоположения.", font));
-	        p = new Paragraph("Негативные тенденции – признак того, что вам необходим отдых, переосмысление и мобилизация ресурсов для решения проблемы. "
-				+ "А также это возможность смягчить напряжение, ведь вы будете знать о нём заранее. "
-				+ "Не зацикливайтесь на негативе, используйте по максимуму свои сильные стороны и благоприятные события, которые упомянуты в прогнозе.", font);
-	        p.setSpacingAfter(10);
-			chapter.add(p);
+			chapter.add(Chunk.NEWLINE);
 
 			chapter.add(new Paragraph("Если из возраста в возраст событие повторяется, значит оно создаст большой резонанс.", font));
-			chapter.add(new Paragraph("Максимальная погрешность прогноза ±3 месяца.", font));
+			Font red = PDFUtil.getDangerFont();
+			chapter.add(new Paragraph("Максимальная погрешность прогноза ±2 месяца.", red));
 
 			p = new Paragraph("Если в прогнозе упомянуты люди, которых уже нет в живых (родители, супруги, родственники), "
 				+ "значит речь идёт о людях, их заменяющих (опекуны, крёстные) или похожих на них по характеру.", font);
@@ -271,19 +268,25 @@ public class PDFExporter {
 			else
 				chapter.add(Chunk.NEWLINE);
 
-			//примечание
 			chapter.add(new Paragraph("Примечание:", font));
 			com.itextpdf.text.List list = new com.itextpdf.text.List(false, false, 10);
-			ListItem li = new ListItem();
-	        li.add(new Chunk("Зелёным цветом выделены позитивные тенденции, которые наполнят вас энергией. Их надо использовать по максимуму", new Font(baseFont, 12, Font.NORMAL, new BaseColor(0, 102, 102))));
+	        ListItem li = new ListItem();
+	        li.add(new Chunk("Чёрным цветом выделены важные тенденции, которые указывают на основополагающие события периода.", font));
+	        list.add(li);
+
+			Font green = PDFUtil.getSuccessFont();
+			li = new ListItem();
+	        li.add(new Chunk("Зелёным цветом выделены позитивные тенденции. "
+	        	+ "К ним относятся к событиям, которые сами по себе удачно складываются " 
+	        	+ "и представляют собой благоприятные возможности, наполняющие вас энергией. Их надо использовать по максимуму.", green));
 	        list.add(li);
 
 			li = new ListItem();
-	        li.add(new Chunk("Красным цветом выделены негативные тенденции, которые потребуют большого расхода энергии. Они указывают на сферы, от которых не нужно ждать многого", new Font(baseFont, 12, Font.NORMAL, new BaseColor(102, 0, 51))));
-	        list.add(li);
-
-			li = new ListItem();
-	        li.add(new Chunk("Чёрным цветом выделены важные тенденции, которые указывают на основополагающие события периода", font));
+	        li.add(new Chunk("Красным цветом выделены негативные тенденции, которые потребуют большого расхода энергии. "
+	        	+ "Они указывают на сферы, от которых не нужно ждать многого. "
+	        	+ "Это признак того, что вам необходим отдых, переосмысление и мобилизация ресурсов для решения проблемы. "
+				+ "А также это возможность смягчить напряжение, ведь вы будете знать о нём заранее. "
+				+ "Не зацикливайтесь на негативе, используйте по максимуму свои сильные стороны и благоприятные события прогноза.", red));
 	        list.add(li);
 	        chapter.add(list);
 
@@ -496,10 +499,13 @@ public class PDFExporter {
 			if (spas.isEmpty())
 				return null;
 
+			Font grayfont = PDFUtil.getAnnotationFont(false);
+			Font red = PDFUtil.getDangerFont();
+			Font orange = PDFUtil.getWarningFont();
+
 			String header = "";
 			Paragraph p = null;
 			String agestr = CoreUtil.getAgeString(age);
-			Font grayfont = PDFUtil.getAnnotationFont(false);
 			if (0 == code) {
 				header += "Значимые события " + agestr;
 				p = new Paragraph("В данном разделе описаны жизненноважные, долгожданные, переломные события, "
@@ -535,44 +541,31 @@ public class PDFExporter {
 				if (skyPoint instanceof House) {
 					House house = (House)skyPoint;
 					DirectionText dirText = (DirectionText)service.find(planet, house, type);
+
+					boolean negative = type.getPoints() < 0;
+    				String pname = negative ? planet.getNegative() : planet.getPositive();
+					section.addSection(new Paragraph(house.getName() + " " + type.getSymbol() + " " + pname, fonth5));
 					if (term) {
+						String pretext = spa.getAspect().getCode().equals("CONJUNCTION")
+							? "с куспидом"
+							: "к куспиду";
+
 						p = new Paragraph();
-	    				p.add(new Chunk(planet.getMark("house"), fonth5));
+	    				p.add(new Chunk(planet.getMark("house"), grayfont));
+			    		p.add(new Chunk(spa.getAspect().getName() + " планеты ", grayfont));
 	    				p.add(new Chunk(planet.getSymbol(), PDFUtil.getHeaderAstroFont()));
-	    				p.add(new Chunk(" " + planet.getName() + " (", fonth5));
-
-	    				if (planet.getSign().getCode().equals("Ophiuchus"))
-	    					p.add(new Chunk("\u221E" + " " + planet.getSign().getName(), fonth5));
-	    				else {
-	    					p.add(new Chunk(planet.getSign().getSymbol(), PDFUtil.getHeaderAstroFont()));
-	    					p.add(new Chunk(" " + planet.getSign().getName(), fonth5));
-	    				}
-	    				p.add(new Chunk(", " + planet.getHouse().getDesignation() + " дом) ", fonth5));
-	    				
-	    				if (spa.getAspect().getCode().equals("CONJUNCTION") || spa.getAspect().getCode().equals("OPPOSITION"))
-	    					p.add(new Chunk(spa.getAspect().getSymbol(), PDFUtil.getHeaderAstroFont()));
-	    				else
-	    					p.add(new Chunk(type.getSymbol(), fonth5));
-
-	    				p.add(new Chunk(" " + house.getDesignation() + " дом", fonth5));
-	    				if (null == dirText)
-	    					p.add(new Chunk(", " + house.getName(), fonth5));
-	    				section.addSection(p);
-	    				section.add(Chunk.NEWLINE);
-					} else {
-						boolean negative = type.getPoints() < 0;
-	    				String pname = negative ? planet.getNegative() : planet.getPositive();
-						section.addSection(new Paragraph(house.getName() + " " + type.getSymbol() + " " + pname, fonth5));
+			    		p.add(new Chunk(" " + planet.getName() + " " + pretext + " " + house.getDesignation(), grayfont));
+	    				section.add(p);
 					}
 
 					if (acode.equals("QUADRATURE"))
-						section.add(new Paragraph("Уровень критичности: высокий", PDFUtil.getDangerFont()));
+						section.add(new Paragraph("Уровень критичности: высокий", red));
 					else if (acode.equals("OPPOSITION"))
-						section.add(new Paragraph("Уровень критичности: средний", PDFUtil.getWarningFont()));
+						section.add(new Paragraph("Уровень критичности: средний", red));
 					else if (acode.equals("TRIN"))
-						section.add(new Paragraph("Уровень успеха: высокий", PDFUtil.getDangerFont()));
+						section.add(new Paragraph("Уровень успеха: высокий", orange));
 					else if (acode.equals("SEXTILE"))
-						section.add(new Paragraph("Уровень успеха: средний", PDFUtil.getWarningFont()));
+						section.add(new Paragraph("Уровень успеха: средний", orange));
 
 					if (dirText != null) {
 						String text = dirText.getText();
@@ -589,64 +582,53 @@ public class PDFExporter {
 
 				} else if (skyPoint instanceof Planet) {
 					Planet planet2 = (Planet)skyPoint;
+    				section.addSection(new Paragraph(planet.getShortName() + " " + type.getSymbol() + " " + planet2.getShortName(), fonth5));
 					List<Model> texts = servicea.finds(spa, false);
-					if (texts.isEmpty())
-	    				section.addSection(new Paragraph(planet.getShortName() + " " + type.getSymbol() + " " + planet2.getShortName(), fonth5));
-					else for (Model model : texts) {
-						PlanetAspectText dirText = (PlanetAspectText)model;
-		    			if (term) {
-		    				p = new Paragraph();
-		    				if (dirText != null)
-		    					p.add(new Chunk(dirText.getMark(), fonth5));
-		    				p.add(new Chunk(planet.getSymbol(), PDFUtil.getHeaderAstroFont()));
-		    				p.add(new Chunk(" " + planet.getName() + " (", fonth5));
-	
-		    				if (planet.getSign().getCode().equals("Ophiuchus"))
-		    					p.add(new Chunk("\u221E" + " " + planet.getSign().getName(), fonth5));
-		    				else {
-		    					p.add(new Chunk(planet.getSign().getSymbol(), PDFUtil.getHeaderAstroFont()));
-		    					p.add(new Chunk(" " + planet.getSign().getName(), fonth5));
-		    				}
-		    				p.add(new Chunk(", " + planet.getHouse().getDesignation() + " дом) ", fonth5));
-			    				
-		    				if (spa.getAspect().getCode().equals("CONJUNCTION") || spa.getAspect().getCode().equals("OPPOSITION"))
-		    					p.add(new Chunk(spa.getAspect().getSymbol(), PDFUtil.getHeaderAstroFont()));
-		    				else
-		    					p.add(new Chunk(type.getSymbol(), fonth5));
-	
-		    				p.add(new Chunk(" " + planet2.getSymbol(), PDFUtil.getHeaderAstroFont()));
-		    				p.add(new Chunk(" " + planet2.getName() + " (", fonth5));
-		    				if (planet2.getSign().getCode().equals("Ophiuchus"))
-		    					p.add(new Chunk("\u221E" + " " + planet2.getSign().getName(), fonth5));
-		    				else {
-		    					p.add(new Chunk(planet2.getSign().getSymbol(), PDFUtil.getHeaderAstroFont()));
-		    					p.add(new Chunk(" " + planet2.getSign().getName(), fonth5));
-		    				}
-		    				p.add(new Chunk(", " + planet2.getHouse().getDesignation() + " дом)", fonth5));
-		    				section.addSection(p);
-		    				section.add(Chunk.NEWLINE);
-		    			} else
-		    				section.addSection(new Paragraph(planet.getShortName() + " " + type.getSymbol() + " " + planet2.getShortName(), fonth5));
+					if (!texts.isEmpty())
+						for (Model model : texts) {
+							PlanetAspectText dirText = (PlanetAspectText)model;
+							if (dirText != null) {
+								String text = dirText.getText();
+								if ((null == text || text.isEmpty())
+										&& dirText.getAspect() != null)
+									continue;
+							}
 
-						if (acode.equals("QUADRATURE"))
-							section.add(new Paragraph("Уровень критичности: высокий", PDFUtil.getDangerFont()));
-						else if (acode.equals("OPPOSITION"))
-							section.add(new Paragraph("Уровень критичности: средний", PDFUtil.getWarningFont()));
-						else if (acode.equals("TRIN"))
-							section.add(new Paragraph("Уровень успеха: высокий", PDFUtil.getDangerFont()));
-						else if (acode.equals("SEXTILE"))
-							section.add(new Paragraph("Уровень успеха: средний", PDFUtil.getWarningFont()));
+			    			if (term) {
+								String pretext = spa.getAspect().getCode().equals("CONJUNCTION")
+									? "с планетой"
+									: "к планете";
 
-						if (dirText != null) {
-							String text = dirText.getText();
-							if (text != null) {
-				    			String typeColor = type.getFontColor();
-								BaseColor color = PDFUtil.htmlColor2Base(typeColor);
-								section.add(new Paragraph(PDFUtil.removeTags(text, new Font(baseFont, 12, Font.NORMAL, color))));
-								PDFUtil.printGender(section, dirText, female, child, true);
+			    				p = new Paragraph();
+			    				if (dirText != null)
+			    					p.add(new Chunk(dirText.getMark(), grayfont));
+					    		p.add(new Chunk(spa.getAspect().getName() + " планеты ", grayfont));
+			    				p.add(new Chunk(planet.getSymbol(), PDFUtil.getHeaderAstroFont()));
+					    		p.add(new Chunk(" " + planet.getName() + " " + pretext + " ", grayfont));
+			    				p.add(new Chunk(planet2.getSymbol(), PDFUtil.getHeaderAstroFont()));
+			    				p.add(new Chunk(" " + planet2.getName(), grayfont));
+			    				section.add(p);
+			    			}
+	
+							if (acode.equals("QUADRATURE"))
+								section.add(new Paragraph("Уровень критичности: высокий", red));
+							else if (acode.equals("OPPOSITION"))
+								section.add(new Paragraph("Уровень критичности: средний", orange));
+							else if (acode.equals("TRIN"))
+								section.add(new Paragraph("Уровень успеха: высокий", red));
+							else if (acode.equals("SEXTILE"))
+								section.add(new Paragraph("Уровень успеха: средний", orange));
+	
+							if (dirText != null) {
+								String text = dirText.getText();
+								if (text != null) {
+					    			String typeColor = type.getFontColor();
+									BaseColor color = PDFUtil.htmlColor2Base(typeColor);
+									section.add(new Paragraph(PDFUtil.removeTags(text, new Font(baseFont, 12, Font.NORMAL, color))));
+									PDFUtil.printGender(section, dirText, female, child, true);
+								}
 							}
 						}
-					}
 				}
 			}
 			return section;
