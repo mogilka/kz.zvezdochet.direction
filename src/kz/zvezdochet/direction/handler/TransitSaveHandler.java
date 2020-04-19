@@ -321,23 +321,39 @@ public class TransitSaveHandler extends Handler {
 							for (Object object : objects) {
 								SkyPointAspect spa = (SkyPointAspect)object;
 								if (longterm) {
-									//для домов убираем аспекты кроме соединений и оппозиций 
-									boolean housable = spa.getSkyPoint2() instanceof House;
-									if (housable && !Arrays.asList(paspects).contains(spa.getAspect().getCode()))
-										continue;
-
-									//для минорных планет убираем аспекты кроме соединений
 									Planet planet = (Planet)spa.getSkyPoint1();
-									if (!housable
-											&& planet.isMain()
-											&& !spa.getAspect().getCode().equals("CONJUNCTION"))
-										continue;
+									String acode = spa.getAspect().getCode();
 
-		    		                if (planet.getCode().equals("Rakhu")
-		    		                        || planet.getCode().equals("Kethu"))
-		       		                    if (spa.getAspect().getCode().equals("OPPOSITION"))
-		       		                        continue;
+									boolean housable = spa.getSkyPoint2() instanceof House;
+			    		            if (housable) {
+										//для домов убираем аспекты кроме соединений и оппозиций 
+										if (!Arrays.asList(paspects).contains(acode))
+											continue;
 
+			    		                if (planet.getCode().equals("Kethu")
+			    		                        && !acode.equals("CONJUNCTION"))
+			    		                    continue;
+
+			    		                if (planet.getCode().equals("Rakhu")
+			    		                        && acode.equals("OPPOSITION"))
+			    		                    continue;
+			    		            } else {
+										//для минорных планет убираем аспекты кроме соединений
+										if (planet.isMain()
+												&& !acode.equals("CONJUNCTION"))
+											continue;
+
+										SkyPoint skyPoint = spa.getSkyPoint2();
+			    		            	if (planet.getCode().equals("Kethu")
+			    		                        || skyPoint.getCode().equals("Kethu"))
+			       		                    if (!acode.equals("CONJUNCTION"))
+			       		                        continue;
+
+			    		                if (planet.getCode().equals("Rakhu")
+			    		                        || skyPoint.getCode().equals("Rakhu"))
+			       		                    if (acode.equals("OPPOSITION"))
+			       		                        continue;
+			    		            }
 								}
 								objects2.add(spa);
 							}
@@ -536,7 +552,6 @@ public class TransitSaveHandler extends Handler {
 
 						for (Map.Entry<String, List<Object>> itexts : imap.entrySet()) {
 	    		            boolean main = false;
-	    		            boolean housable = itexts.getKey().contains("HOUSE");
 
 							List<Object> ingresses = itexts.getValue();
 							for (Object object : ingresses) {
@@ -552,25 +567,6 @@ public class TransitSaveHandler extends Handler {
 
 								SkyPoint skyPoint = spa.getSkyPoint2();
 								String acode = spa.getAspect().getCode();
-		    		            if (housable) {
-		    		                if (planet.getCode().equals("Kethu")
-		    		                        && !acode.equals("CONJUNCTION"))
-		    		                    continue;
-
-		    		                if (planet.getCode().equals("Rakhu")
-		    		                        && acode.equals("OPPOSITION"))
-		    		                    continue;
-		    		            } else {
-		    		                if (planet.getCode().equals("Kethu")
-		    		                        || skyPoint.getCode().equals("Kethu"))
-		       		                    if (!acode.equals("CONJUNCTION"))
-		       		                        continue;
-
-		    		                if (planet.getCode().equals("Rakhu")
-		    		                        || skyPoint.getCode().equals("Rakhu"))
-		       		                    if (acode.equals("OPPOSITION"))
-		       		                        continue;
-		    		            }
 		    		            String rduration = spa.isRetro() ? " и более" : "";
 
 								String prefix = "";
@@ -687,7 +683,7 @@ public class TransitSaveHandler extends Handler {
 										&& !type.getCode().contains("POSITIVE")) {
 									String str = "Т.к. в этот период " + planet.getName() + " находится в ретро-фазе, то длительность прогноза затянется, а описанные события ";
 									if (acode.equals("CONJUNCTION"))
-										str += "приобретут для вас особую важность";
+										str += "приобретут для вас особую важность и в будущем ещё напомнят о себе";
 									else
 										str += "будут носить необратимый характер";
 									daysection.add(new Paragraph(str, grayfont));
