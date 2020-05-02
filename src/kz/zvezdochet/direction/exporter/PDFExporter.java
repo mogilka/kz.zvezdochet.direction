@@ -292,7 +292,15 @@ public class PDFExporter {
 
 	        chapter.add(Chunk.NEWLINE);
 	        chapter.add(new Paragraph("Заголовки абзацев (например, «Добро + Прибыль») используются для структурирования текста и "
-	        	+ "указывают на сферу жизни, к которой относится описываемое событие", font));
+	        	+ "указывают на сферу жизни, к которой относится описываемое событие.", font));
+
+			chapter.add(Chunk.NEWLINE);
+			p = new Paragraph("Самые важные события периода", fonth5);
+			p.setSpacingAfter(10);
+			chapter.add(p);
+			p = new Paragraph("Чтобы увидеть самые важные моменты ближайших лет, "
+				+ "почитайте раздел «Значимые события» каждого года.", font);
+			chapter.add(p);
 
 	        //инструкция по поиску события
 	        if (ages > 2) {
@@ -307,31 +315,22 @@ public class PDFExporter {
 	            anchor.setReference("#diagrams");
 				li.add(new Chunk("Перейдите в раздел ", font));
 		        li.add(anchor);
-		        li.add(new Chunk(" в конце документа", font));
+		        li.add(new Chunk(" в конце документа;", font));
 		        ilist.add(li);
 	
 				li = new ListItem();
-		        li.add(new Chunk("Найдите диаграмму нужной вам категории событий", font));
+		        li.add(new Chunk("найдите диаграмму нужной вам категории событий;", font));
 		        ilist.add(li);
 	
 				li = new ListItem();
-		        li.add(new Chunk("Посмотрите возраст на вершине графика. Указанное событие должно произойти в этом возрасте", font));
+		        li.add(new Chunk("посмотрите возраст на вершине графика (жирная точка). Указанное событие должно произойти в этом возрасте;", font));
 		        ilist.add(li);
 	
 				li = new ListItem();
-		        li.add(new Chunk("Перейдите в раздел данного возраста и прочтите толкование события", font));
+		        li.add(new Chunk("перейдите в раздел данного возраста и прочтите толкование события", font));
 		        ilist.add(li);
 		        chapter.add(ilist);
 	        }
-
-	        //
-			chapter.add(Chunk.NEWLINE);
-			p = new Paragraph("Основные вехи периода", fonth5);
-			p.setSpacingAfter(10);
-			chapter.add(p);
-			p = new Paragraph("Чтобы увидеть самые важные моменты ближайших лет, "
-				+ "почитайте раздел «Значимые события» каждого года", font);
-			chapter.add(p);
 	        doc.add(chapter);
 
 			HouseService serviceh = new HouseService();

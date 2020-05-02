@@ -190,6 +190,15 @@ public class AgeCalcHandler extends Handler {
 					continue;
 
 				if (a.isExact(res)) {
+					String acode = a.getCode();
+	            	if (point1.getCode().equals("Kethu") && point2 instanceof Planet)
+	                    if (!acode.equals("CONJUNCTION"))
+	                        continue;
+
+	                if (point1.getCode().equals("Rakhu") || point2.getCode().equals("Rakhu"))
+	                    if (acode.equals("OPPOSITION"))
+	                        continue;
+
 //					if (21 == point1.getId() && 153 == point2.getId())
 //						System.out.println(one + " - " + two + " = " + res);
 					if (point2 instanceof House && CalcUtil.compareAngles(one, two)) {

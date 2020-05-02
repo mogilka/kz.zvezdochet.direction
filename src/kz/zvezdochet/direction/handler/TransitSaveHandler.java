@@ -189,7 +189,9 @@ public class TransitSaveHandler extends Handler {
 
 			Font fonth5 = PDFUtil.getHeaderFont();
 			chapter.add(new Paragraph("Диаграммы", fonth5));
-			chapter.add(new Paragraph("Диаграммы показывают динамику событий по дням в трёх категориях: позитив, негатив и важное.", font));
+			chapter.add(new Paragraph("Диаграммы показывают динамику событий по дням в трёх категориях: позитив, негатив и важное. "
+				+ "По ним можно наглядно увидеть, в какие даты станут актуальны те или иные сферы вашей жизни, "
+				+ "и соответствующим образом скорректировать свои планы.", font));
 			chapter.add(Chunk.NEWLINE);
 
 			chapter.add(new Paragraph("Позитив и негатив:", bold));
