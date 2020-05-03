@@ -347,6 +347,10 @@ public class TransitSaveHandler extends Handler {
 
 										SkyPoint skyPoint = spa.getSkyPoint2();
 			    		            	if (planet.getCode().equals("Kethu")
+			    		                        && skyPoint.getCode().equals("Kethu"))
+		       		                        continue;
+
+			    		            	if (planet.getCode().equals("Kethu")
 			    		                        || skyPoint.getCode().equals("Kethu"))
 			       		                    if (!acode.equals("CONJUNCTION"))
 			       		                        continue;
