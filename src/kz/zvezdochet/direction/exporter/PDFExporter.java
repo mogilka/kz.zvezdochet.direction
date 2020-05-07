@@ -268,7 +268,8 @@ public class PDFExporter {
 			else
 				chapter.add(Chunk.NEWLINE);
 
-			chapter.add(new Paragraph("Примечание:", font));
+			Font bold = new Font(baseFont, 12, Font.BOLD);
+			chapter.add(new Paragraph("Примечание:", bold));
 			com.itextpdf.text.List list = new com.itextpdf.text.List(false, false, 10);
 	        ListItem li = new ListItem();
 	        li.add(new Chunk("Чёрным цветом выделены важные тенденции, которые указывают на основополагающие события периода.", font));
@@ -287,6 +288,10 @@ public class PDFExporter {
 	        	+ "Это признак того, что вам необходим отдых, переосмысление и мобилизация ресурсов для решения проблемы. "
 				+ "А также это возможность смягчить напряжение, ведь вы будете знать о нём заранее. "
 				+ "Не зацикливайтесь на негативе, используйте по максимуму свои сильные стороны и благоприятные события прогноза.", red));
+	        list.add(li);
+
+			li = new ListItem();
+	        li.add(new Chunk("В течение года в одной и той же сфере жизни могут происходить как напряжённые, так и приятные события.", font));
 	        list.add(li);
 	        chapter.add(list);
 
