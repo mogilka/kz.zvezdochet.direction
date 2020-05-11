@@ -175,9 +175,12 @@ public class AgeCalcHandler extends Handler {
 
 			//искусственно устанавливаем нарастающую оппозицию,
 			//чтобы она синхронизировалась с соответствующим ей соединением в этом возрасте
-			if (point2 instanceof House)
+			if (point2 instanceof House) {
 				if (res >= 179 && res < 180)
 					++res;
+			} else if (point1.getCode().equals("Kethu") || point2.getCode().equals("Kethu")) {
+				++res;
+			}
 
 			//определяем, является ли аспект стандартным
 			for (Model realasp : aspects) {
@@ -191,14 +194,12 @@ public class AgeCalcHandler extends Handler {
 
 				if (a.isExact(res)) {
 					String acode = a.getCode();
-	            	if (point1.getCode().equals("Kethu") && point2 instanceof Planet)
-	                    if (!acode.equals("CONJUNCTION"))
+                    if (acode.equals("OPPOSITION")) {
+    	                if (point1.getCode().equals("Rakhu") || point2.getCode().equals("Rakhu"))
 	                        continue;
-
-	                if (point1.getCode().equals("Rakhu") || point2.getCode().equals("Rakhu"))
-	                    if (acode.equals("OPPOSITION"))
+    	                if (point1.getCode().equals("Kethu") || point2.getCode().equals("Kethu"))
 	                        continue;
-
+                    }
 //					if (21 == point1.getId() && 153 == point2.getId())
 //						System.out.println(one + " - " + two + " = " + res);
 					if (point2 instanceof House && CalcUtil.compareAngles(one, two)) {
