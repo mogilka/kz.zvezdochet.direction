@@ -349,7 +349,7 @@ public class CollationPart extends ModelPart implements ICalculable {
 		try {
 			IStructuredSelection sel = (IStructuredSelection)tvParticipants.getSelection();
 			if (null == sel.getFirstElement()) {
-				DialogUtil.alertError("Задайте сообщество, в которое добавляется участник");
+				DialogUtil.alertWarning("Задайте сообщество, в которое добавляется участник");
 				return;
 			} else {
 				Participant participant = (Participant)sel.getFirstElement();
@@ -380,10 +380,10 @@ public class CollationPart extends ModelPart implements ICalculable {
 		try {
 			Collation collation = (Collation)getModel(0, false);
 			if (null == collation)
-				DialogUtil.alertError("Задайте событие, в которое добавляется участник");
+				DialogUtil.alertWarning("Задайте событие, в которое добавляется участник");
 			else {
 				if (null == event)
-					DialogUtil.alertError("Задайте участника события");
+					DialogUtil.alertWarning("Задайте участника события");
 				else {
 					List<Participant> participants = collation.getParticipants();
 					if (null == participants)
@@ -413,7 +413,7 @@ public class CollationPart extends ModelPart implements ICalculable {
 	public boolean check(int mode) throws Exception {
 		if (Handler.MODE_SAVE == mode) {
 			if (null == model) {
-				DialogUtil.alertError("Выберите событие");
+				DialogUtil.alertWarning("Выберите событие");
 				return false;
 			}
 			if (tiMembers.isEnabled()) {

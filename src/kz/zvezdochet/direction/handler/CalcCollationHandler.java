@@ -102,7 +102,7 @@ public class CalcCollationHandler extends Handler {
 			collationPart.onCalc(collation);
 			updateStatus("Групповой прогноз сформирован", false);
 		} catch (Exception e) {
-			DialogUtil.alertError(e.getMessage());
+			DialogUtil.alertError(e);
 			updateStatus("Ошибка", true);
 			e.printStackTrace();
 		}
@@ -134,7 +134,7 @@ public class CalcCollationHandler extends Handler {
 				}
 			}
 		} catch (Exception e) {
-			DialogUtil.alertError(point1.getNumber() + ", " + point2.getNumber());
+			DialogUtil.alertWarning(point1.getNumber() + ", " + point2.getNumber());
 			e.printStackTrace();
 		}
 		return null;

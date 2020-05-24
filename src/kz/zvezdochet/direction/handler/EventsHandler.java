@@ -37,7 +37,7 @@ public class EventsHandler extends Handler {
 		    transitPart.setPerson(event);
 			updateStatus("Таблица транзитов сформирована", false);
 		} catch (Exception e) {
-			DialogUtil.alertError(e.getMessage());
+			DialogUtil.alertError(e);
 			updateStatus("Ошибка", true);
 			e.printStackTrace();
 		}

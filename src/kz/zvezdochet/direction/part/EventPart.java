@@ -588,7 +588,7 @@ public class EventPart extends ModelListView implements ICalculable {
 		if (null == dtBirth.getSelection())
 			msgBody.append(lbBirth.getText());
 		if (null == trplace) {
-			DialogUtil.alertError(Messages.getString("EventView.PlaceIsWrong"));
+			DialogUtil.alertWarning(Messages.getString("EventView.PlaceIsWrong"));
 			return false;
 		}
 		if (Handler.MODE_SAVE == mode) {
@@ -768,7 +768,7 @@ public class EventPart extends ModelListView implements ICalculable {
 				}
 			}
 		} catch (Exception e) {
-			DialogUtil.alertError(point1.getNumber() + ", " + point2.getNumber());
+			DialogUtil.alertWarning(point1.getNumber() + ", " + point2.getNumber());
 			e.printStackTrace();
 		}
 	}

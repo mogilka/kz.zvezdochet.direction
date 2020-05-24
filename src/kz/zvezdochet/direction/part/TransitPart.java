@@ -96,10 +96,10 @@ public class TransitPart extends ModelListView {
 			txZone.setText("0.0");
 
 		if (!DateUtil.isDateRangeValid(dt.getSelection(), dt2.getSelection())) {
-			DialogUtil.alertError("Укажите правильный период");
+			DialogUtil.alertWarning("Укажите правильный период");
 			return false;
 		} else if (null == person) {
-			DialogUtil.alertError("Событие не задано");
+			DialogUtil.alertWarning("Событие не задано");
 			return false;
 		}
 		return true;

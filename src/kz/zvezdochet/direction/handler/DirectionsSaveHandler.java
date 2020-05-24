@@ -110,7 +110,7 @@ public class DirectionsSaveHandler extends Handler {
 			//а ещё лучше открывать его
 			updateStatus("Файл дирекций сформирован", false);
 		} catch (Exception e) {
-			DialogUtil.alertError(e.getMessage());
+			DialogUtil.alertError(e);
 			updateStatus("Ошибка", true);
 			e.printStackTrace();
 		}

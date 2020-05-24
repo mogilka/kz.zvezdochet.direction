@@ -30,7 +30,7 @@ public class EventCalcHandler extends Handler {
 			transitPart.onCalc(2);
 			updateStatus("Карта транзитов сформирована", false);
 		} catch (Exception e) {
-			DialogUtil.alertError(e.getMessage());
+			DialogUtil.alertError(e);
 			updateStatus("Ошибка", true);
 			e.printStackTrace();
 		}

@@ -17,7 +17,6 @@ import kz.zvezdochet.part.EventPart;
 /**
  * Обработчик открытия транзитного периода персоны
  * @author Natalie Didenko
- *
  */
 public class TransitHandler extends Handler {
 	@Inject
@@ -38,7 +37,7 @@ public class TransitHandler extends Handler {
 		    periodPart.setPerson(person);
 			updateStatus("Транзитный период открыт", false);
 		} catch (Exception e) {
-			DialogUtil.alertError(e.getMessage());
+			DialogUtil.alertError(e);
 			updateStatus("Ошибка", true);
 			e.printStackTrace();
 		}

@@ -84,7 +84,7 @@ public class DirectionsHandler extends Handler {
 		    housePart.setData(data);
 			updateStatus("Таблица дирекций сформирована", false);
 		} catch (Exception e) {
-			DialogUtil.alertError(e.getMessage());
+			DialogUtil.alertError(e);
 			updateStatus("Ошибка", true);
 			e.printStackTrace();
 		}

@@ -175,10 +175,10 @@ public class AgePart extends ModelListView implements ICalculable {
 	@Override
 	public boolean check(int mode) {
 		if (spFrom.getSelection() > spTo.getSelection()) {
-			DialogUtil.alertError("Укажите правильный период жизни");
+			DialogUtil.alertWarning("Укажите правильный период жизни");
 			return false;
 		} else if (null == event) {
-			DialogUtil.alertError("Событие не задано");
+			DialogUtil.alertWarning("Событие не задано");
 			return false;
 		}
 		return true;

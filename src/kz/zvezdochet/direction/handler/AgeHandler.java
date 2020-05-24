@@ -36,7 +36,7 @@ public class AgeHandler extends Handler {
 		    AgePart agePart = (AgePart)part.getObject();
 		    agePart.setEvent(event);
 		} catch (Exception e) {
-			DialogUtil.alertError(e.getMessage());
+			DialogUtil.alertError(e);
 			e.printStackTrace();
 		}
 	}

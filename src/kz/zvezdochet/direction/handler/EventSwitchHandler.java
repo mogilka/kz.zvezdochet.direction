@@ -26,7 +26,7 @@ public class EventSwitchHandler extends Handler {
 			transitPart.onCalc(mode);
 			updateStatus("Карта транзитов переключена", false);
 		} catch (Exception e) {
-			DialogUtil.alertError(e.getMessage());
+			DialogUtil.alertError(e);
 			updateStatus("Ошибка", true);
 			e.printStackTrace();
 		}

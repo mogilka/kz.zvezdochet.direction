@@ -99,7 +99,7 @@ public class TimelineHandler extends Handler {
 		    agePart.setData(aged);
 			updateStatus("Таймлайн сформирован", false);
 		} catch (Exception e) {
-			DialogUtil.alertError(e.getMessage());
+			DialogUtil.alertError(e);
 			updateStatus("Ошибка", true);
 			e.printStackTrace();
 		}
@@ -131,7 +131,7 @@ public class TimelineHandler extends Handler {
 			}
 			aged.add(aspect);
 		} catch (Exception e) {
-			DialogUtil.alertError(point1.getNumber() + ", " + point2.getNumber());
+			DialogUtil.alertWarning(point1.getNumber() + ", " + point2.getNumber());
 			e.printStackTrace();
 		}
 	}

@@ -129,7 +129,7 @@ public class DateCalcHandler extends Handler {
 			transitPart.onCalc(event, person);
 			updateStatus("Космограмма транзитов сформирована", false);
 		} catch (Exception e) {
-			DialogUtil.alertError(e.getMessage());
+			DialogUtil.alertError(e);
 			updateStatus("Ошибка", true);
 			e.printStackTrace();
 		}
@@ -160,7 +160,7 @@ public class DateCalcHandler extends Handler {
 				}
 			}
 		} catch (Exception e) {
-			DialogUtil.alertError(point1.getNumber() + ", " + point2.getNumber());
+			DialogUtil.alertWarning(point1.getNumber() + ", " + point2.getNumber());
 			e.printStackTrace();
 		}
 	}
