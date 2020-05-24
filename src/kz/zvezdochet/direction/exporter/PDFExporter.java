@@ -2,6 +2,7 @@ package kz.zvezdochet.direction.exporter;
 
 import java.io.FileOutputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -34,7 +35,6 @@ import kz.zvezdochet.analytics.exporter.EventRules;
 import kz.zvezdochet.bean.AspectType;
 import kz.zvezdochet.bean.Event;
 import kz.zvezdochet.bean.House;
-import kz.zvezdochet.bean.Place;
 import kz.zvezdochet.bean.Planet;
 import kz.zvezdochet.bean.PositionType;
 import kz.zvezdochet.bean.Sign;
@@ -76,6 +76,10 @@ public class PDFExporter {
 	 * Признак использования астрологических терминов
 	 */
 	private boolean term = false;
+	/**
+	 * Признак оптимистичного прогноза
+	 */
+	private boolean optimistic = false;
 
 	public PDFExporter() {
 		try {
@@ -91,7 +95,8 @@ public class PDFExporter {
 	 * Генерация событий периода
 	 * @param event событие
 	 */
-	public void generate(Event event, List<SkyPointAspect> spas, int initage, int finalage) {
+	public void generate(Event event, List<SkyPointAspect> spas, int initage, int finalage, boolean optimistic) {
+		this.optimistic = optimistic;
 		Document doc = new Document();
 		try {
 			String filename = PlatformUtil.getPath(Activator.PLUGIN_ID, "/out/directions.pdf").getPath();
@@ -113,15 +118,7 @@ public class PDFExporter {
 	        p.setAlignment(Element.ALIGN_CENTER);
 			chapter.add(p);
 
-			Place place = event.getPlace();
-			if (null == place)
-				place = new Place().getDefault();
-			text = (event.getZone() >= 0 ? "UTC+" : "") + event.getZone() +
-					" " + (event.getDst() >= 0 ? "DST+" : "") + event.getDst() + 
-					" " + place.getName() +
-					" " + place.getLatitude() + "°" +
-					", " + place.getLongitude() + "°";
-			p = new Paragraph(text, font);
+			p = new Paragraph("Тип прогноза: " + (optimistic ? "оптимистичный" : "реалистичный"), font);
 	        p.setAlignment(Element.ALIGN_CENTER);
 			chapter.add(p);
 
@@ -282,13 +279,15 @@ public class PDFExporter {
 	        	+ "и представляют собой благоприятные возможности, наполняющие вас энергией. Их надо использовать по максимуму.", green));
 	        list.add(li);
 
-			li = new ListItem();
-	        li.add(new Chunk("Красным цветом выделены негативные тенденции, которые потребуют большого расхода энергии. "
-	        	+ "Они указывают на сферы, от которых не нужно ждать многого. "
-	        	+ "Это признак того, что вам необходим отдых, переосмысление и мобилизация ресурсов для решения проблемы. "
-				+ "А также это возможность смягчить напряжение, ведь вы будете знать о нём заранее. "
-				+ "Не зацикливайтесь на негативе, используйте по максимуму свои сильные стороны и благоприятные события прогноза.", red));
-	        list.add(li);
+	        if (!optimistic) {
+				li = new ListItem();
+		        li.add(new Chunk("Красным цветом выделены негативные тенденции, которые потребуют большого расхода энергии. "
+		        	+ "Они указывают на сферы, от которых не нужно ждать многого. "
+		        	+ "Это признак того, что вам необходим отдых, переосмысление и мобилизация ресурсов для решения проблемы. "
+					+ "А также это возможность смягчить напряжение, ведь вы будете знать о нём заранее. "
+					+ "Не зацикливайтесь на негативе, используйте по максимуму свои сильные стороны и благоприятные события прогноза.", red));
+		        list.add(li);
+	        }
 
 			li = new ListItem();
 	        li.add(new Chunk("В течение года в одной и той же сфере жизни могут происходить как напряжённые, так и приятные события.", font));
@@ -538,10 +537,20 @@ public class PDFExporter {
 				if (type.getCode().contains("HIDDEN"))
 					continue;
 
+				if (optimistic && 2 == spa.getAspect().getTypeid())
+					continue;
+
+				String[] pnegative = {"Lilith", "Kethu"};
 				Planet planet = (Planet)spa.getSkyPoint1();
+				SkyPoint skyPoint = spa.getSkyPoint2();
+				if (optimistic
+						&& 1 == spa.getAspect().getTypeid()
+						&& (Arrays.asList(pnegative).contains(planet.getCode())
+							|| Arrays.asList(pnegative).contains(skyPoint.getCode())))
+					continue;
+
 				String acode = spa.getAspect().getCode();
 
-				SkyPoint skyPoint = spa.getSkyPoint2();
 				if (skyPoint instanceof House) {
 					House house = (House)skyPoint;
 					DirectionText dirText = (DirectionText)service.find(planet, house, type);

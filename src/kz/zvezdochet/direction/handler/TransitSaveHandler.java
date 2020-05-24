@@ -36,7 +36,6 @@ import com.itextpdf.text.pdf.BaseFont;
 import com.itextpdf.text.pdf.PdfWriter;
 
 import kz.zvezdochet.analytics.bean.PlanetAspectText;
-import kz.zvezdochet.bean.Aspect;
 import kz.zvezdochet.bean.AspectType;
 import kz.zvezdochet.bean.Event;
 import kz.zvezdochet.bean.House;
@@ -46,6 +45,7 @@ import kz.zvezdochet.bean.Planet;
 import kz.zvezdochet.bean.SkyPoint;
 import kz.zvezdochet.bean.SkyPointAspect;
 import kz.zvezdochet.core.handler.Handler;
+import kz.zvezdochet.core.ui.util.DialogUtil;
 import kz.zvezdochet.core.util.DateUtil;
 import kz.zvezdochet.core.util.PlatformUtil;
 import kz.zvezdochet.direction.Activator;
@@ -86,9 +86,13 @@ public class TransitSaveHandler extends Handler {
 			Event person = periodPart.getPerson();
 			Place place = periodPart.getPlace();
 			double zone = periodPart.getZone();
-			Aspect selaspect = periodPart.getAspect();
-			boolean longterm = selaspect != null;
 			Map<Long, House> houses = person.getHouses();
+
+			int choice = DialogUtil.alertQuestion("Вопрос", "Выберите тип прогноза:", new String[] {"Только важное", "Полный"});
+			boolean longterm = choice < 1;
+
+			choice = DialogUtil.alertQuestion("Вопрос", "Выберите тип прогноза:", new String[] {"Реалистичный", "Оптимистичный"});
+			boolean optimistic = choice > 0;
 			updateStatus("Расчёт транзитов на период", false);
 
 			Date initDate = periodPart.getInitialDate();
@@ -132,15 +136,18 @@ public class TransitSaveHandler extends Handler {
 
 			if (null == place)
 				place = new Place().getDefault();
-			text = (zone >= 0 ? "UTC+" : "") + zone +
-				" " + place.getName() +
-				" " + place.getLatitude() + "°" +
-				", " + place.getLongitude() + "°";
-			p = new Paragraph(text, font);
-	        p.setAlignment(Element.ALIGN_CENTER);
-			chapter.add(p);
-
-			text = "Тип прогноза: " + (longterm ? "самое важное" : "ежедневный");
+			boolean pdefault = place.getId().equals(place.getDefault().getId());
+			if (!pdefault) {
+				text = (zone >= 0 ? "UTC+" : "") + zone +
+					" " + place.getName() +
+					" " + place.getLatitude() + "°" +
+					", " + place.getLongitude() + "°";
+				p = new Paragraph(text, font);
+		        p.setAlignment(Element.ALIGN_CENTER);
+				chapter.add(p);
+			}				
+			
+			text = "Тип прогноза: " + (optimistic ? "оптимистичный" : "реалистичный") + ", " + (longterm ? "самое важное" : "ежедневный");
 			p = new Paragraph(text, font);
 	        p.setAlignment(Element.ALIGN_CENTER);
 			chapter.add(p);
@@ -160,10 +167,12 @@ public class TransitSaveHandler extends Handler {
 	        p.add(chunk);
 	        chapter.add(p);
 
-			chapter.add(new Paragraph("Данный прогноз сделан с учётом вашего текущего местонахождения. "
-				+ "Если в течение прогнозного периода вы переедете в более отдалённое место (в другой часовой пояс или с ощутимой сменой географической широты), "
-				+ "то в некоторых аспектах прогноз может иметь временны́е погрешности.", font));
-			chapter.add(Chunk.NEWLINE);
+	        if (!pdefault) {
+				chapter.add(new Paragraph("Данный прогноз сделан с учётом вашего текущего местонахождения. "
+					+ "Если в течение прогнозного периода вы переедете в более отдалённое место (в другой часовой пояс или с ощутимой сменой географической широты), "
+					+ "то в некоторых аспектах прогноз может иметь временны́е погрешности.", font));
+				chapter.add(Chunk.NEWLINE);
+	        }
 
 			Font red = PDFUtil.getDangerFont();
 			p = new Paragraph();
@@ -264,9 +273,9 @@ public class TransitSaveHandler extends Handler {
 			 */
 			String[] icodes = Ingress.getKeys();
 			/**
-			 * коды аспектов, используемых в урезанном отчёте
+			 * коды аспектов, используемых для домов в урезанном отчёте
 			 */
-			String[] paspects = {"CONJUNCTION", "OPPOSITION"};
+			String[] paspects = optimistic ? new String[] {"CONJUNCTION"} : new String[] {"CONJUNCTION", "OPPOSITION"};
 
 			//создаём аналогичный массив, но с домами вместо дат
 			for (Map.Entry<Integer, Map<Integer, List<Long>>> entry : years.entrySet()) {
@@ -295,7 +304,9 @@ public class TransitSaveHandler extends Handler {
 					if (null == dtexts)
 						dtexts = new TreeMap<Long, Map<String, List<Object>>>();
 
+					int i = -1;
 					for (Long time : dates) {
+						++i;
 						Date date = new Date(time);
 						String sdate = DateUtil.formatCustomDateTime(date, "yyyy-MM-dd") + " 12:00:00";
 						Event event = new Event();
@@ -320,48 +331,76 @@ public class TransitSaveHandler extends Handler {
 								continue;
 
 							List<Object> objects2 = ingressmap.containsKey(key) ? ingressmap.get(key) : new ArrayList<Object>();
+							String[] negatives = {"Kethu", "Lilith"};
 							for (Object object : objects) {
-								SkyPointAspect spa = (SkyPointAspect)object;
-								if (longterm) {
+								if (object instanceof SkyPointAspect) {
+									SkyPointAspect spa = (SkyPointAspect)object;
 									Planet planet = (Planet)spa.getSkyPoint1();
-									String acode = spa.getAspect().getCode();
+									SkyPoint skyPoint = spa.getSkyPoint2();
 
-									boolean housable = spa.getSkyPoint2() instanceof House;
-			    		            if (housable) {
-										//для домов убираем аспекты кроме соединений и оппозиций 
+									//для домов убираем аспекты кроме заданных для данного типа прогноза 
+									boolean housable = skyPoint instanceof House;
+									String acode = spa.getAspect().getCode();
+			    		            if (housable)
 										if (!Arrays.asList(paspects).contains(acode))
 											continue;
 
-			    		                if (planet.getCode().equals("Kethu")
-			    		                        && !acode.equals("CONJUNCTION"))
-			    		                    continue;
+									if (longterm) {
+				    		            if (housable) {
+				    		                if (planet.getCode().equals("Kethu")
+				    		                        && !acode.equals("CONJUNCTION"))
+				    		                    continue;
+	
+				    		                if (planet.getCode().equals("Rakhu")
+				    		                        && acode.equals("OPPOSITION"))
+				    		                    continue;
+				    		            } else {
+											//для минорных планет убираем аспекты кроме соединений
+											if (planet.isMain()
+													&& !acode.equals("CONJUNCTION"))
+												continue;
+	
+				    		            	if (planet.getCode().equals("Kethu")
+				    		                        && skyPoint.getCode().equals("Kethu"))
+			       		                        continue;
+	
+				    		            	if (planet.getCode().equals("Kethu")
+				    		                        || skyPoint.getCode().equals("Kethu"))
+				       		                    if (!acode.equals("CONJUNCTION"))
+				       		                        continue;
+	
+				    		                if (planet.getCode().equals("Rakhu")
+				    		                        || skyPoint.getCode().equals("Rakhu"))
+				       		                    if (acode.equals("OPPOSITION"))
+				       		                        continue;
+				    		            }
+									}
 
-			    		                if (planet.getCode().equals("Rakhu")
-			    		                        && acode.equals("OPPOSITION"))
-			    		                    continue;
-			    		            } else {
-										//для минорных планет убираем аспекты кроме соединений
-										if (planet.isMain()
-												&& !acode.equals("CONJUNCTION"))
+									if (optimistic) {
+										if (2 == spa.getAspect().getTypeid())
 											continue;
 
-										SkyPoint skyPoint = spa.getSkyPoint2();
-			    		            	if (planet.getCode().equals("Kethu")
-			    		                        && skyPoint.getCode().equals("Kethu"))
-		       		                        continue;
-
-			    		            	if (planet.getCode().equals("Kethu")
-			    		                        || skyPoint.getCode().equals("Kethu"))
-			       		                    if (!acode.equals("CONJUNCTION"))
-			       		                        continue;
-
-			    		                if (planet.getCode().equals("Rakhu")
-			    		                        || skyPoint.getCode().equals("Rakhu"))
-			       		                    if (acode.equals("OPPOSITION"))
-			       		                        continue;
-			    		            }
+										if (acode.equals("CONJUNCTION")) {
+											if (Arrays.asList(negatives).contains(planet.getCode())
+													|| Arrays.asList(negatives).contains(skyPoint.getCode()))
+												continue;
+										}
+									}
+									objects2.add(spa);
+//								} else if (object instanceof Planet) { //ретро или директ
+//									Planet planet = (Planet)object;
+//								    List<SkyPointAspect> transits = new ArrayList<SkyPointAspect>();
+//									List<Object> pobjects = new ArrayList<Object>();
+//									pobjects.addAll(ingressList.get(Ingress._SEPARATION));
+//									pobjects.addAll(ingressList.get(Ingress._SEPARATION_HOUSE));
+//									for (Object object2 : pobjects) {
+//										SkyPointAspect spa = (SkyPointAspect)object2;
+//										if (!spa.getSkyPoint1().equals(planet.getId()))
+//											continue;
+//										transits.add(spa);
+//									}
+//									planet.setData(transits);//TODO обработать ретро-толкования
 								}
-								objects2.add(spa);
 							}
 							ingressmap.put(key, objects2);
 						}
@@ -377,6 +416,8 @@ public class TransitSaveHandler extends Handler {
 								continue;
 							List<Object> ingresses = ientry.getValue();
 							for (Object object : ingresses) {
+								if (!(object instanceof SkyPointAspect))
+									continue;
 								SkyPointAspect spa = (SkyPointAspect)object;
 								SkyPoint skyPoint = spa.getSkyPoint1();
 								SkyPoint skyPoint2 = spa.getSkyPoint2();
