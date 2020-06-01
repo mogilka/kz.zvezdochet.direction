@@ -480,7 +480,7 @@ public class DayTimesExportHandler extends Handler {
 						        li.add(new Chunk(item.planet.getShortName() + " " + type.getSymbol() + " " + item.planet2.getShortName() + ": ", abfont));
 								li.setSpacingAfter(10);
 
-								List<Model> texts = servicea.finds(new SkyPointAspect(item.planet, item.planet2, item.aspect), false);
+								List<Model> texts = servicea.finds(new SkyPointAspect(item.planet, item.planet2, item.aspect));
 								if (texts.isEmpty())
 									alist.add(li);
 								else for (Model model : texts) {

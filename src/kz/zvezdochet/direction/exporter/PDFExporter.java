@@ -596,7 +596,7 @@ public class PDFExporter {
 				} else if (skyPoint instanceof Planet) {
 					Planet planet2 = (Planet)skyPoint;
     				section.addSection(new Paragraph(planet.getShortName() + " " + type.getSymbol() + " " + planet2.getShortName(), fonth5));
-					List<Model> texts = servicea.finds(spa, false);
+					List<Model> texts = servicea.finds(spa);
 					if (!texts.isEmpty())
 						for (Model model : texts) {
 							PlanetAspectText dirText = (PlanetAspectText)model;
