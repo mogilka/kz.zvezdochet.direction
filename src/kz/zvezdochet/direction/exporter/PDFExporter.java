@@ -138,6 +138,7 @@ public class PDFExporter {
 	        chapter.add(p);
 
 	        int ages = finalage - initage + 1;
+	        boolean chartable = ages > 4;
 	        chapter.add(new Paragraph("Данный прогноз не содержит конкретных дат, "
 	        	+ "но описывает самые значительные тенденции вашей жизни в ближайшие " + CoreUtil.getAgeString(ages)
         		+ " независимо от переездов и местоположения.", font));
@@ -235,7 +236,7 @@ public class PDFExporter {
 						double val = submap.containsKey(age) ? submap.get(age) : 0;
 						submap.put(age, val + point);
 						seriesh.put(houseid, submap);
-	
+
 						//данные для диаграммы возраста
 						Map<Long, Double> submapa = seriesa.containsKey(age) ? seriesa.get(age) : new HashMap<Long, Double>();
 						val = submapa.containsKey(houseid) ? submapa.get(houseid) : 0;
@@ -307,7 +308,7 @@ public class PDFExporter {
 			chapter.add(p);
 
 	        //инструкция по поиску события
-	        if (ages > 2) {
+	        if (chartable) {
 				chapter.add(Chunk.NEWLINE);
 				p = new Paragraph("Как найти конкретное событие?", fonth5);
 				p.setSpacingAfter(10);
@@ -419,7 +420,7 @@ public class PDFExporter {
 				doc.add(chapter);
 			}
 
-	        if (ages > 2) {
+	        if (chartable) {
 				chapter = new ChapterAutoNumber(PDFUtil.printHeader(new Paragraph(), "Диаграммы", null));
 				chapter.setNumberDepth(0);
 	
