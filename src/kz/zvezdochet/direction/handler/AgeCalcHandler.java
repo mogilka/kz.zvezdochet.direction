@@ -151,8 +151,6 @@ public class AgeCalcHandler extends Handler {
 	 * @param age возраст
 	 */
 	private void manageCalc(SkyPoint point1, SkyPoint point2, int age) {
-		if (point1.getCode().equals(point2.getCode())) return;
-
 		if (point1 instanceof Planet)
 			calc(new Planet((Planet)point1), point2, age, false);
 		else
