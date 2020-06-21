@@ -122,7 +122,7 @@ public class TransitSaveHandler extends Handler {
 			PDFUtil.printHeader(p, "Прогноз по месяцам", null);
 			chapter.add(p);
 
-			String text = person.getCallname() + ": ";
+			String text = person.getCallname() + ", прогноз на период: ";
 			SimpleDateFormat sdf = new SimpleDateFormat("EEEE, d MMMM yyyy");
 			text += sdf.format(initDate);
 			boolean days = (DateUtil.getDateFromDate(initDate) != DateUtil.getDateFromDate(finalDate)
@@ -167,19 +167,19 @@ public class TransitSaveHandler extends Handler {
 	        p.add(chunk);
 	        chapter.add(p);
 
-	        if (!pdefault) {
-				chapter.add(new Paragraph("Данный прогноз сделан с учётом вашего текущего местонахождения. "
-					+ "Если в течение прогнозного периода вы переедете в более отдалённое место (в другой часовой пояс или с ощутимой сменой географической широты), "
-					+ "то в некоторых аспектах прогноз может иметь временны́е погрешности.", font));
-				chapter.add(Chunk.NEWLINE);
-	        }
-
 			Font red = PDFUtil.getDangerFont();
 			p = new Paragraph();
 			p.add(new Chunk("Общая погрешность прогноза составляет ±1 день. ", red));
 			p.add(new Chunk("Это значит, что описанное событие может произойти на день раньше, если длительность прогноза составляет более одного дня (в толковании вы это увидите).", font));
 			chapter.add(p);
 			chapter.add(Chunk.NEWLINE);
+
+	        if (!pdefault) {
+				chapter.add(new Paragraph("Прогноз сделан для местонахождения «" + place.getName() + "». "
+					+ "Если в течение прогнозного периода вы переедете в более отдалённое место (в другой часовой пояс или с ощутимой сменой географической широты), "
+					+ "то в некоторых прогнозах погрешность может составить ±2 дня.", font));
+				chapter.add(Chunk.NEWLINE);
+	        }
 
 			Font bold = new Font(baseFont, 12, Font.BOLD);
 			chapter.add(new Paragraph("Длительность прогнозов", bold));
@@ -278,6 +278,7 @@ public class TransitSaveHandler extends Handler {
 			String[] paspects = optimistic ? new String[] {"CONJUNCTION"} : new String[] {"CONJUNCTION", "OPPOSITION"};
 
 			//создаём аналогичный массив, но с домами вместо дат
+			int j = -1;
 			for (Map.Entry<Integer, Map<Integer, List<Long>>> entry : years.entrySet()) {
 				int y = entry.getKey();
 				Map<Integer, List<Long>> months = years.get(y);
@@ -304,9 +305,8 @@ public class TransitSaveHandler extends Handler {
 					if (null == dtexts)
 						dtexts = new TreeMap<Long, Map<String, List<Object>>>();
 
-					int i = -1;
 					for (Long time : dates) {
-						++i;
+						++j;
 						Date date = new Date(time);
 						String sdate = DateUtil.formatCustomDateTime(date, "yyyy-MM-dd") + " 12:00:00";
 						Event event = new Event();
@@ -330,6 +330,9 @@ public class TransitSaveHandler extends Handler {
 							if (objects.isEmpty())
 								continue;
 
+							if (j > 0 && key.contains("REPEAT"))
+								continue;
+
 							List<Object> objects2 = ingressmap.containsKey(key) ? ingressmap.get(key) : new ArrayList<Object>();
 							String[] negatives = {"Kethu", "Lilith"};
 							for (Object object : objects) {
@@ -341,20 +344,21 @@ public class TransitSaveHandler extends Handler {
 									//для домов убираем аспекты кроме заданных для данного типа прогноза 
 									boolean housable = skyPoint instanceof House;
 									String acode = spa.getAspect().getCode();
-			    		            if (housable)
+			    		            if (housable) {
 										if (!Arrays.asList(paspects).contains(acode))
 											continue;
 
+			    		                if (planet.getCode().equals("Kethu")
+			    		                        && !acode.equals("CONJUNCTION"))
+			    		                    continue;
+
+			    		                if (planet.getCode().equals("Rakhu")
+			    		                        && acode.equals("OPPOSITION"))
+			    		                    continue;
+			    		            }
+
 									if (longterm) {
-				    		            if (housable) {
-				    		                if (planet.getCode().equals("Kethu")
-				    		                        && !acode.equals("CONJUNCTION"))
-				    		                    continue;
-	
-				    		                if (planet.getCode().equals("Rakhu")
-				    		                        && acode.equals("OPPOSITION"))
-				    		                    continue;
-				    		            } else {
+				    		            if (!housable) {
 											//для минорных планет убираем аспекты кроме соединений
 											if (planet.isMain()
 													&& !acode.equals("CONJUNCTION"))
@@ -387,19 +391,22 @@ public class TransitSaveHandler extends Handler {
 										}
 									}
 									objects2.add(spa);
-//								} else if (object instanceof Planet) { //ретро или директ
-//									Planet planet = (Planet)object;
-//								    List<SkyPointAspect> transits = new ArrayList<SkyPointAspect>();
-//									List<Object> pobjects = new ArrayList<Object>();
-//									pobjects.addAll(ingressList.get(Ingress._SEPARATION));
-//									pobjects.addAll(ingressList.get(Ingress._SEPARATION_HOUSE));
-//									for (Object object2 : pobjects) {
-//										SkyPointAspect spa = (SkyPointAspect)object2;
-//										if (!spa.getSkyPoint1().equals(planet.getId()))
-//											continue;
-//										transits.add(spa);
-//									}
-//									planet.setData(transits);//TODO обработать ретро-толкования
+								} else if (object instanceof Planet) { //ретро или директ
+									Planet planet = (Planet)object;
+								    List<SkyPointAspect> transits = new ArrayList<SkyPointAspect>();
+									List<Object> pobjects = new ArrayList<Object>();
+									pobjects.addAll(ingressList.get(Ingress._EXACT));
+									pobjects.addAll(ingressList.get(Ingress._EXACT_HOUSE));
+									pobjects.addAll(ingressList.get(Ingress._REPEAT));
+									pobjects.addAll(ingressList.get(Ingress._REPEAT_HOUSE));
+									for (Object object2 : pobjects) {
+										SkyPointAspect spa = (SkyPointAspect)object2;
+										if (!spa.getSkyPoint1().getId().equals(planet.getId()))
+											continue;
+										transits.add(spa);
+									}
+									planet.setData(transits);
+									objects2.add(planet);
 								}
 							}
 							ingressmap.put(key, objects2);
@@ -566,7 +573,6 @@ public class TransitSaveHandler extends Handler {
 		 	        p.add(anchor);
 		 			section.add(p);
 					section.add(Chunk.NEWLINE);
-//		        	myears = null;
 					
 					Map<Long, Map<String, List<Object>>> dtexts = mtexts.get(m);
 					if (dtexts.isEmpty())
@@ -578,16 +584,18 @@ public class TransitSaveHandler extends Handler {
 							List<Object> ingresses = daytexts.getValue();
 							if (!ingresses.isEmpty()) {
 								for (Object object : ingresses) {
-									SkyPointAspect spa = (SkyPointAspect)object;
-									Planet planet = (Planet)spa.getSkyPoint1();
-		    		                boolean main = planet.isMain();
-		    		                boolean separation = daytexts.getKey().contains("SEPARATION");
-		    		                if (main && separation)
-		        		                continue;
-		    		                else {
-										empty = false;
-										break;
-		    		                }
+									if (object instanceof SkyPointAspect) {
+										SkyPointAspect spa = (SkyPointAspect)object;
+										Planet planet = (Planet)spa.getSkyPoint1();
+			    		                boolean main = planet.isMain();
+			    		                boolean separation = daytexts.getKey().contains("SEPARATION");
+			    		                if (main && separation)
+			        		                continue;
+			    		                else {
+											empty = false;
+											break;
+			    		                }
+									}
 								}
 							}
 						}
@@ -595,7 +603,6 @@ public class TransitSaveHandler extends Handler {
 
 						String shortdate = sdf.format(new Date(dentry.getKey()));
 						Section daysection = PDFUtil.printSubsection(section, shortdate, null);
-						//TODO добавить поздравление с днём рождения
 
 						for (Map.Entry<String, List<Object>> itexts : imap.entrySet()) {
 	    		            boolean main = false;
@@ -605,26 +612,30 @@ public class TransitSaveHandler extends Handler {
 								text = "";
 								String code = "";
 
-								SkyPointAspect spa = (SkyPointAspect)object;
-								Planet planet = (Planet)spa.getSkyPoint1();
-	    		                main = planet.isMain();
-	    		                boolean separation = itexts.getKey().contains("SEPARATION");
-	    		                if (main && separation)
-	        		                continue;
+								if (object instanceof SkyPointAspect) {
+									SkyPointAspect spa = (SkyPointAspect)object;
+									Planet planet = (Planet)spa.getSkyPoint1();
+		    		                main = planet.isMain();
+		    		                
+		    		                boolean exact = itexts.getKey().contains("EXACT");
+		    		                boolean separation = itexts.getKey().contains("SEPARATION");
+		    		                boolean repeat = itexts.getKey().contains("REPEAT");
+		    		                if (main && (separation || repeat))
+		        		                continue;
 
-								SkyPoint skyPoint = spa.getSkyPoint2();
-								String acode = spa.getAspect().getCode();
-		    		            String rduration = spa.isRetro() ? " и более" : "";
+									SkyPoint skyPoint = spa.getSkyPoint2();
+									String acode = spa.getAspect().getCode();
+			    		            String rduration = spa.isRetro() ? " и более" : "";
 
-								String prefix = "";
-								if (!main) {
-	               	                if (itexts.getKey().contains("EXACT"))
-	               	                	prefix = "Начинается: ";
-									else if (itexts.getKey().contains("REPEAT"))
-										prefix = "Продолжается: ";
-									else if (separation)
-										prefix = "Заканчивается: ";
-								}
+									String prefix = "";
+									if (!main) {
+		               	                if (exact)
+		               	                	prefix = "Начинается: ";
+										else if (repeat)
+											prefix = "Продолжается: ";
+										else if (separation)
+											prefix = "Заканчивается: ";
+									}
 /*
  * 			Anchor anchor = new Anchor("Рисунок вашего гороскопа", fonta);
             anchor.setReference("#cosmogram");
@@ -638,102 +649,186 @@ public class TransitSaveHandler extends Handler {
         	p.add(anchorTarget);
 
  */
-								AspectType type = spa.getAspect().getType();
-								String typeColor = type.getFontColor();
-								BaseColor color = PDFUtil.htmlColor2Base(typeColor);
-								Font colorbold = new Font(baseFont, 12, Font.BOLD, color);
-			    				String tduration = separation ? "" : spa.getTransitDuration();
+									AspectType type = spa.getAspect().getType();
+									String typeColor = type.getFontColor();
+									BaseColor color = PDFUtil.htmlColor2Base(typeColor);
+									Font colorbold = new Font(baseFont, 12, Font.BOLD, color);
+				    				String tduration = separation ? "" : spa.getTransitDuration();
 
-								if (skyPoint instanceof House) {
-									House house = (House)skyPoint;
+									if (skyPoint instanceof House) {
+										House house = (House)skyPoint;
+	
+			    		                if (acode.equals("CONJUNCTION")) {
+											if (planet.getCode().equals("Selena"))
+												type = positiveType;
+											else if (planet.getCode().equals("Lilith")
+			    		                            || planet.getCode().equals("Kethu"))
+												type = negativeType;
+										} else if (planet.getCode().equals("Moon"))
+											continue;
+	
+										DirectionText dirText = (DirectionText)service.find(planet, house, type);
+										if (dirText != null) {
+											text = dirText.getDescription();
+											code = dirText.getCode();
+										}
+										String ptext = prefix;
+										if (null == dirText
+												|| ((!separation && !repeat) && null == dirText.getDescription())
+												|| ((separation || repeat) && (null == code || code.isEmpty())))
+											ptext += planet.getShortName() + " " + type.getSymbol() + " " + house.getName() + "<>";
+										if (!separation && !repeat)
+											ptext += house.getName();
 
-		    		                if (acode.equals("CONJUNCTION")) {
-										if (planet.getCode().equals("Selena"))
-											type = positiveType;
-										else if (planet.getCode().equals("Lilith")
-		    		                            || planet.getCode().equals("Kethu"))
-											type = negativeType;
-									} else if (planet.getCode().equals("Moon"))
+					    				daysection.addSection(new Paragraph(ptext, colorbold));
+					    				if (tduration.length() > 0 && !repeat)
+						    				daysection.add(new Paragraph("Длительность прогноза: " + tduration + rduration, grayfont));
+
+									} else if (skyPoint instanceof Planet) {
+										long aspectid = 0;
+										boolean checktype = false;
+										Planet planet2 = (Planet)skyPoint;
+										boolean revolution = planet.getId().equals(planet2.getId());
+			    		                if (acode.equals("CONJUNCTION")) {
+											if (!revolution) {
+												if (planet.getCode().equals("Selena")
+														|| planet2.getCode().equals("Selena")) {
+													type = positiveType;
+													checktype = true;
+												}
+											}
+										} else if (planet.getCode().equals("Moon"))
+								            aspectid = spa.getAspect().getId();
+	
+										PlanetAspectText dirText = (PlanetAspectText)servicea.find(spa, aspectid, checktype);
+										if (dirText != null) {
+											text = dirText.getDescription();
+											code = dirText.getCode();
+										}
+										String ptext = prefix;
+										if (null == dirText
+												|| ((!separation && !repeat) && null == dirText.getDescription())
+												|| ((separation || repeat) && (null == code || code.isEmpty()))) {
+											ptext += planet.getShortName();
+											if (!revolution)
+												ptext += " " + type.getSymbol() + " " + planet2.getShortName() + "<>";
+										} else if (!separation && !repeat) {
+											ptext += planet.getShortName();
+											if (!revolution)
+												ptext +=  " " + type.getSymbol() + " " + planet2.getShortName();
+										}
+										daysection.addSection(new Paragraph(ptext, colorbold));
+					    				if (tduration.length() > 0 && !repeat)
+						    				daysection.add(new Paragraph("Длительность прогноза: " + tduration + rduration, grayfont));
+									}
+	
+									if (text != null) {
+										String descr = "";
+			               	            if (main)
+			               	                descr = text;
+			               	            else {
+			               	                if (exact)
+			               	                    descr = text;
+			               	            	else
+			               	                    descr = code;
+			               	            }
+										p = new Paragraph();
+										if (null == descr)
+											descr = "";
+										p.add(new Chunk(descr, new Font(baseFont, 12, Font.NORMAL, color)));
+										daysection.add(p);
+									}
+									if (spa.isRetro()
+											&& !separation
+											&& !planet.isFictitious()
+											&& !type.getCode().contains("POSITIVE")) {
+										String str = "Т.к. в этот период " + planet.getName() + " находится в ретро-фазе, то длительность прогноза затянется, а описанные события ";
+										if (acode.equals("CONJUNCTION"))
+											str += "приобретут для вас особую важность и в будущем ещё напомнят о себе";
+										else
+											str += "будут носить необратимый характер";
+										daysection.add(new Paragraph(str, grayfont));
+									}
+
+								//изменение движения планеты
+								} else if (object instanceof Planet) {
+									Planet planet = (Planet)object;
+									if (planet.isFictitious())
 										continue;
 
-									DirectionText dirText = (DirectionText)service.find(planet, house, type);
-									if (dirText != null) {
-										text = dirText.getDescription();
-										code = dirText.getCode();
-									}
-									String ptext = prefix;
-									if (null == dirText
-											|| (separation && (null == code || code.isEmpty())))
-										ptext += planet.getShortName() + " " + type.getSymbol() + " " + house.getName();
-									if (!separation)
-										ptext += house.getName();
+									boolean motion = itexts.getKey().contains("MOTION");
+									if (!motion)
+										continue;
+									boolean direct = itexts.getKey().equals(Ingress._DIRECT);
 
-				    				daysection.addSection(new Paragraph(ptext, colorbold));
-				    				if (tduration.length() > 0)
-					    				daysection.add(new Paragraph("Длительность прогноза: " + tduration + rduration, grayfont));
-								} else if (skyPoint instanceof Planet) {
-									long aspectid = 0;
-									boolean checktype = false;
-									Planet planet2 = (Planet)skyPoint;
-									boolean revolution = planet.getId().equals(planet2.getId());
-		    		                if (acode.equals("CONJUNCTION")) {
-										if (!revolution) {
-											if (planet.getCode().equals("Selena")
-													|| planet2.getCode().equals("Selena")) {
-												type = positiveType;
-												checktype = true;
+									String direction = direct ? "директное" : "обратное";
+									String ptext = planet.getName() + " переходит в " + direction + " движение";
+				    				daysection.addSection(new Paragraph(ptext, bold));
+
+				    				@SuppressWarnings("unchecked")
+									List<SkyPointAspect> transits = (List<SkyPointAspect>)planet.getData();
+									if (null == transits || transits.isEmpty())
+										daysection.add(new Paragraph("Как-то ощутимо на вас это не повлияет", grayfont));
+									else {
+										daysection.add(new Paragraph("Т.к. " + planet.getName() + " меняет направление, сегодня станут актуальными следующие прогнозы:", grayfont));
+
+										for (SkyPointAspect spa : transits) {
+											SkyPoint skyPoint = spa.getSkyPoint2();
+											AspectType type = spa.getAspect().getType();
+											String acode = spa.getAspect().getCode();
+											String typeColor = type.getFontColor();
+											BaseColor color = PDFUtil.htmlColor2Base(typeColor);
+											Font colorbold = new Font(baseFont, 12, Font.NORMAL, color);
+											daysection.add(Chunk.NEWLINE);
+
+											if (skyPoint instanceof House) {
+												House house = (House)skyPoint;
+			
+					    		                if (acode.equals("CONJUNCTION")) {
+													if (planet.getCode().equals("Selena"))
+														type = positiveType;
+													else if (planet.getCode().equals("Lilith")
+					    		                            || planet.getCode().equals("Kethu"))
+														type = negativeType;
+												} else if (planet.getCode().equals("Moon"))
+													continue;
+			
+												DirectionText dirText = (DirectionText)service.find(planet, house, type);
+												if (dirText != null)
+													text = dirText.getDescription();
+
+												ptext = (null == dirText || null == dirText.getDescription())
+													? planet.getShortName() + " " + type.getSymbol() + " " + house.getName() + "<>"
+													: text;
+												daysection.add(new Paragraph(ptext, colorbold));
+
+											} else if (skyPoint instanceof Planet) {
+												long aspectid = 0;
+												boolean checktype = false;
+												Planet planet2 = (Planet)skyPoint;
+												boolean revolution = planet.getId().equals(planet2.getId());
+					    		                if (acode.equals("CONJUNCTION")) {
+													if (!revolution) {
+														if (planet.getCode().equals("Selena")
+																|| planet2.getCode().equals("Selena")) {
+															type = positiveType;
+															checktype = true;
+														}
+													}
+												} else if (planet.getCode().equals("Moon"))
+										            aspectid = spa.getAspect().getId();
+			
+												PlanetAspectText dirText = (PlanetAspectText)servicea.find(spa, aspectid, checktype);
+												if (dirText != null)
+													text = dirText.getDescription();
+
+												ptext = (null == dirText || null == dirText.getDescription())
+													? planet.getShortName() + (revolution ? "" : " " + type.getSymbol() + " " + planet2.getShortName() + "<>")
+													: text;
+												daysection.add(new Paragraph(ptext, colorbold));												
 											}
 										}
-									} else if (planet.getCode().equals("Moon"))
-							            aspectid = spa.getAspect().getId();
-
-									PlanetAspectText dirText = (PlanetAspectText)servicea.find(spa, aspectid, checktype);
-									if (dirText != null) {
-										text = dirText.getDescription();
-										code = dirText.getCode();
 									}
-									String ptext = prefix;
-									if (null == dirText
-											|| (separation && (null == code || code.isEmpty()))) {
-										ptext += planet.getShortName();
-										if (!revolution)
-											ptext += " " + type.getSymbol() + " " + planet2.getShortName();
-									} else if (!separation) {
-										ptext += planet.getShortName();
-										if (!revolution)
-											ptext +=  " " + type.getSymbol() + " " + planet2.getShortName();
-									}
-									daysection.addSection(new Paragraph(ptext, colorbold));
-				    				if (tduration.length() > 0)
-					    				daysection.add(new Paragraph("Длительность прогноза: " + tduration + rduration, grayfont));
-								}
-
-								if (text != null) {
-									String descr = "";
-		               	            if (main)
-		               	                descr = text;
-		               	            else {
-		               	                if (itexts.getKey().contains("EXACT"))
-		               	                    descr = text;
-		               	            	else
-		               	                    descr = code;
-		               	            }
-									p = new Paragraph();
-									if (null == descr)
-										descr = "";
-									p.add(new Chunk(descr, new Font(baseFont, 12, Font.NORMAL, color)));
-									daysection.add(p);
-								}
-								if (spa.isRetro()
-										&& !separation
-										&& !planet.isFictitious()
-										&& !type.getCode().contains("POSITIVE")) {
-									String str = "Т.к. в этот период " + planet.getName() + " находится в ретро-фазе, то длительность прогноза затянется, а описанные события ";
-									if (acode.equals("CONJUNCTION"))
-										str += "приобретут для вас особую важность и в будущем ещё напомнят о себе";
-									else
-										str += "будут носить необратимый характер";
-									daysection.add(new Paragraph(str, grayfont));
 								}
 								daysection.add(Chunk.NEWLINE);
 							}
