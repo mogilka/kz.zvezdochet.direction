@@ -395,8 +395,6 @@ public class TransitSaveHandler extends Handler {
 									Planet planet = (Planet)object;
 								    List<SkyPointAspect> transits = new ArrayList<SkyPointAspect>();
 									List<Object> pobjects = new ArrayList<Object>();
-									pobjects.addAll(ingressList.get(Ingress._EXACT));
-									pobjects.addAll(ingressList.get(Ingress._EXACT_HOUSE));
 									pobjects.addAll(ingressList.get(Ingress._REPEAT));
 									pobjects.addAll(ingressList.get(Ingress._REPEAT_HOUSE));
 									for (Object object2 : pobjects) {
@@ -753,14 +751,11 @@ public class TransitSaveHandler extends Handler {
 								//изменение движения планеты
 								} else if (object instanceof Planet) {
 									Planet planet = (Planet)object;
-									if (planet.isFictitious())
-										continue;
 
 									boolean motion = itexts.getKey().contains("MOTION");
 									if (!motion)
 										continue;
 									boolean direct = itexts.getKey().equals(Ingress._DIRECT);
-
 									String direction = direct ? "директное" : "обратное";
 									String ptext = planet.getName() + " переходит в " + direction + " движение";
 				    				daysection.addSection(new Paragraph(ptext, bold));
@@ -770,7 +765,7 @@ public class TransitSaveHandler extends Handler {
 									if (null == transits || transits.isEmpty())
 										daysection.add(new Paragraph("Как-то ощутимо на вас это не повлияет", grayfont));
 									else {
-										daysection.add(new Paragraph("Т.к. " + planet.getName() + " меняет направление, сегодня станут актуальными следующие прогнозы:", grayfont));
+										daysection.add(new Paragraph("Т.к. " + planet.getName() + " меняет направление, сегодня снова станут актуальными следующие прогнозы:", grayfont));
 
 										for (SkyPointAspect spa : transits) {
 											SkyPoint skyPoint = spa.getSkyPoint2();
