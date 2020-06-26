@@ -572,16 +572,16 @@ public class PDFExporter {
 	    				section.add(p);
 					}
 
-					if (acode.equals("QUADRATURE"))
-						section.add(new Paragraph("Уровень критичности: высокий", red));
-					else if (acode.equals("OPPOSITION"))
-						section.add(new Paragraph("Уровень критичности: средний", red));
-					else if (acode.equals("TRIN"))
-						section.add(new Paragraph("Уровень успеха: высокий", orange));
-					else if (acode.equals("SEXTILE"))
-						section.add(new Paragraph("Уровень успеха: средний", orange));
-
 					if (dirText != null) {
+						if (acode.equals("QUADRATURE"))
+							section.add(new Paragraph("Уровень критичности: высокий", red));
+						else if (acode.equals("OPPOSITION"))
+							section.add(new Paragraph("Уровень критичности: средний", red));
+						else if (acode.equals("TRIN"))
+							section.add(new Paragraph("Уровень успеха: высокий", orange));
+						else if (acode.equals("SEXTILE"))
+							section.add(new Paragraph("Уровень успеха: средний", orange));
+
 						String text = dirText.getText();
 						if (text != null) {
 							String typeColor = type.getFontColor();
@@ -623,15 +623,17 @@ public class PDFExporter {
 			    				p.add(new Chunk(" " + planet2.getName(), grayfont));
 			    				section.add(p);
 			    			}
-	
-							if (acode.equals("QUADRATURE"))
-								section.add(new Paragraph("Уровень критичности: высокий", red));
-							else if (acode.equals("OPPOSITION"))
-								section.add(new Paragraph("Уровень критичности: средний", orange));
-							else if (acode.equals("TRIN"))
-								section.add(new Paragraph("Уровень успеха: высокий", red));
-							else if (acode.equals("SEXTILE"))
-								section.add(new Paragraph("Уровень успеха: средний", orange));
+
+			    			if (null == dirText.getAspect()) {
+								if (acode.equals("QUADRATURE"))
+									section.add(new Paragraph("Уровень критичности: высокий", red));
+								else if (acode.equals("OPPOSITION"))
+									section.add(new Paragraph("Уровень критичности: средний", orange));
+								else if (acode.equals("TRIN"))
+									section.add(new Paragraph("Уровень успеха: высокий", red));
+								else if (acode.equals("SEXTILE"))
+									section.add(new Paragraph("Уровень успеха: средний", orange));
+			    			}
 	
 							if (dirText != null) {
 								String text = dirText.getText();
