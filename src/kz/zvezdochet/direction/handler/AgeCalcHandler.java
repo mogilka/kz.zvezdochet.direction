@@ -95,7 +95,7 @@ public class AgeCalcHandler extends Handler {
 				e.printStackTrace();
 			}
 
-			for (int age = initage; age <= finage + 1; age++) {
+			for (int age = initage; age <= finage; age++) {
 				//дирекции планеты к другим планетам
 				if (null == selhouse && !houseFrom) {
 					for (Planet selp : selplanets)
@@ -173,12 +173,12 @@ public class AgeCalcHandler extends Handler {
 
 			//искусственно устанавливаем нарастающую оппозицию,
 			//чтобы она синхронизировалась с соответствующим ей соединением в этом возрасте
-			if (point2 instanceof House) {
-				if (res >= 179 && res < 180)
-					++res;
-			} else if (point1.getCode().equals("Kethu") || point2.getCode().equals("Kethu")) {
-				++res;
-			}
+//			if (point2 instanceof House) {
+//				if (res >= 179 && res < 180)
+//					++res;
+//			} else if (point1.getCode().equals("Kethu") || point2.getCode().equals("Kethu")) {
+//				++res;
+//			}
 
 			//определяем, является ли аспект стандартным
 			for (Model realasp : aspects) {
@@ -198,16 +198,18 @@ public class AgeCalcHandler extends Handler {
     	                if (point1.getCode().equals("Kethu") || point2.getCode().equals("Kethu"))
 	                        continue;
                     }
-//					if (21 == point1.getId() && 153 == point2.getId())
-//						System.out.println(one + " - " + two + " = " + res);
-					if (point2 instanceof House && CalcUtil.compareAngles(one, two)) {
-						++res;
-						--age;
-					}
-					if (age < 0)
-						continue;
-					if (age < initage || age > finage)
-						continue;
+
+					if (24 == point1.getId() && 173 == point2.getId())
+						System.out.println(one + " - " + two + " = " + res);
+
+//					if (point2 instanceof House && CalcUtil.compareAngles(one, two)) {
+//						--res;
+//						--age;
+//					}
+//					if (age < 0)
+//						continue;
+//					if (age < initage || age > finage)
+//						continue;
 
 					SkyPointAspect aspect = new SkyPointAspect();
 					point1.setLongitude(one);
