@@ -338,27 +338,38 @@ public class TransitSaveHandler extends Handler {
 							for (Object object : objects) {
 								if (object instanceof SkyPointAspect) {
 									SkyPointAspect spa = (SkyPointAspect)object;
+									String acode = spa.getAspect().getCode();
 									Planet planet = (Planet)spa.getSkyPoint1();
 									SkyPoint skyPoint = spa.getSkyPoint2();
 
+									if (optimistic) {
+										if (2 == spa.getAspect().getTypeid())
+											continue;
+
+										if (acode.equals("CONJUNCTION")) {
+											if (Arrays.asList(negatives).contains(planet.getCode())
+													|| Arrays.asList(negatives).contains(skyPoint.getCode()))
+												continue;
+										}
+									}
+
 									//для домов убираем аспекты кроме заданных для данного типа прогноза 
 									boolean housable = skyPoint instanceof House;
-									String acode = spa.getAspect().getCode();
 			    		            if (housable) {
 										if (!Arrays.asList(paspects).contains(acode))
 											continue;
-
-			    		                if (planet.getCode().equals("Kethu")
-			    		                        && !acode.equals("CONJUNCTION"))
-			    		                    continue;
-
-			    		                if (planet.getCode().equals("Rakhu")
-			    		                        && acode.equals("OPPOSITION"))
-			    		                    continue;
 			    		            }
 
 									if (longterm) {
-				    		            if (!housable) {
+				    		            if (housable) {
+				    		                if (planet.getCode().equals("Kethu")
+				    		                        && !acode.equals("CONJUNCTION"))
+				    		                    continue;
+
+				    		                if (planet.getCode().equals("Rakhu")
+				    		                        && acode.equals("OPPOSITION"))
+				    		                    continue;
+				    		            } else {
 											//для минорных планет убираем аспекты кроме соединений
 											if (planet.isMain()
 													&& !acode.equals("CONJUNCTION"))
@@ -379,18 +390,8 @@ public class TransitSaveHandler extends Handler {
 				       		                        continue;
 				    		            }
 									}
-
-									if (optimistic) {
-										if (2 == spa.getAspect().getTypeid())
-											continue;
-
-										if (acode.equals("CONJUNCTION")) {
-											if (Arrays.asList(negatives).contains(planet.getCode())
-													|| Arrays.asList(negatives).contains(skyPoint.getCode()))
-												continue;
-										}
-									}
 									objects2.add(spa);
+
 								} else if (object instanceof Planet) { //ретро или директ
 									Planet planet = (Planet)object;
 								    List<SkyPointAspect> transits = new ArrayList<SkyPointAspect>();
