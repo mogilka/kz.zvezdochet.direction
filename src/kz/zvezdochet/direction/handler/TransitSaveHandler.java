@@ -526,7 +526,7 @@ public class TransitSaveHandler extends Handler {
 				Bar[] bars = new Bar[24];
 				for (int i = 0; i < 12; i++) {
 					int month = i + 1;
-					String smonth = DateUtil.getMonthName(month);
+					String smonth = DateUtil.getMonthName(month).substring(0, 3);
 					bars[i] = new Bar(smonth, positive.get(month), null, "Позитивные события", null);
 					bars[i + 12] = new Bar(smonth, negative.get(month) * (-1), null, "Негативные события", null);
 				}
@@ -868,7 +868,7 @@ public class TransitSaveHandler extends Handler {
 								timeSeries.add(tsdi);
 							dataset.addSeries(timeSeries);
 			        	}
-			        	if (dataset.getSeriesCount() > 0) {
+			        	if (dataset.getSeriesCount() > 1) { //точечный график не отображаем
 			        		if (++i > 1) {
 			        			i = 0;
 			        			section.add(Chunk.NEXTPAGE);

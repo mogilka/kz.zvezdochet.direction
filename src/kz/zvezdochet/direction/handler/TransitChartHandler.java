@@ -224,7 +224,7 @@ public class TransitChartHandler extends Handler {
 					for (int j = 0; j < series.size(); j++) {
 						Long pid = series.get(j);
 						Planet planet = planets.get(pid);
-						dataset.addValue(planet.getNumber(), planet.getName(), sdf.format(new Date(d)));
+						dataset.addValue(planet.getNumber(), planet.getCode(), sdf.format(new Date(d)));
 					}
 				}
 				if (dataset.getColumnCount() > 0) {

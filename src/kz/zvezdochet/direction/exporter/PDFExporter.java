@@ -11,9 +11,6 @@ import java.util.SortedSet;
 import java.util.TreeMap;
 import java.util.TreeSet;
 
-import org.jfree.data.xy.XYSeries;
-import org.jfree.data.xy.XYSeriesCollection;
-
 import com.itextpdf.text.Anchor;
 import com.itextpdf.text.BaseColor;
 import com.itextpdf.text.Chapter;
@@ -45,6 +42,7 @@ import kz.zvezdochet.core.service.DataAccessException;
 import kz.zvezdochet.core.util.CalcUtil;
 import kz.zvezdochet.core.util.CoreUtil;
 import kz.zvezdochet.core.util.DateUtil;
+import kz.zvezdochet.core.util.OsUtil;
 import kz.zvezdochet.core.util.PlatformUtil;
 import kz.zvezdochet.direction.Activator;
 import kz.zvezdochet.direction.bean.DirectionText;
@@ -138,7 +136,7 @@ public class PDFExporter {
 	        chapter.add(p);
 
 	        int ages = finalage - initage + 1;
-	        boolean chartable = ages > 4;
+	        boolean chartable = ages > 3;
 	        chapter.add(new Paragraph("Данный прогноз не содержит конкретных дат, "
 	        	+ "но описывает самые значительные тенденции вашей жизни в ближайшие " + CoreUtil.getAgeString(ages)
         		+ " независимо от переездов и местоположения.", font));
@@ -256,7 +254,7 @@ public class PDFExporter {
 			}
 			int height = 400;
 			if (ages < 2)
-				height = 100;
+				height = 150;
 			else if (ages < 4)
 				height = 200;
 			Image image = PDFUtil.printStackChart(writer, "Соотношение категорий событий", "Возраст", "Количество", bars, 500, height, true);
@@ -322,11 +320,11 @@ public class PDFExporter {
 		        li.add(anchor);
 		        li.add(new Chunk(" в конце документа;", font));
 		        ilist.add(li);
-	
+
 				li = new ListItem();
 		        li.add(new Chunk("найдите диаграмму нужной вам категории событий;", font));
 		        ilist.add(li);
-	
+
 				li = new ListItem();
 		        li.add(new Chunk("посмотрите возраст на вершине графика (жирная точка). Указанное событие должно произойти в этом возрасте;", font));
 		        ilist.add(li);
@@ -365,8 +363,8 @@ public class PDFExporter {
 					bar.setCategory(age + "");
 					items[++i] = bar;
 				}
-				image = PDFUtil.printBars(writer, "", "Сферы жизни", "Баллы", items, 500, 300, false, false, false);
-				section.add(image);
+				section.add(PDFUtil.printBars(writer, "", "Сферы жизни", "Баллы", items, 500, 300, false, false, false));
+				section.add(new Paragraph("Ниже приведён прогноз по этим сферам жизни", font));
 				chapter.add(Chunk.NEXTPAGE);
 
 				for (Map.Entry<Integer, List<SkyPointAspect>> subentry : agemap.entrySet())
@@ -453,13 +451,12 @@ public class PDFExporter {
 		        HouseMap[] houseMap = HouseMap.getMap();
 		        for (HouseMap hmap : houseMap) {
 		        	Section section = PDFUtil.printSection(chapter, hmap.name, null);
-					XYSeriesCollection items = new XYSeriesCollection();
+			        Map<String, Object[]> smap = new HashMap<>();
 					List<String> descrs = new ArrayList<String>();
 		        	for (int i = 0; i < 3; i++) {
 		        		long houseid = hmap.houseids[i];
 		        		Map<Integer, Double> hdata = seriesh.get(houseid);
 						House house = (House)serviceh.find(houseid);
-				        XYSeries series = new XYSeries(house.getName());
 		        		if (null == hdata || 0 == hdata.size()) {
 	//	        			if (i > 0) {
 	//							series.add(initage, 0);
@@ -468,12 +465,18 @@ public class PDFExporter {
 		        			continue;
 		        		}
 						descrs.add(house.getName() + ": " + house.getDescription());
+
+						List<Integer> names = new ArrayList<Integer>();
+						List<Double> values = new ArrayList<Double>();
+		        		
 		        		SortedSet<Integer> keys = new TreeSet<Integer>(hdata.keySet());
-		        		for (Integer key : keys)
-							series.add(key, hdata.get(key));
-				        items.addSeries(series);
+		        		for (Integer key : keys) {
+							names.add(key);
+							values.add(hdata.get(key));
+						}
+		        		smap.put(house.getName(), new Object[] {names, values});
 		        	}	        	
-					image = PDFUtil.printGraphics(writer, "", "Возраст", "Баллы", items, 500, 300, true);
+					image = PDFUtil.printGraphics(writer, "", "Возраст", "Баллы", smap, 500, 300, true);
 					section.add(image);
 	
 					list = new com.itextpdf.text.List(false, false, 10);
@@ -717,21 +720,26 @@ public class PDFExporter {
 	 * @param section раздел
 	 */
 	private void printDiagramDescr(Section section) {
-		String text = "Диаграмма обобщает информацию о событиях возраста:";
-		section.add(new Paragraph(text, font));
-
-		com.itextpdf.text.List list = new com.itextpdf.text.List(false, false, 10);
-		ListItem li = new ListItem();
-        li.add(new Chunk("Показатели выше нуля указывают на успех и лёгкость", new Font(baseFont, 12, Font.NORMAL, new BaseColor(0, 102, 102))));
-        list.add(li);
-
-		li = new ListItem();
-        li.add(new Chunk("Показатели на нуле указывают на нейтральность ситуации", font));
-        list.add(li);
-
-		li = new ListItem();
-        li.add(new Chunk("Показатели ниже нуля указывают на трудности и напряжение", new Font(baseFont, 12, Font.NORMAL, new BaseColor(102, 0, 51))));
-        list.add(li);
-        section.add(list);
+		if (OsUtil.getOS().equals(OsUtil.OS.LINUX)) {
+			String text = "Диаграмма обобщает информацию о событиях возраста и указывает, какие сферы жизни будут актуальны в течение года:";
+			section.add(new Paragraph(text, font));
+	
+			com.itextpdf.text.List list = new com.itextpdf.text.List(false, false, 10);
+			ListItem li = new ListItem();
+	        li.add(new Chunk("Показатели выше нуля указывают на успех и лёгкость", new Font(baseFont, 12, Font.NORMAL, new BaseColor(0, 102, 102))));
+	        list.add(li);
+	
+			li = new ListItem();
+	        li.add(new Chunk("Показатели на нуле указывают на нейтральность ситуации", font));
+	        list.add(li);
+	
+			li = new ListItem();
+	        li.add(new Chunk("Показатели ниже нуля указывают на трудности и напряжение", new Font(baseFont, 12, Font.NORMAL, new BaseColor(102, 0, 51))));
+	        list.add(li);
+	        section.add(list);
+		} else {
+			String text = "Диаграмма обобщает информацию о событиях возраста и указывает, какие сферы жизни будут актуальны в течение года. Чем длиньше столбик, тем больше успеха ожидается в данной сфере жизни";
+			section.add(new Paragraph(text, font));			
+		}
 	}
 }
