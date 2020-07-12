@@ -688,15 +688,8 @@ public class TransitSaveHandler extends Handler {
 										boolean checktype = false;
 										Planet planet2 = (Planet)skyPoint;
 										boolean revolution = planet.getId().equals(planet2.getId());
-			    		                if (acode.equals("CONJUNCTION")) {
-											if (!revolution) {
-												if (planet.getCode().equals("Selena")
-														|| planet2.getCode().equals("Selena")) {
-													type = positiveType;
-													checktype = true;
-												}
-											}
-										} else if (planet.getCode().equals("Moon"))
+										if (planet.getCode().equals("Moon")
+												&& !acode.equals("CONJUNCTION"))
 								            aspectid = spa.getAspect().getId();
 	
 										PlanetAspectText dirText = (PlanetAspectText)servicea.find(spa, aspectid, checktype);
