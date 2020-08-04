@@ -137,6 +137,15 @@ public class TransitCalcHandler extends Handler {
 			double two = point2.getLongitude();
 			double res = CalcUtil.getDifference(one, two);
 
+			//искусственно устанавливаем нарастающую оппозицию,
+			//чтобы она синхронизировалась с соответствующим ей соединением в этот день
+			if (point2 instanceof House
+					|| point2.getCode().equals("Rakhu")
+					|| point2.getCode().equals("Kethu"))
+				if ((res >= 179 && res < 180)
+						|| CalcUtil.compareAngles(one, two))
+					++res;
+
 			for (Model model : selaspects) {
 				Aspect a = (Aspect)model;
 

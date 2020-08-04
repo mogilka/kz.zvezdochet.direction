@@ -741,6 +741,11 @@ public class EventPart extends ModelListView implements ICalculable {
 			double one = point1.getLongitude();
 			double two = point2.getLongitude();
 			double res = CalcUtil.getDifference(one, two);
+			if (point2 instanceof House) {
+				if ((res >= 179 && res < 180)
+						|| CalcUtil.compareAngles(one, two))
+					++res;
+			}
 //			if (31 == point1.getId() && 158 == point2.getId())
 //				System.out.println(one + "-" + two + "=" + res);
 
