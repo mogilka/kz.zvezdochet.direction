@@ -27,7 +27,7 @@ public class AgeHandler extends Handler {
 	public void execute(@Active MPart activePart) {
 		try {
 			EventPart eventPart = (EventPart)activePart.getObject();
-			Event event = (Event)eventPart.getModel(EventPart.MODE_CALC, true);
+			Event event = (Event)eventPart.getModel(EventPart.MODE_ASPECT_PLANET_PLANET, true);
 			if (null == event) return;
 		
 			MPart part = partService.findPart("kz.zvezdochet.direction.part.age");

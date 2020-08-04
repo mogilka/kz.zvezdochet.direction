@@ -32,7 +32,7 @@ public class DirectionsHandler extends Handler {
 	public void execute(@Active MPart activePart) {
 		try {
 			EventPart eventPart = (EventPart)activePart.getObject();
-			Event event = (Event)eventPart.getModel(EventPart.MODE_CALC, true);
+			Event event = (Event)eventPart.getModel(EventPart.MODE_ASPECT_PLANET_PLANET, true);
 			if (null == event) return;
 			if (null == event.getHouses()) return; //TODO выдавать сообщение
 			updateStatus("Расчёт дирекций планет по домам", false);

@@ -26,7 +26,7 @@ public class TransitHandler extends Handler {
 	public void execute(@Active MPart activePart) {
 		try {
 			EventPart eventPart = (EventPart)activePart.getObject();
-			Event person = (Event)eventPart.getModel(EventPart.MODE_CALC, true);
+			Event person = (Event)eventPart.getModel(EventPart.MODE_ASPECT_PLANET_PLANET, true);
 			if (null == person) return;
 
 			updateStatus("Открытие транзитного периода", false);
