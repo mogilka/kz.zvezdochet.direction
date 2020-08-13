@@ -46,6 +46,7 @@ public class DirectionsHandler extends Handler {
 			for (House house : houses.values())
 				data[house.getNumber() - 1][0] = house.getName() + " (" + CalcUtil.roundTo(house.getLongitude(), 2) + ")";
 
+			int MAX_AGE = event.isHuman() ? 100 : 500; //TODO корректировать лимит возраста по дате смерти? =)
 			//формируем массив дирекций планет по домам
 			for (Planet planet : planets) {
 				double one = planet.getLongitude();
@@ -71,7 +72,7 @@ public class DirectionsHandler extends Handler {
 					}
 					if (retro)
 						res *= -1;
-					if (Math.abs(res) < 100) //TODO корректировать лимит возраста по дате смерти? =)
+					if (Math.abs(res) < MAX_AGE)
 						data[house.getNumber() - 1][planet.getId().intValue() - 18] = String.valueOf(CalcUtil.roundTo(res, 2));
 				}
 			}
