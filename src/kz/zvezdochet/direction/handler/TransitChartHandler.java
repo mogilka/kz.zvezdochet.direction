@@ -16,7 +16,6 @@ import org.eclipse.e4.core.di.annotations.Execute;
 import org.eclipse.e4.ui.model.application.ui.basic.MPart;
 import org.jfree.data.category.DefaultCategoryDataset;
 
-import com.itextpdf.text.BaseColor;
 import com.itextpdf.text.Chapter;
 import com.itextpdf.text.ChapterAutoNumber;
 import com.itextpdf.text.Chunk;
@@ -29,7 +28,7 @@ import com.itextpdf.text.Section;
 import com.itextpdf.text.pdf.BaseFont;
 import com.itextpdf.text.pdf.PdfWriter;
 
-import kz.zvezdochet.bean.AspectType;
+import kz.zvezdochet.bean.Aspect;
 import kz.zvezdochet.bean.Event;
 import kz.zvezdochet.bean.House;
 import kz.zvezdochet.bean.Ingress;
@@ -143,7 +142,7 @@ public class TransitChartHandler extends Handler {
 
 			List<Long> ydates = new ArrayList<Long>();
 			Map<Long, Map<Long, List<Long>>> yhouses = new TreeMap<Long, Map<Long, List<Long>>>();
-			Map<Long, Map<String, List<SkyPointAspect>>> dtexts = new TreeMap<Long, Map<String, List<SkyPointAspect>>>();
+			Map<Long, Map<Long, List<SkyPointAspect>>> yplanets = new TreeMap<Long, Map<Long, List<SkyPointAspect>>>();
 
 			System.out.println("Prepared for: " + (System.currentTimeMillis() - run));
 			run = System.currentTimeMillis();
@@ -156,6 +155,7 @@ public class TransitChartHandler extends Handler {
 				ydates.add(time);
 			}
 			Collections.sort(ydates);
+			int datecnt = ydates.size();
 
 			/**
 			 * коды ингрессий, используемых в отчёте
@@ -179,7 +179,6 @@ public class TransitChartHandler extends Handler {
 				if (ingressList.isEmpty())
 					continue;
 
-				Map<String, List<SkyPointAspect>> ingressmap = new TreeMap<String, List<SkyPointAspect>>();
 				for (Map.Entry<String, List<Object>> ientry : ingressList.entrySet()) {
 					String key = ientry.getKey();
 					if (!Arrays.asList(icodes).contains(key))
@@ -190,7 +189,6 @@ public class TransitChartHandler extends Handler {
 								&& !DateUtil.formatDate(date).equals(DateUtil.formatDate(finalDate))))
 						continue;
 
-					List<SkyPointAspect> objects2 = ingressmap.containsKey(key) ? ingressmap.get(key) : new ArrayList<SkyPointAspect>();
 					List<Object> ingresses = ientry.getValue();
 					for (Object object : ingresses) {
 						if (object instanceof Planet)
@@ -214,14 +212,17 @@ public class TransitChartHandler extends Handler {
 							dmap.put(time, pmap);
 							yhouses.put(hid, dmap);
 						} else {
-							if (skyPoint.isMain())
+							if (skyPoint.isMain() && datecnt > 250)
 								continue;
-							objects2.add(spa);
+
+							Map<Long, List<SkyPointAspect>> dmap = yplanets.containsKey(hid) ? yplanets.get(hid) : new TreeMap<Long, List<SkyPointAspect>>();
+							List<SkyPointAspect> pmap = dmap.containsKey(time) ? dmap.get(time) : new ArrayList<SkyPointAspect>();
+							pmap.add(spa);
+							dmap.put(time, pmap);
+							yplanets.put(hid, dmap);
 						}
 					}
-					ingressmap.put(key, objects2);
 				}
-				dtexts.put(time, ingressmap);
 			}
 			ydates = null;
 			System.out.println("Composed for: " + (System.currentTimeMillis() - run));
@@ -231,17 +232,18 @@ public class TransitChartHandler extends Handler {
 	        sdf = new SimpleDateFormat("dd.MM.yy");
 			int i = -1;
 			for (Map.Entry<Long, Map<Long, List<Long>>> entry : yhouses.entrySet()) {
-				long houseid = entry.getKey();
-				House house = houses.get(houseid);
+				House house = houses.get(entry.getKey());
 
 	        	Map<Long, List<Long>> map = entry.getValue();
 				if (map.isEmpty())
 					continue;
+
 				DefaultCategoryDataset dataset = new DefaultCategoryDataset();
 				for (Map.Entry<Long, List<Long>> entry3 : map.entrySet()) {
 					List<Long> series = entry3.getValue();
 					if (null == series || series.isEmpty())
 						continue;
+
 					Long d = entry3.getKey();
 					for (int j = 0; j < series.size(); j++) {
 						Long pid = series.get(j);
@@ -262,6 +264,8 @@ public class TransitChartHandler extends Handler {
 			yhouses = null;
 			doc.add(chapter);
 			doc.add(Chunk.NEXTPAGE);
+			Long[] fplanets = {20l, 24l, 26l, 27l, 34l};
+			List<Long> fpids = Arrays.asList(fplanets);
 
 			//генерируем транзиты планет
 			chapter = new ChapterAutoNumber("Аспекты медленных планет");
@@ -270,79 +274,43 @@ public class TransitChartHandler extends Handler {
 			p.setAlignment(Element.ALIGN_CENTER);
 			chapter.add(p);
 
-			Font grayfont = PDFUtil.getAnnotationFont(false);
-			sdf = new SimpleDateFormat("EEEE, d MMMM yyyy");
+			i = -1;
+			for (Map.Entry<Long, Map<Long, List<SkyPointAspect>>> entry : yplanets.entrySet()) {
+				Planet planet = planets.get(entry.getKey());
 
-			for (Map.Entry<Long, Map<String, List<SkyPointAspect>>> dentry : dtexts.entrySet()) {
-				Map<String, List<SkyPointAspect>> imap = dentry.getValue();
-				boolean empty = true;
-				for (Map.Entry<String, List<SkyPointAspect>> daytexts : imap.entrySet()) {
-					List<SkyPointAspect> ingresses = daytexts.getValue();
-					if (!ingresses.isEmpty()) {
-						empty = false;
-						break;
+	        	Map<Long, List<SkyPointAspect>> map = entry.getValue();
+				if (map.isEmpty())
+					continue;
+
+				DefaultCategoryDataset dataset = new DefaultCategoryDataset();
+				for (Map.Entry<Long, List<SkyPointAspect>> entry3 : map.entrySet()) {
+					List<SkyPointAspect> series = entry3.getValue();
+					if (null == series || series.isEmpty())
+						continue;
+
+					Long d = entry3.getKey();
+					for (int j = 0; j < series.size(); j++) {
+						SkyPointAspect spa = series.get(j);
+						Planet planet2 = planets.get(spa.getSkyPoint1().getId());
+						Aspect aspect = spa.getAspect();
+						String sign = "";
+						if (!aspect.getCode().equals("CONJUNCTION"))
+							sign += aspect.getType().getSymbol();
+						dataset.addValue(planet2.getNumber(), planet2.getCode() + sign, sdf.format(new Date(d)));
 					}
 				}
-				if (empty) continue;
-
-				String ym =  sdf.format(new Date(dentry.getKey()));
-				Section daysection = PDFUtil.printSection(chapter, ym, null);
-
-				for (Map.Entry<String, List<SkyPointAspect>> itexts : imap.entrySet()) {
-					List<SkyPointAspect> ingresses = itexts.getValue();
-					for (Object object : ingresses) {
-						text = "";
-
-						if (object instanceof SkyPointAspect) {
-							SkyPointAspect spa = (SkyPointAspect)object;
-							Planet planet = (Planet)spa.getSkyPoint1();
-    		                
-    		                boolean exact = itexts.getKey().contains("EXACT");
-    		                boolean separation = itexts.getKey().contains("SEPARATION");
-    		                boolean repeat = itexts.getKey().contains("REPEAT");
-
-							SkyPoint skyPoint = spa.getSkyPoint2();
-							String acode = spa.getAspect().getCode();
-	    		            String rduration = spa.isRetro() ? " и более" : "";
-
-							String prefix = "";
-							if (exact)
-								prefix = "Начинается: ";
-							else if (repeat)
-								prefix = "Продолжается: ";
-							else if (separation)
-								prefix = "Заканчивается: ";
-
-							AspectType type = spa.getAspect().getType();
-							String typeColor = type.getFontColor();
-							BaseColor color = PDFUtil.htmlColor2Base(typeColor);
-							Font colorbold = new Font(baseFont, 12, Font.BOLD, color);
-		    				String tduration = spa.getTransitDuration();
-
-							if (skyPoint instanceof Planet) {
-								Planet planet2 = (Planet)skyPoint;
-								String ptext = prefix + planet.getShortName() + " " + type.getSymbol() + " " + planet2.getShortName();
-								daysection.addSection(new Paragraph(ptext, colorbold));
-			    				if (tduration.length() > 0)
-				    				daysection.add(new Paragraph("Длительность прогноза: " + tduration + rduration, grayfont));
-							}
-
-							if (spa.isRetro()
-									&& !separation
-									&& !planet.isFictitious()
-									&& !type.getCode().contains("POSITIVE")) {
-								String str = "Т.к. в этот период " + planet.getName() + " находится в ретро-фазе, то длительность прогноза затянется, а описанные события ";
-								if (acode.equals("CONJUNCTION"))
-									str += "приобретут для вас особую важность и в будущем ещё напомнят о себе";
-								else
-									str += "будут носить необратимый характер";
-								daysection.add(new Paragraph(str, grayfont));
-							}
-						}
-						daysection.add(Chunk.NEWLINE);
+				if (dataset.getColumnCount() > 0) {
+					if (++i > 1) {
+						i = 0;
+						chapter.add(Chunk.NEXTPAGE);
 					}
+					String natal = (19 == entry.getKey()) ? "Натальное " : (fpids.contains(entry.getKey()) ? "Натальная" : "Натальный");
+		        	Section section = PDFUtil.printSection(chapter, natal + " " + planet.getName(), null);
+					Image image = PDFUtil.printLineChart(writer, "", "", "Баллы", dataset, 500, 0, true);
+					section.add(image);
 				}
 			}
+			yplanets = null;
 			doc.add(chapter);
 			doc.add(Chunk.NEWLINE);
 	        doc.add(PDFUtil.printCopyright());
