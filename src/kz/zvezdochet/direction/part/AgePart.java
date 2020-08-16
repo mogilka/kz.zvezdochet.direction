@@ -289,7 +289,7 @@ public class AgePart extends ModelListView implements ICalculable {
 
 		Map<String, Object> params = new HashMap<>();
 		params.put("exact", true);
-		params.put("houseAspectable", true);
+		params.put("aspectMode", "houseAspectable");
 
 		String[] atcodes = {"NEUTRAL", "POSITIVE", "NEGATIVE"};
 		List<String> aparams = new ArrayList<String>();
