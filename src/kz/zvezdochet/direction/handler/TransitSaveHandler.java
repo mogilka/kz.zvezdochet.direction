@@ -759,7 +759,11 @@ public class TransitSaveHandler extends Handler {
 									if (null == transits || transits.isEmpty())
 										daysection.add(new Paragraph("Как-то ощутимо на вас это не повлияет", grayfont));
 									else {
-										daysection.add(new Paragraph("Т.к. " + planet.getName() + " меняет направление, сегодня снова станут актуальными следующие прогнозы:", grayfont));
+										Planet rp = person.getPlanets().get(planet.getId());
+										if (rp.isRetrograde())
+											daysection.add(new Paragraph("Т.к. во время вашего рождения планета " + planet.getName() + " двигалась в обратном направлении, то для вас сегодня станут особо актуальными следующие прогнозы:", grayfont));
+										else
+											daysection.add(new Paragraph("Т.к. " + planet.getName() + " меняет направление, сегодня снова станут актуальными следующие прогнозы:", grayfont));
 
 										for (SkyPointAspect spa : transits) {
 											SkyPoint skyPoint = spa.getSkyPoint2();
