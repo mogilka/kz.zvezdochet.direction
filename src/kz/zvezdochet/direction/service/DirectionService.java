@@ -4,7 +4,6 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
-import kz.zvezdochet.analytics.bean.PlanetHouseText;
 import kz.zvezdochet.analytics.service.PlanetHouseService;
 import kz.zvezdochet.bean.AspectType;
 import kz.zvezdochet.bean.House;
@@ -14,8 +13,6 @@ import kz.zvezdochet.core.service.DataAccessException;
 import kz.zvezdochet.core.tool.Connector;
 import kz.zvezdochet.direction.bean.DirectionText;
 import kz.zvezdochet.service.AspectTypeService;
-import kz.zvezdochet.service.HouseService;
-import kz.zvezdochet.service.PlanetService;
 
 /**
  * Сервис дирекций планет по астрологическим домам

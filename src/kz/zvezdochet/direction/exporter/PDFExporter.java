@@ -110,8 +110,9 @@ public class PDFExporter {
 			chapter.setNumberDepth(0);
 
 			//шапка
+	        int ages = finalage - initage + 1;
 			String text = event.getCallname();
-			text += " - " + DateUtil.fulldtf.format(event.getBirth());
+			text += " - прогноз на " + CoreUtil.getAgeString(ages);
 			Paragraph p = new Paragraph(text, font);
 	        p.setAlignment(Element.ALIGN_CENTER);
 			chapter.add(p);
@@ -135,7 +136,6 @@ public class PDFExporter {
 	        p.add(chunk);
 	        chapter.add(p);
 
-	        int ages = finalage - initage + 1;
 	        boolean chartable = ages > 3;
 	        chapter.add(new Paragraph("Данный прогноз не содержит конкретных дат, "
 	        	+ "но описывает самые значительные тенденции вашей жизни в ближайшие " + CoreUtil.getAgeString(ages)
