@@ -98,9 +98,18 @@ public class AgeCalcHandler extends Handler {
 			for (int age = initage; age <= finage + 1; age++) {
 				//дирекции планеты к другим планетам
 				if (null == selhouse && !houseFrom) {
-					for (Planet selp : selplanets)
-						for (Planet selp2 : planets)
-							manageCalc(selp, selp2, age);
+					for (Planet selp : planets) {
+						boolean match1 = (null == selplanet);
+						if (selplanet != null && selp.getId().equals(selplanet.getId()))
+							match1 = true;
+						for (Planet selp2 : planets) {
+							boolean match2 = (null == selplanet);
+							if (selplanet != null && selp2.getId().equals(selplanet.getId()))
+								match2 = true;
+							if (match1 || match2)
+								manageCalc(selp, selp2, age);
+						}
+					}
 				}
 				if (event.isHousable()) {
 					if (houseFrom) {
