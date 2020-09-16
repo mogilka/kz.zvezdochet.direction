@@ -103,7 +103,7 @@ public class TransitSaveHandler extends Handler {
 			Calendar end = Calendar.getInstance();
 			end.setTime(finalDate);
 
-			String filename = PlatformUtil.getPath(Activator.PLUGIN_ID, "/out/transits.pdf").getPath();
+			String filename = PlatformUtil.getPath(Activator.PLUGIN_ID, "/out/short.pdf").getPath();
 			PdfWriter writer = PdfWriter.getInstance(doc, new FileOutputStream(filename));
 	        writer.setPageEvent(new PageEventHandler());
 	        doc.open();

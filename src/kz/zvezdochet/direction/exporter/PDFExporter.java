@@ -97,7 +97,7 @@ public class PDFExporter {
 		this.optimistic = optimistic;
 		Document doc = new Document();
 		try {
-			String filename = PlatformUtil.getPath(Activator.PLUGIN_ID, "/out/directions.pdf").getPath();
+			String filename = PlatformUtil.getPath(Activator.PLUGIN_ID, "/out/long.pdf").getPath();
 			PdfWriter writer = PdfWriter.getInstance(doc, new FileOutputStream(filename));
 	        writer.setPageEvent(new PageEventHandler());
 	        doc.open();
