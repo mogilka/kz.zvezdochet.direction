@@ -136,7 +136,7 @@ public class PDFExporter {
 	        p.add(chunk);
 	        chapter.add(p);
 
-	        boolean chartable = ages > 3;
+	        boolean chartable = ages > 4;
 	        chapter.add(new Paragraph("Данный прогноз не содержит конкретных дат, "
 	        	+ "но описывает самые значительные тенденции вашей жизни в ближайшие " + CoreUtil.getAgeString(ages)
         		+ " независимо от переездов и местоположения.", font));
