@@ -140,9 +140,6 @@ public class PDFExporter {
 	        chapter.add(new Paragraph("Данный прогноз не содержит конкретных дат, "
 	        	+ "но описывает самые значительные тенденции вашей жизни в ближайшие " + CoreUtil.getAgeString(ages)
         		+ " независимо от переездов и местоположения.", font));
-			chapter.add(Chunk.NEWLINE);
-
-			chapter.add(new Paragraph("Если из возраста в возраст событие повторяется, значит оно создаст большой резонанс.", font));
 			Font red = PDFUtil.getDangerFont();
 			chapter.add(new Paragraph("Максимальная погрешность прогноза ±2 месяца.", red));
 
@@ -291,6 +288,12 @@ public class PDFExporter {
 			li = new ListItem();
 	        li.add(new Chunk("В течение года в одной и той же сфере жизни могут происходить как напряжённые, так и приятные события.", font));
 	        list.add(li);
+
+	        if (ages > 1) {
+				li = new ListItem();
+		        li.add(new Chunk("Если из возраста в возраст событие повторяется, значит оно создаст большой резонанс.", font));
+		        list.add(li);
+	        }
 	        chapter.add(list);
 
 	        chapter.add(Chunk.NEWLINE);
