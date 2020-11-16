@@ -44,16 +44,11 @@ public class DirectionService extends PlanetHouseService {
 
 		AspectTypeService service = new AspectTypeService();
 		String pcode = planet.getCode();
-		if (null == aspectType) {
-			if (planet.isDamaged() || planet.isLilithed() || pcode.equals("Lilith"))
-				aspectType = (AspectType)service.find("NEGATIVE");
-			else
+		if (null == aspectType)
 				aspectType = (AspectType)service.find("NEUTRAL");
-		}
+
 		if (aspectType.getCode().equals("NEUTRAL")) {
-			if (pcode.equals("Kethu") || pcode.equals("Lilith"))
-				aspectType = (AspectType)service.find("NEGATIVE");
-			else if (pcode.equals("Selena"))
+			if (pcode.equals("Selena"))
 				aspectType = (AspectType)service.find("POSITIVE");
 		}		
 		try {
