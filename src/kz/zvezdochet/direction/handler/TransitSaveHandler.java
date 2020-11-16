@@ -170,6 +170,12 @@ public class TransitSaveHandler extends Handler {
 	        p.add(chunk);
 	        chapter.add(p);
 
+			p = new Paragraph();
+			p.add(new Chunk("Файл содержит очень большой объём информации, и нет смысла пытаться его весь прочитать. "
+				+ "Используйте данный прогноз в начале каждой недели как путеводитель, помогающий скорректировать планы и учесть риски.", font));
+			chapter.add(p);
+			chapter.add(Chunk.NEWLINE);
+
 			Font red = PDFUtil.getDangerFont();
 			p = new Paragraph();
 			p.add(new Chunk("Общая погрешность прогноза составляет ±1 день. ", red));
@@ -234,7 +240,6 @@ public class TransitSaveHandler extends Handler {
 	        	+ "т.к. они окажутся значимыми для вас и ваших близких и могут иметь непредвиденные последствия.", red));
 	        list.add(li);
 	        chapter.add(list);
-			chapter.add(Chunk.NEWLINE);
 	        doc.add(chapter);
 
 			Map<Integer, Map<Integer, List<Long>>> years = new TreeMap<Integer, Map<Integer, List<Long>>>();
