@@ -516,7 +516,6 @@ public class TransitSaveHandler extends Handler {
 			PlanetTextService servicep = new PlanetTextService();
 
 			AspectTypeService typeService = new AspectTypeService();
-			AspectType negativeType = (AspectType)typeService.find(2L);
 			AspectType positiveType = (AspectType)typeService.find(3L);
 
 	        //года
@@ -669,9 +668,6 @@ public class TransitSaveHandler extends Handler {
 			    		                if (acode.equals("CONJUNCTION")) {
 											if (planet.getCode().equals("Selena"))
 												type = positiveType;
-											else if (planet.getCode().equals("Lilith")
-			    		                            || planet.getCode().equals("Kethu"))
-												type = negativeType;
 										} else if (planet.getCode().equals("Moon"))
 											continue;
 	
@@ -797,9 +793,6 @@ public class TransitSaveHandler extends Handler {
 					    		                if (acode.equals("CONJUNCTION")) {
 													if (planet.getCode().equals("Selena"))
 														type = positiveType;
-													else if (planet.getCode().equals("Lilith")
-					    		                            || planet.getCode().equals("Kethu"))
-														type = negativeType;
 												} else if (planet.getCode().equals("Moon"))
 													continue;
 			

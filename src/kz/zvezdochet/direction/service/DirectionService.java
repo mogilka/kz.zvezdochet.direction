@@ -45,7 +45,7 @@ public class DirectionService extends PlanetHouseService {
 		AspectTypeService service = new AspectTypeService();
 		String pcode = planet.getCode();
 		if (null == aspectType)
-				aspectType = (AspectType)service.find("NEUTRAL");
+			aspectType = (AspectType)service.find("NEUTRAL");
 
 		if (aspectType.getCode().equals("NEUTRAL")) {
 			if (pcode.equals("Selena"))
