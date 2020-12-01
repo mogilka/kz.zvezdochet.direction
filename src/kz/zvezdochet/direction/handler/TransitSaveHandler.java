@@ -114,15 +114,15 @@ public class TransitSaveHandler extends Handler {
 	    	Font font = PDFUtil.getRegularFont();
 
 	        //metadata
-	        PDFUtil.getMetaData(doc, "Прогноз по месяцам");
+	        PDFUtil.getMetaData(doc, "Ежедневный прогноз");
 
 	        //раздел
-			Chapter chapter = new ChapterAutoNumber("Прогноз по месяцам");
+			Chapter chapter = new ChapterAutoNumber("Ежедневный прогноз");
 			chapter.setNumberDepth(0);
 
 			//шапка
 			Paragraph p = new Paragraph();
-			PDFUtil.printHeader(p, "Прогноз по месяцам", null);
+			PDFUtil.printHeader(p, "Ежедневный прогноз", null);
 			chapter.add(p);
 
 			String text = person.getCallname() + ", прогноз на период: ";
@@ -140,17 +140,8 @@ public class TransitSaveHandler extends Handler {
 			if (null == place)
 				place = new Place().getDefault();
 			boolean pdefault = place.getId().equals(place.getDefault().getId());
-			if (!pdefault) {
-				text = (zone >= 0 ? "UTC+" : "") + zone +
-					" " + place.getName() +
-					" " + place.getLatitude() + "°" +
-					", " + place.getLongitude() + "°";
-				p = new Paragraph(text, font);
-		        p.setAlignment(Element.ALIGN_CENTER);
-				chapter.add(p);
-			}				
 			
-			text = "Тип прогноза: " + (optimistic ? "оптимистичный" : "реалистичный") + ", " + (longterm ? "самое важное" : "ежедневный");
+			text = "Тип прогноза: " + (optimistic ? "оптимистичный" : "реалистичный") + ", " + (longterm ? "самое важное" : "полный");
 			p = new Paragraph(text, font);
 	        p.setAlignment(Element.ALIGN_CENTER);
 			chapter.add(p);
@@ -171,8 +162,8 @@ public class TransitSaveHandler extends Handler {
 	        chapter.add(p);
 
 			p = new Paragraph();
-			p.add(new Chunk("Файл содержит очень большой объём информации, и нет смысла пытаться его весь прочитать. "
-				+ "Используйте данный прогноз в начале каждой недели как путеводитель, помогающий скорректировать планы и учесть риски.", font));
+			p.add(new Chunk("Файл содержит большой объём информации, и если прогноз рассчитан на несколько месяцев, нет смысла пытаться его весь прочитать. "
+				+ "Используйте прогноз в начале каждой недели как путеводитель, помогающий понять тенденции и учесть риски.", font));
 			chapter.add(p);
 			chapter.add(Chunk.NEWLINE);
 
@@ -184,9 +175,9 @@ public class TransitSaveHandler extends Handler {
 			chapter.add(Chunk.NEWLINE);
 
 	        if (!pdefault) {
-				chapter.add(new Paragraph("Прогноз сделан для местонахождения «" + place.getName() + "». "
+				chapter.add(new Paragraph("Прогноз сделан для локации «" + place.getName() + "». "
 					+ "Если в течение прогнозного периода вы переедете в более отдалённое место (в другой часовой пояс или с ощутимой сменой географической широты), "
-					+ "то в некоторых прогнозах погрешность может составить ±2 дня.", font));
+					+ "то погрешность некоторых прогнозов может составить ±2 дня.", font));
 				chapter.add(Chunk.NEWLINE);
 	        }
 
@@ -208,15 +199,15 @@ public class TransitSaveHandler extends Handler {
 			Font fonth5 = PDFUtil.getHeaderFont();
 			chapter.add(new Paragraph("Диаграммы", fonth5));
 			chapter.add(new Paragraph("Диаграммы показывают динамику событий по дням в трёх категориях: позитив, негатив и важное. "
-				+ "По ним можно наглядно увидеть, в какие даты станут актуальны те или иные сферы вашей жизни, "
-				+ "и соответствующим образом скорректировать свои планы.", font));
+				+ "По ним наглядно видно, в какие даты станут актуальны те или иные сферы вашей жизни, "
+				+ "и можно соответствующим образом скорректировать свои планы.", font));
 			chapter.add(Chunk.NEWLINE);
 
 			chapter.add(new Paragraph("Позитив и негатив:", bold));
 			list = new com.itextpdf.text.List(false, false, 10);
 			list = new com.itextpdf.text.List(false, false, 10);
 			li = new ListItem();
-	        li.add(new Chunk("«Позитив» – это благоприятные возможности, которые нужно использовать по максимуму.", PDFUtil.getSuccessFont()));
+	        li.add(new Chunk("«Позитив» – это хороший эмоциональный настрой и благоприятные возможности, которые нужно использовать по максимуму.", PDFUtil.getSuccessFont()));
 	        list.add(li);
 
 			li = new ListItem();
@@ -232,12 +223,12 @@ public class TransitSaveHandler extends Handler {
 			chapter.add(new Paragraph("Важное:", bold));
 			list = new com.itextpdf.text.List(false, false, 10);
 			li = new ListItem();
-	        li.add(new Chunk("«Важное» – сильнее всего влияет на ваше поведение в указанный период, особенно в сочетании с «Позитивом» или «Негативом».", font));
+	        li.add(new Chunk("«Важное» – сильнее всего влияет на ваше поведение в указанный период, особенно в сочетании с «Позитивом» и «Негативом».", font));
 	        list.add(li);
 
 			li = new ListItem();
-	        li.add(new Chunk("Если рядом с «Важным» отсутствует «Позитив», значит решения нужно принимать обдуманно, "
-	        	+ "т.к. они окажутся значимыми для вас и ваших близких и могут иметь непредвиденные последствия.", red));
+	        li.add(new Chunk("Если рядом с «Важным» отсутствует «Позитив», значит решение нужно принимать обдуманно, "
+	        	+ "т.к. оно окажется значимым для вас и ваших близких и может иметь непредвиденные последствия.", red));
 	        list.add(li);
 	        chapter.add(list);
 	        doc.add(chapter);
@@ -280,10 +271,6 @@ public class TransitSaveHandler extends Handler {
 			 * коды ингрессий, используемых в отчёте
 			 */
 			String[] icodes = Ingress.getKeys();
-			/**
-			 * коды аспектов, используемых для домов в урезанном отчёте
-			 */
-			String[] paspects = optimistic ? new String[] {"CONJUNCTION"} : new String[] {"CONJUNCTION", "OPPOSITION"};
 
 			//создаём аналогичный массив, но с домами вместо дат
 			int j = -1;
@@ -361,22 +348,23 @@ public class TransitSaveHandler extends Handler {
 										}
 									}
 
-									//для домов убираем аспекты кроме заданных для данного типа прогноза 
 									boolean housable = skyPoint instanceof House;
 			    		            if (housable) {
-										if (!Arrays.asList(paspects).contains(acode))
-											continue;
+			    		                if (acode.equals("OPPOSITION"))
+			    		                	if (planet.getCode().equals("Rakhu")
+			    		                			|| planet.getCode().equals("Kethu"))
+			    		                		continue;
 			    		            }
 
 									if (longterm) {
+										//для домов убираем аспекты кроме релевантных для данного типа прогноза
 				    		            if (housable) {
-				    		                if (planet.getCode().equals("Kethu")
-				    		                        && !acode.equals("CONJUNCTION"))
-				    		                    continue;
-
-				    		                if (planet.getCode().equals("Rakhu")
-				    		                        && acode.equals("OPPOSITION"))
-				    		                    continue;
+				    		    			/**
+				    		    			 * коды аспектов, используемых для домов в урезанном отчёте
+				    		    			 */
+				    		    			String[] paspects = optimistic ? new String[] {"CONJUNCTION"} : new String[] {"CONJUNCTION", "OPPOSITION"};
+											if (!Arrays.asList(paspects).contains(acode))
+												continue;
 				    		            } else {
 											//для минорных планет убираем аспекты кроме соединений
 											if (planet.isMain()

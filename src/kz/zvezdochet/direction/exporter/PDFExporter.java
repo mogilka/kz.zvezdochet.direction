@@ -450,7 +450,7 @@ public class PDFExporter {
 				p = new Paragraph("Если график представляет собой точку, значит актуальность данной сферы жизни будет ограничена одним годом. " +
 					"Если график изображён в виде линии, значит в течение нескольких лет произойдёт череда событий в данной сфере", font);
 				chapter.add(p);
-	
+
 		        HouseMap[] houseMap = HouseMap.getMap();
 		        for (HouseMap hmap : houseMap) {
 		        	Section section = PDFUtil.printSection(chapter, hmap.name, null);
