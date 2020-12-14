@@ -349,12 +349,15 @@ public class TransitSaveHandler extends Handler {
 									}
 
 									boolean housable = skyPoint instanceof House;
-			    		            if (housable) {
-			    		                if (acode.equals("OPPOSITION"))
-			    		                	if (planet.getCode().equals("Rakhu")
-			    		                			|| planet.getCode().equals("Kethu"))
+		    		                if (acode.equals("OPPOSITION")) {
+		    		                	if (planet.getCode().equals("Rakhu")
+		    		                			|| planet.getCode().equals("Kethu"))
+		    		                		continue;
+		    		                	if (!housable)
+			    		                	if (skyPoint.getCode().equals("Rakhu")
+			    		                			|| skyPoint.getCode().equals("Kethu"))
 			    		                		continue;
-			    		            }
+		    		                }
 
 									if (longterm) {
 										//для домов убираем аспекты кроме релевантных для данного типа прогноза
