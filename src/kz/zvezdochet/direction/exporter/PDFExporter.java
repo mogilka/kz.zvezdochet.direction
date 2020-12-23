@@ -148,6 +148,15 @@ public class PDFExporter {
 			p.setSpacingBefore(10);
 			chapter.add(p);
 
+			if (event.isChild()) {
+				p = new Paragraph("Т.к. прогноз составлен на ребёнка, то следует учесть, "
+					+ "что толкования ориентированы на взрослых людей, и их нужно адаптировать к ситуации ребёнка. "
+					+ "Например, если в тексте речь идёт о работе, значит имеется в виду учёба; "
+					+ "если речь идёт о сотрудничестве, значит имеются в виду ребя из других классов и сообществ и т.п.", font);
+				p.setSpacingBefore(10);
+				chapter.add(p);				
+			}
+
 			//данные для графика
 			Map<Integer,Integer> positive = new HashMap<Integer,Integer>();
 			Map<Integer,Integer> negative = new HashMap<Integer,Integer>();
@@ -537,7 +546,8 @@ public class PDFExporter {
 
 			DirectionService service = new DirectionService();
 			DirectionAspectService servicea = new DirectionAspectService();
-			boolean child = age < event.MAX_TEEN_AGE;
+			boolean child = event.isChild();
+			String[] adult = {"II_3", "V_2", "V_3", "VII"};
 
 			for (SkyPointAspect spa : spas) {
 				AspectType type = spa.getAspect().getType();
@@ -559,6 +569,9 @@ public class PDFExporter {
 				String acode = spa.getAspect().getCode();
 
 				if (skyPoint instanceof House) {
+					if (child && Arrays.asList(adult).contains(skyPoint.getCode()))
+						continue;
+
 					House house = (House)skyPoint;
 					DirectionText dirText = (DirectionText)service.find(planet, house, type);
 
