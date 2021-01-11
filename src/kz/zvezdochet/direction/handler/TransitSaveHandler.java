@@ -670,9 +670,11 @@ public class TransitSaveHandler extends Handler {
 										String ptext = prefix;
 										if (null == dirText
 												|| ((!separation && !repeat) && null == dirText.getDescription())
-												|| ((separation || repeat) && (null == code || code.isEmpty())))
+												|| ((separation || repeat) && (null == code || code.isEmpty()))) {
 											ptext += planet.getShortName() + " " + type.getSymbol() + " " + house.getName() + "<>";
-										if (!separation && !repeat)
+										} else if (repeat)
+											ptext += code;
+										else if (!separation)
 											ptext += house.getName();
 
 					    				daysection.addSection(new Paragraph(ptext, colorbold));
@@ -718,7 +720,7 @@ public class TransitSaveHandler extends Handler {
 			               	                if (exact)
 			               	                    descr = text;
 			               	            	else
-			               	                    descr = code;
+			               	                    descr = repeat ? text : code;
 			               	            }
 										p = new Paragraph();
 										if (null == descr)
