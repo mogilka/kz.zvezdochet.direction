@@ -141,7 +141,7 @@ public class TransitChartHandler extends Handler {
 	        chapter.add(p);
 
 			List<Long> ydates = new ArrayList<Long>();
-			Map<Long, Map<Long, List<Long>>> yhouses = new TreeMap<Long, Map<Long, List<Long>>>();
+			Map<Long, Map<Long, List<SkyPointAspect>>> yhouses = new TreeMap<Long, Map<Long, List<SkyPointAspect>>>();
 			Map<Long, Map<Long, List<SkyPointAspect>>> yplanets = new TreeMap<Long, Map<Long, List<SkyPointAspect>>>();
 
 			System.out.println("Prepared for: " + (System.currentTimeMillis() - run));
@@ -200,15 +200,14 @@ public class TransitChartHandler extends Handler {
 
 						SkyPoint skyPoint2 = spa.getSkyPoint2();
 						if (skyPoint2 instanceof House
-								&& !spa.getAspect().getCode().equals("CONJUNCTION"))
+								&& !spa.getAspect().isMain())
 							continue;
 
-						long pid = skyPoint.getId();
 						long hid = skyPoint2.getId();
 						if (skyPoint2 instanceof House) {
-							Map<Long, List<Long>> dmap = yhouses.containsKey(hid) ? yhouses.get(hid) : new TreeMap<Long, List<Long>>();
-							List<Long> pmap = dmap.containsKey(time) ? dmap.get(time) : new ArrayList<Long>();
-							pmap.add(pid);
+							Map<Long, List<SkyPointAspect>> dmap = yhouses.containsKey(hid) ? yhouses.get(hid) : new TreeMap<Long, List<SkyPointAspect>>();
+							List<SkyPointAspect> pmap = dmap.containsKey(time) ? dmap.get(time) : new ArrayList<SkyPointAspect>();
+							pmap.add(spa);
 							dmap.put(time, pmap);
 							yhouses.put(hid, dmap);
 						} else {
@@ -231,24 +230,38 @@ public class TransitChartHandler extends Handler {
 			run = System.currentTimeMillis();
 	        sdf = new SimpleDateFormat("dd.MM.yy");
 			int i = -1;
-			for (Map.Entry<Long, Map<Long, List<Long>>> entry : yhouses.entrySet()) {
+			for (Map.Entry<Long, Map<Long, List<SkyPointAspect>>> entry : yhouses.entrySet()) {
 				House house = houses.get(entry.getKey());
 
-	        	Map<Long, List<Long>> map = entry.getValue();
+	        	Map<Long, List<SkyPointAspect>> map = entry.getValue();
 				if (map.isEmpty())
 					continue;
 
 				DefaultCategoryDataset dataset = new DefaultCategoryDataset();
-				for (Map.Entry<Long, List<Long>> entry3 : map.entrySet()) {
-					List<Long> series = entry3.getValue();
+				for (Map.Entry<Long, List<SkyPointAspect>> entry3 : map.entrySet()) {
+					List<SkyPointAspect> series = entry3.getValue();
 					if (null == series || series.isEmpty())
 						continue;
 
 					Long d = entry3.getKey();
 					for (int j = 0; j < series.size(); j++) {
-						Long pid = series.get(j);
-						Planet planet = planets.get(pid);
-						dataset.addValue(planet.getNumber(), planet.getCode(), sdf.format(new Date(d)));
+						SkyPointAspect spa = series.get(j);
+						Aspect aspect = spa.getAspect();
+						boolean conj = aspect.getCode().equals("CONJUNCTION");
+						Planet planet = planets.get(spa.getSkyPoint1().getId());
+						if (!conj
+								&& (planet.isMain() || planet.getCode().equals("Kethu")))
+							continue;
+						String sign = "";
+						double index = planet.getNumber();
+						if (!conj) {
+							sign += aspect.getType().getSymbol();
+//							if (aspect.getType().getPoints() > 0)
+//								index += 16;
+//							else
+//								index -= 16;
+						}
+						dataset.addValue(index, planet.getCode() + sign, sdf.format(new Date(d)));
 					}
 				}
 				if (dataset.getColumnCount() > 0) {
