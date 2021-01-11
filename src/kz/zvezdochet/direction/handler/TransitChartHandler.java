@@ -200,7 +200,7 @@ public class TransitChartHandler extends Handler {
 
 						SkyPoint skyPoint2 = spa.getSkyPoint2();
 						if (skyPoint2 instanceof House
-								&& !spa.getAspect().isMain())
+								&& !spa.getAspect().getCode().equals("CONJUNCTION"))
 							continue;
 
 						long hid = skyPoint2.getId();
