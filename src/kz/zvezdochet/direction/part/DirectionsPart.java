@@ -17,7 +17,7 @@ import kz.zvezdochet.core.ui.view.View;
 import kz.zvezdochet.core.util.CalcUtil;
 
 /**
- * Дирекции планет по домам
+ * Сводная таблица дирекций планет по домам
  * @author Natalie Didenko
  */
 public class DirectionsPart extends ListView {

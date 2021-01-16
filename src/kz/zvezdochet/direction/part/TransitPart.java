@@ -21,6 +21,7 @@ import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.nebula.widgets.cdatetime.CDT;
 import org.eclipse.nebula.widgets.cdatetime.CDateTime;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Label;
@@ -74,6 +75,7 @@ public class TransitPart extends ModelListView {
 	private ComboViewer cvPlanet;
 	private ComboViewer cvHouse;
 	private ComboViewer cvAspect;
+	private Button btTerm;
 
 	public void setPerson(Event person) {
 		this.person = person;
@@ -167,6 +169,10 @@ public class TransitPart extends ModelListView {
 		lb.setText(Messages.getString("PersonView.Zone")); //$NON-NLS-1$
 		txZone = new Text(secPlace, SWT.BORDER);
 
+		btTerm = new Button(secPlace, SWT.BORDER | SWT.CHECK);
+		lb = new Label(secPlace, SWT.NONE);
+		lb.setText("Термины");
+
 		GridLayoutFactory.swtDefaults().numColumns(10).applyTo(grFilter);
 		GridDataFactory.fillDefaults().grab(true, false).applyTo(grFilter);
 		GridLayoutFactory.swtDefaults().numColumns(4).applyTo(secPlace);
@@ -191,6 +197,8 @@ public class TransitPart extends ModelListView {
 			grab(true, false).applyTo(cvHouse.getCombo());
 		GridDataFactory.fillDefaults().align(SWT.FILL, SWT.CENTER).
 			grab(true, false).applyTo(cvAspect.getCombo());
+		GridDataFactory.fillDefaults().align(SWT.LEFT, SWT.CENTER).
+			grab(true, false).applyTo(btTerm);
 
 		GridDataFactory.fillDefaults().align(SWT.FILL, SWT.CENTER).grab(true, true).applyTo(table2);
 	}
@@ -369,5 +377,15 @@ public class TransitPart extends ModelListView {
 				return type;
 		}
 		return null;
+	}
+
+	/**
+	 * Определяем тип отчёта по выделению пункта "Астрологические термины":
+	 * 	true - делаем отчёт гороскопа с указанием названий планет, аспектов и других терминов
+	 * 	false - пишем человекопонятные заменители вместо терминов
+	 * @return
+	 */
+	public boolean isTerm() {
+		return btTerm.getSelection();
 	}
 }

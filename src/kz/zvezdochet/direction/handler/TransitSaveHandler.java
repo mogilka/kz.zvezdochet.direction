@@ -96,6 +96,9 @@ public class TransitSaveHandler extends Handler {
 
 			choice = DialogUtil.alertQuestion("Вопрос", "Выберите тип прогноза:", new String[] {"Реалистичный", "Оптимистичный"});
 			boolean optimistic = choice > 0;
+
+			//Признак использования астрологических терминов
+			boolean term = periodPart.isTerm();
 			updateStatus("Расчёт транзитов на период", false);
 
 			Date initDate = periodPart.getInitialDate();
@@ -673,9 +676,9 @@ public class TransitSaveHandler extends Handler {
 												|| ((separation || repeat) && (null == code || code.isEmpty()))) {
 											ptext += planet.getShortName() + " " + type.getSymbol() + " " + house.getName() + "<>";
 										} else if (repeat)
-											ptext += code;
+											ptext += term ? planet.getName() + " " + type.getSymbol() + " " + house.getDesignation() + " дом" : code;
 										else if (!separation)
-											ptext += house.getName();
+											ptext += term ? planet.getName() + " " + type.getSymbol() + " " + house.getDesignation() + " дом" : house.getName();
 
 					    				daysection.addSection(new Paragraph(ptext, colorbold));
 					    				if (tduration.length() > 0 && !repeat)
@@ -702,10 +705,16 @@ public class TransitSaveHandler extends Handler {
 											ptext += planet.getShortName() + "<>";
 											if (!revolution)
 												ptext += " " + type.getSymbol() + " " + planet2.getShortName() + "<>";
-										} else if (!separation && !repeat) {
-											ptext += planet.getShortName();
+										} else if (repeat) {
+											if (term) {
+												ptext += planet.getName();
+												if (!revolution)
+													ptext += " " + type.getSymbol() + " " + planet2.getName();
+											}
+										} else if (!separation) {
+											ptext += term ? planet.getName() : planet.getShortName();
 											if (!revolution)
-												ptext +=  " " + type.getSymbol() + " " + planet2.getShortName();
+												ptext += " " + type.getSymbol() + " " + (term ? planet2.getName() : planet2.getShortName());
 										}
 										daysection.addSection(new Paragraph(ptext, colorbold));
 					    				if (tduration.length() > 0 && !repeat)

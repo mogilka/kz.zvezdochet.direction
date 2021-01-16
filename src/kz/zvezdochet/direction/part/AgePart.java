@@ -53,6 +53,7 @@ public class AgePart extends ModelListView implements ICalculable {
 	private ComboViewer cvHouse;
 	private ComboViewer cvAspect;
 	private Button btHouse;
+	private Button btTerm;
 
 	@Inject
 	public AgePart() {}
@@ -90,7 +91,11 @@ public class AgePart extends ModelListView implements ICalculable {
 		lb = new Label(grFilter, SWT.NONE);
 		lb.setText("Дирекции домов");
 
-		GridLayoutFactory.swtDefaults().numColumns(10).applyTo(grFilter);
+		btTerm = new Button(grFilter, SWT.BORDER | SWT.CHECK);
+		lb = new Label(grFilter, SWT.NONE);
+		lb.setText("Термины");
+
+		GridLayoutFactory.swtDefaults().numColumns(12).applyTo(grFilter);
 		GridDataFactory.fillDefaults().grab(true, false).applyTo(grFilter);
 		GridDataFactory.fillDefaults().align(SWT.FILL, SWT.CENTER).
 			grab(true, false).applyTo(spFrom);
@@ -104,6 +109,8 @@ public class AgePart extends ModelListView implements ICalculable {
 			grab(true, false).applyTo(cvAspect.getCombo());
 		GridDataFactory.fillDefaults().align(SWT.LEFT, SWT.CENTER).
 			grab(false, false).applyTo(btHouse);
+		GridDataFactory.fillDefaults().align(SWT.LEFT, SWT.CENTER).
+			grab(false, false).applyTo(btTerm);
 	}
 
 	@Override
@@ -297,5 +304,15 @@ public class AgePart extends ModelListView implements ICalculable {
 		params.put("aspects", aparams);
 
 		cmpCosmogram.paint(event, direvent, params);
+	}
+
+	/**
+	 * Определяем тип отчёта по выделению пункта "Астрологические термины":
+	 * 	true - делаем отчёт гороскопа с указанием названий планет, аспектов и других терминов
+	 * 	false - пишем человекопонятные заменители вместо терминов
+	 * @return
+	 */
+	public boolean isTerm() {
+		return btTerm.getSelection();
 	}
 }

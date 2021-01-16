@@ -92,9 +92,15 @@ public class PDFExporter {
 	/**
 	 * Генерация событий периода
 	 * @param event событие
+	 * @param spas список аспектов планет и домов
+	 * @param initage начальный возраст
+	 * @param finalage конечный возраст
+	 * @param optimistic 0|1 реалистичный|оптимистичный
+	 * @param term 0|1 без терминов|с терминами
 	 */
-	public void generate(Event event, List<SkyPointAspect> spas, int initage, int finalage, boolean optimistic) {
+	public void generate(Event event, List<SkyPointAspect> spas, int initage, int finalage, boolean optimistic, boolean term) {
 		this.optimistic = optimistic;
+		this.term = term;
 		Document doc = new Document();
 		try {
 			String filename = PlatformUtil.getPath(Activator.PLUGIN_ID, "/out/long.pdf").getPath();
@@ -575,9 +581,15 @@ public class PDFExporter {
 					House house = (House)skyPoint;
 					DirectionText dirText = (DirectionText)service.find(planet, house, type);
 
-					boolean negative = type.getPoints() < 0;
-    				String pname = negative ? planet.getNegative() : planet.getPositive();
-					section.addSection(new Paragraph(house.getName() + " " + type.getSymbol() + " " + pname, fonth5));
+					String text = "";
+					if (term)
+						text = planet.getName() + " " + type.getSymbol() + " " + house.getDesignation() + " дом";
+					else {
+						boolean negative = type.getPoints() < 0;
+	    				String pname = negative ? planet.getNegative() : planet.getPositive();
+	    				text = house.getName() + " " + type.getSymbol() + " " + pname;
+					}
+					section.addSection(new Paragraph(text, fonth5));
 					if (term) {
 						String pretext = spa.getAspect().getCode().equals("CONJUNCTION")
 							? "с куспидом"
@@ -585,9 +597,9 @@ public class PDFExporter {
 
 						p = new Paragraph();
 	    				p.add(new Chunk(planet.getMark("house"), grayfont));
-			    		p.add(new Chunk(spa.getAspect().getName() + " планеты ", grayfont));
-	    				p.add(new Chunk(planet.getSymbol(), PDFUtil.getHeaderAstroFont()));
-			    		p.add(new Chunk(" " + planet.getName() + " " + pretext + " " + house.getDesignation(), grayfont));
+			    		p.add(new Chunk(spa.getAspect().getName() + " ", grayfont));
+	    				p.add(new Chunk(planet.getSymbol() + "d", PDFUtil.getHeaderAstroFont()));
+			    		p.add(new Chunk(" " + pretext + " " + house.getDesignation(), grayfont));
 	    				section.add(p);
 					}
 
@@ -601,7 +613,7 @@ public class PDFExporter {
 						else if (acode.equals("SEXTILE"))
 							section.add(new Paragraph("Уровень успеха: средний", orange));
 
-						String text = dirText.getText();
+						text = dirText.getText();
 						if (text != null) {
 							String typeColor = type.getFontColor();
 							BaseColor color = PDFUtil.htmlColor2Base(typeColor);
@@ -615,13 +627,16 @@ public class PDFExporter {
 
 				} else if (skyPoint instanceof Planet) {
 					Planet planet2 = (Planet)skyPoint;
-    				section.addSection(new Paragraph(planet.getShortName() + " " + type.getSymbol() + " " + planet2.getShortName(), fonth5));
+					String text = term
+						? planet.getName() + " " + type.getSymbol() + " " + planet2.getName()
+						: planet.getShortName() + " " + type.getSymbol() + " " + planet2.getShortName();
+    				section.addSection(new Paragraph(text, fonth5));
 					List<Model> texts = servicea.finds(spa);
 					if (!texts.isEmpty())
 						for (Model model : texts) {
 							PlanetAspectText dirText = (PlanetAspectText)model;
 							if (dirText != null) {
-								String text = dirText.getText();
+								text = dirText.getText();
 								if ((null == text || text.isEmpty())
 										&& dirText.getAspect() != null)
 									continue;
@@ -629,17 +644,16 @@ public class PDFExporter {
 
 			    			if (term) {
 								String pretext = spa.getAspect().getCode().equals("CONJUNCTION")
-									? "с планетой"
-									: "к планете";
+									? "с "
+									: "к ";
 
 			    				p = new Paragraph();
 			    				if (dirText != null)
 			    					p.add(new Chunk(dirText.getMark(), grayfont));
-					    		p.add(new Chunk(spa.getAspect().getName() + " планеты ", grayfont));
-			    				p.add(new Chunk(planet.getSymbol(), PDFUtil.getHeaderAstroFont()));
-					    		p.add(new Chunk(" " + planet.getName() + " " + pretext + " ", grayfont));
-			    				p.add(new Chunk(planet2.getSymbol(), PDFUtil.getHeaderAstroFont()));
-			    				p.add(new Chunk(" " + planet2.getName(), grayfont));
+					    		p.add(new Chunk(spa.getAspect().getName() + " ", grayfont));
+			    				p.add(new Chunk(planet.getSymbol() + "d", PDFUtil.getHeaderAstroFont()));
+					    		p.add(new Chunk(" " + pretext + " ", grayfont));
+			    				p.add(new Chunk(planet2.getSymbol() + "r", PDFUtil.getHeaderAstroFont()));
 			    				section.add(p);
 			    			}
 
@@ -655,7 +669,7 @@ public class PDFExporter {
 			    			}
 	
 							if (dirText != null) {
-								String text = dirText.getText();
+								text = dirText.getText();
 								if (text != null) {
 					    			String typeColor = type.getFontColor();
 									BaseColor color = PDFUtil.htmlColor2Base(typeColor);

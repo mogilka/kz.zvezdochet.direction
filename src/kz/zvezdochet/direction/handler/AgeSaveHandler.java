@@ -18,7 +18,6 @@ import kz.zvezdochet.direction.part.AgePart;
 /**
  * Сохранение дирекций периода в файл
  * @author Natalie Didenko
- *
  */
 public class AgeSaveHandler extends Handler {
 
@@ -31,13 +30,14 @@ public class AgeSaveHandler extends Handler {
 			if (null == spas) return;
 			final Event event = agePart.getEvent();
 			final int choice = DialogUtil.alertQuestion("Вопрос", "Выберите тип прогноза:", new String[] {"Реалистичный", "Оптимистичный"});
+			final boolean term = agePart.isTerm();
 			updateStatus("Сохранение дирекций в файл", false);
 
 			final Display display = Display.getDefault();
     		BusyIndicator.showWhile(display, new Runnable() {
     			@Override
     			public void run() {
-    				new PDFExporter().generate(event, spas, agePart.getInitialAge(), agePart.getFinalAge(), choice > 0);
+    				new PDFExporter().generate(event, spas, agePart.getInitialAge(), agePart.getFinalAge(), choice > 0, term);
     			}
     		});
 			//TODO показывать диалог, что документ сформирован
