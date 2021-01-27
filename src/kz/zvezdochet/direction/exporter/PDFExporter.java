@@ -280,7 +280,8 @@ public class PDFExporter {
 			chapter.add(new Paragraph("Примечание:", bold));
 			com.itextpdf.text.List list = new com.itextpdf.text.List(false, false, 10);
 	        ListItem li = new ListItem();
-	        li.add(new Chunk("Чёрным цветом выделены важные тенденции, которые указывают на основополагающие события периода.", font));
+	        li.add(new Chunk("Чёрным цветом выделены важные тенденции, которые указывают на основополагающие события периода, - это самое важное, что с вами произойдёт. "
+	        	+ "Эти тенденции могут сохраняться в течение двух лет. А всё остальное продлится не более трёх месяцев.", font));
 	        list.add(li);
 
 			Font green = PDFUtil.getSuccessFont();
