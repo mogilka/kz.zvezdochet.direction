@@ -2,6 +2,7 @@ package kz.zvezdochet.direction.part;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Calendar;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
@@ -23,8 +24,6 @@ import org.eclipse.jface.viewers.IBaseLabelProvider;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.viewers.TableViewer;
-import org.eclipse.nebula.widgets.cdatetime.CDT;
-import org.eclipse.nebula.widgets.cdatetime.CDateTime;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.CTabFolder;
 import org.eclipse.swt.custom.CTabItem;
@@ -37,6 +36,7 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.DateTime;
 import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Table;
@@ -101,7 +101,7 @@ public class EventPart extends ModelListView implements ICalculable {
 	private Text txZone;
 	private Text txGreenwich;
 	private Label lbBirth;
-	private CDateTime dtBirth;
+	private DateTime dtBirth;
 	private Text txDescr;
 	private TableViewer transitViewer;
 	private List<Model> aspects = null;
@@ -408,9 +408,9 @@ public class EventPart extends ModelListView implements ICalculable {
 
 		lbBirth = new Label(secEvent, SWT.NONE);
 		lbBirth.setText(Messages.getString("PersonView.BirthDate")); //$NON-NLS-1$
-		dtBirth = new CDateTime(secEvent, CDT.BORDER | CDT.COMPACT | CDT.DROP_DOWN | CDT.DATE_LONG | CDT.TIME_MEDIUM);
-		dtBirth.setNullText(""); //$NON-NLS-1$
-		dtBirth.setSelection(new Date());
+		dtBirth = new DateTime(secEvent, SWT.DROP_DOWN);
+//		dtBirth.setNullText(""); //$NON-NLS-1$
+//		dtBirth.setSelection(new Date());
 
 		Button bt = new Button(secEvent, SWT.NONE);
 		bt.setText("Расчёт");
@@ -468,8 +468,8 @@ public class EventPart extends ModelListView implements ICalculable {
 		GridLayoutFactory.swtDefaults().numColumns(3).applyTo(secEvent);
 		GridDataFactory.fillDefaults().span(2, 1).align(SWT.FILL, SWT.CENTER).
 			grab(true, false).applyTo(txName);
-		GridDataFactory.fillDefaults().align(SWT.FILL, SWT.CENTER).
-			grab(true, false).applyTo(dtBirth);
+//		GridDataFactory.fillDefaults().align(SWT.FILL, SWT.CENTER).
+//			grab(true, false).applyTo(dtBirth);
 		GridDataFactory.fillDefaults().align(SWT.FILL, SWT.CENTER).
 			span(4, 1).grab(true, false).applyTo(txPlace);
 		GridDataFactory.fillDefaults().align(SWT.FILL, SWT.CENTER).
@@ -562,8 +562,14 @@ public class EventPart extends ModelListView implements ICalculable {
 	private void syncModel(int mode) {
 		try {
 			if (!check(mode)) return;
+
+			Calendar calendar = Calendar.getInstance();
+			calendar.set(Calendar.DAY_OF_MONTH, dtBirth.getDay());
+			calendar.set(Calendar.MONTH, dtBirth.getMonth());
+			calendar.set(Calendar.YEAR, dtBirth.getYear());
+
 			trevent = new Event();
-			trevent.setBirth(dtBirth.getSelection());
+			trevent.setBirth(calendar.getTime());
 			trevent.setPlace(trplace);
 			double zone = (txZone.getText() != null && txZone.getText().length() > 0) ? Double.parseDouble(txZone.getText()) : 0;
 			trevent.setZone(zone);
@@ -585,8 +591,8 @@ public class EventPart extends ModelListView implements ICalculable {
 	@Override
 	public boolean check(int mode) throws Exception {
 		StringBuffer msgBody = new StringBuffer();
-		if (null == dtBirth.getSelection())
-			msgBody.append(lbBirth.getText());
+//		if (null == dtBirth.getSelection())
+//			msgBody.append(lbBirth.getText());
 		if (null == trplace) {
 			DialogUtil.alertWarning(Messages.getString("EventView.PlaceIsWrong"));
 			return false;
@@ -626,8 +632,10 @@ public class EventPart extends ModelListView implements ICalculable {
 		txLongitude.setText(""); //$NON-NLS-1$
 		txZone.setText(""); //$NON-NLS-1$
 		txGreenwich.setText(""); //$NON-NLS-1$
-		dtBirth.setSelection(new Date());
 		txDescr.setText(""); //$NON-NLS-1$
+
+		Calendar calendar = Calendar.getInstance();
+		dtBirth.setDate(calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH), calendar.get(Calendar.DAY_OF_MONTH));
 	}
 
 	/**
@@ -712,12 +720,17 @@ public class EventPart extends ModelListView implements ICalculable {
 	 * Инициализация текущего момента в качестве даты транзита
 	 */
 	public void initDate() {
-		dtBirth.setSelection(new Date());
+		Calendar calendar = Calendar.getInstance();
+		dtBirth.setDate(calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH), calendar.get(Calendar.DAY_OF_MONTH));
 		syncModel(MODE_CALC);
 	}
 
 	public Date getDate() {
-		return dtBirth.getSelection();
+		Calendar calendar = Calendar.getInstance();
+		calendar.set(Calendar.DAY_OF_MONTH, dtBirth.getDay());
+		calendar.set(Calendar.MONTH, dtBirth.getMonth());
+		calendar.set(Calendar.YEAR, dtBirth.getYear());
+		return calendar.getTime();
 	}
 
 	public void setModel(Event event) {

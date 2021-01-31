@@ -7,6 +7,5 @@
 	</classpathentry>
 	<classpathentry kind="con" path="org.eclipse.pde.core.requiredPlugins"/>
 	<classpathentry kind="src" path="src"/>
-	<classpathentry kind="lib" path="/home/natalie/.p2/pool/plugins/org.eclipse.nebula.cwt_1.0.0.201607202302.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

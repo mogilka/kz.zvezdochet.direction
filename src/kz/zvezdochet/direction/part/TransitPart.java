@@ -1,5 +1,6 @@
 package kz.zvezdochet.direction.part;
 
+import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 
@@ -18,11 +19,10 @@ import org.eclipse.jface.viewers.CheckboxTableViewer;
 import org.eclipse.jface.viewers.ComboViewer;
 import org.eclipse.jface.viewers.IBaseLabelProvider;
 import org.eclipse.jface.viewers.IStructuredSelection;
-import org.eclipse.nebula.widgets.cdatetime.CDT;
-import org.eclipse.nebula.widgets.cdatetime.CDateTime;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.DateTime;
 import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Table;
@@ -44,7 +44,6 @@ import kz.zvezdochet.core.ui.view.ModelLabelProvider;
 import kz.zvezdochet.core.ui.view.ModelListView;
 import kz.zvezdochet.core.ui.view.View;
 import kz.zvezdochet.core.util.CalcUtil;
-import kz.zvezdochet.core.util.DateUtil;
 import kz.zvezdochet.direction.provider.TransitLabelProvider;
 import kz.zvezdochet.part.Messages;
 import kz.zvezdochet.provider.PlaceProposalProvider;
@@ -65,8 +64,8 @@ public class TransitPart extends ModelListView {
 	private Event person;
 	private Place trplace;
 
-	private CDateTime dt;
-	private CDateTime dt2;
+	private DateTime dt;
+	private DateTime dt2;
 	private Text txPlace;
 	private Text txLatitude;
 	private Text txLongitude;
@@ -88,19 +87,20 @@ public class TransitPart extends ModelListView {
 
 	@Override
 	public boolean check(int mode) throws Exception {
-		if (null == dt.getSelection())
-			dt.setSelection(new Date());
-		if (null == dt2.getSelection())
-			dt2.setSelection(new Date(System.currentTimeMillis() + 84600));
+//		if (null == dt.getSelection())
+//			dt.setSelection(new Date());
+//		if (null == dt2.getSelection())
+//			dt2.setSelection(new Date(System.currentTimeMillis() + 84600));
 		if (null == trplace)
 			trplace = new Place().getDefault();
 		if (txZone.getText().equals(""))
 			txZone.setText("0.0");
 
-		if (!DateUtil.isDateRangeValid(dt.getSelection(), dt2.getSelection())) {
-			DialogUtil.alertWarning("Укажите правильный период");
-			return false;
-		} else if (null == person) {
+//		if (!DateUtil.isDateRangeValid(dt.getSelection(), dt2.getSelection())) {
+//			DialogUtil.alertWarning("Укажите правильный период");
+//			return false;
+//		}
+		if (null == person) {
 			DialogUtil.alertWarning("Событие не задано");
 			return false;
 		}
@@ -116,13 +116,13 @@ public class TransitPart extends ModelListView {
 
 		Label lb = new Label(grFilter, SWT.NONE);
 		lb.setText("Начало");
-		dt = new CDateTime(grFilter, CDT.BORDER | CDT.COMPACT | CDT.DROP_DOWN | CDT.DATE_LONG | CDT.DATE_MEDIUM);
-		dt.setNullText(""); //$NON-NLS-1$
+		dt = new DateTime(grFilter, SWT.DROP_DOWN);
+//		dt.setNullText(""); //$NON-NLS-1$
 
 		lb = new Label(grFilter, SWT.NONE);
 		lb.setText("Конец");
-		dt2 = new CDateTime(grFilter, CDT.BORDER | CDT.COMPACT | CDT.DROP_DOWN | CDT.DATE_LONG | CDT.DATE_MEDIUM);
-		dt2.setNullText(""); //$NON-NLS-1$
+		dt2 = new DateTime(grFilter, SWT.DROP_DOWN);
+//		dt2.setNullText(""); //$NON-NLS-1$
 
 		lb = new Label(grFilter, SWT.NONE);
 		lb.setText("Сфера жизни");
@@ -213,8 +213,8 @@ public class TransitPart extends ModelListView {
 
 	@Override
 	public void reset() {
-		dt.setNullText("");
-		dt2.setNullText("");
+//		dt.setNullText("");
+//		dt2.setNullText("");
 		txPlace.setText(""); //$NON-NLS-1$
 		txLatitude.setText(""); //$NON-NLS-1$
 		txLongitude.setText(""); //$NON-NLS-1$
@@ -223,11 +223,19 @@ public class TransitPart extends ModelListView {
 	}
 
 	public Date getInitialDate() {
-		return dt.getSelection();
+		Calendar calendar = Calendar.getInstance();
+		calendar.set(Calendar.DAY_OF_MONTH, dt.getDay());
+		calendar.set(Calendar.MONTH, dt.getMonth());
+		calendar.set(Calendar.YEAR, dt.getYear());
+		return calendar.getTime();
 	}
 
 	public Date getFinalDate() {
-		return dt2.getSelection();
+		Calendar calendar = Calendar.getInstance();
+		calendar.set(Calendar.DAY_OF_MONTH, dt2.getDay());
+		calendar.set(Calendar.MONTH, dt2.getMonth());
+		calendar.set(Calendar.YEAR, dt2.getYear());
+		return calendar.getTime();
 	}
 
 	@Override
