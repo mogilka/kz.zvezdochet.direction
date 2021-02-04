@@ -47,8 +47,8 @@ import kz.zvezdochet.service.PlanetService;
  * @author Natalie Didenko
  */
 public class AgePart extends ModelListView implements ICalculable {
-	private Spinner spFrom;
-	private Spinner spTo;
+	private Spinner spAge;
+	private Spinner spYears;
 	private ComboViewer cvPlanet;
 	private ComboViewer cvHouse;
 	private ComboViewer cvAspect;
@@ -70,13 +70,15 @@ public class AgePart extends ModelListView implements ICalculable {
 
 		Label lb = new Label(grFilter, SWT.NONE);
 		lb.setText("Возраст");
-		spFrom = new Spinner(grFilter, SWT.BORDER);
-		spFrom.setMinimum(0);
-		spFrom.setMaximum(150);
+		spAge = new Spinner(grFilter, SWT.BORDER);
+		spAge.setMinimum(0);
+		spAge.setMaximum(150);
 
-		spTo = new Spinner(grFilter, SWT.BORDER);
-		spTo.setMinimum(0);
-		spTo.setMaximum(150);
+		lb = new Label(grFilter, SWT.NONE);
+		lb.setText("Период");
+		spYears = new Spinner(grFilter, SWT.BORDER);
+		spYears.setMinimum(0);
+		spYears.setMaximum(30);
 
 		lb = new Label(grFilter, SWT.NONE);
 		lb.setText("Сфера жизни");
@@ -95,12 +97,12 @@ public class AgePart extends ModelListView implements ICalculable {
 		lb = new Label(grFilter, SWT.NONE);
 		lb.setText("Термины");
 
-		GridLayoutFactory.swtDefaults().numColumns(12).applyTo(grFilter);
+		GridLayoutFactory.swtDefaults().numColumns(13).applyTo(grFilter);
 		GridDataFactory.fillDefaults().grab(true, false).applyTo(grFilter);
 		GridDataFactory.fillDefaults().align(SWT.FILL, SWT.CENTER).
-			grab(true, false).applyTo(spFrom);
+			grab(true, false).applyTo(spAge);
 		GridDataFactory.fillDefaults().align(SWT.FILL, SWT.CENTER).
-			grab(true, false).applyTo(spTo);
+			grab(true, false).applyTo(spYears);
 		GridDataFactory.fillDefaults().align(SWT.FILL, SWT.CENTER).
 			grab(true, false).applyTo(cvPlanet.getCombo());
 		GridDataFactory.fillDefaults().align(SWT.FILL, SWT.CENTER).
@@ -139,12 +141,9 @@ public class AgePart extends ModelListView implements ICalculable {
 	 */
 	public void setEvent(Event event) {
 		this.event = event;
-		int age = spFrom.getSelection();
+		int age = spAge.getSelection();
 		if (age < 1)
-			spFrom.setSelection(0);
-		age = spTo.getSelection();
-		if (age < 1)
-			spTo.setSelection(event.getAge());
+			spAge.setSelection(event.getAge());
 	}
 
 	@Override
@@ -181,10 +180,7 @@ public class AgePart extends ModelListView implements ICalculable {
 
 	@Override
 	public boolean check(int mode) {
-		if (spFrom.getSelection() > spTo.getSelection()) {
-			DialogUtil.alertWarning("Укажите правильный период жизни");
-			return false;
-		} else if (null == event) {
+		if (null == event) {
 			DialogUtil.alertWarning("Событие не задано");
 			return false;
 		}
@@ -192,19 +188,19 @@ public class AgePart extends ModelListView implements ICalculable {
 	}
 
 	/**
-	 * Возвращает выбранный начальный возраст
-	 * @return начальный возраст
+	 * Возвращает выбранный возраст
+	 * @return возраст прогноза
 	 */
-	public int getInitialAge() {
-		return spFrom.getSelection();
+	public int getAge() {
+		return spAge.getSelection();
 	}
 
 	/**
-	 * Возвращает выбранный конечный возраст
-	 * @return конечный возраст
+	 * Возвращает количество выбранных лет
+	 * @return число лет для прогноза
 	 */
-	public int getFinalAge() {
-		return spTo.getSelection();
+	public int getYears() {
+		return spYears.getSelection();
 	}
 
 	/**
@@ -276,9 +272,9 @@ public class AgePart extends ModelListView implements ICalculable {
 	@SuppressWarnings("unchecked")
 	@Override
 	public void onCalc(Object mode) {
-		int initage = getInitialAge();
-		int finage = getFinalAge();
-		if (initage != finage)
+		//если выбран один год, показываем космограмму дирекций
+		int finage = getYears();
+		if (finage > 0)
 			return;
 
 		Event direvent = new Event();
@@ -290,7 +286,7 @@ public class AgePart extends ModelListView implements ICalculable {
 		Collection<Planet> planets = event.getPlanets().values();
 		Map<Long, Planet> planets2 = direvent.getPlanets();
 		for (Planet planet : planets) {
-			double coord = CalcUtil.incrementCoord(planet.getLongitude(), initage, true);
+			double coord = CalcUtil.incrementCoord(planet.getLongitude(), getAge(), true);
 			planets2.get(planet.getId()).setLongitude(coord);
 		}
 

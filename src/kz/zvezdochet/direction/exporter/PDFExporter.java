@@ -94,11 +94,11 @@ public class PDFExporter {
 	 * @param event событие
 	 * @param spas список аспектов планет и домов
 	 * @param initage начальный возраст
-	 * @param finalage конечный возраст
+	 * @param years количество лет
 	 * @param optimistic 0|1 реалистичный|оптимистичный
 	 * @param term 0|1 без терминов|с терминами
 	 */
-	public void generate(Event event, List<SkyPointAspect> spas, int initage, int finalage, boolean optimistic, boolean term) {
+	public void generate(Event event, List<SkyPointAspect> spas, int initage, int years, boolean optimistic, boolean term) {
 		this.optimistic = optimistic;
 		this.term = term;
 		Document doc = new Document();
@@ -116,7 +116,7 @@ public class PDFExporter {
 			chapter.setNumberDepth(0);
 
 			//шапка
-	        int ages = finalage - initage + 1;
+	        int ages = years + 1;
 			String text = event.getCallname();
 			text += " - прогноз на " + CoreUtil.getAgeString(ages);
 			Paragraph p = new Paragraph(text, font);

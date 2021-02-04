@@ -37,7 +37,7 @@ public class AgeSaveHandler extends Handler {
     		BusyIndicator.showWhile(display, new Runnable() {
     			@Override
     			public void run() {
-    				new PDFExporter().generate(event, spas, agePart.getInitialAge(), agePart.getFinalAge(), choice > 0, term);
+    				new PDFExporter().generate(event, spas, agePart.getAge(), agePart.getYears(), choice > 0, term);
     			}
     		});
 			//TODO показывать диалог, что документ сформирован
