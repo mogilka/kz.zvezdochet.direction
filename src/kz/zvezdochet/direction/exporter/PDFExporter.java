@@ -103,7 +103,7 @@ public class PDFExporter {
 		this.term = term;
 		Document doc = new Document();
 		try {
-			String filename = PlatformUtil.getPath(Activator.PLUGIN_ID, "/out/long.pdf").getPath();
+			String filename = PlatformUtil.getPath(Activator.PLUGIN_ID, "/out/longterm.pdf").getPath();
 			PdfWriter writer = PdfWriter.getInstance(doc, new FileOutputStream(filename));
 	        writer.setPageEvent(new PageEventHandler());
 	        doc.open();
@@ -116,7 +116,7 @@ public class PDFExporter {
 			chapter.setNumberDepth(0);
 
 			//шапка
-	        int ages = years + 1;
+	        int ages = years;
 			String text = event.getCallname();
 			text += " - прогноз на " + CoreUtil.getAgeString(ages);
 			Paragraph p = new Paragraph(text, font);
@@ -287,7 +287,7 @@ public class PDFExporter {
 			Font green = PDFUtil.getSuccessFont();
 			li = new ListItem();
 	        li.add(new Chunk("Зелёным цветом выделены позитивные тенденции. "
-	        	+ "К ним относятся к событиям, которые сами по себе удачно складываются " 
+	        	+ "К ним относятся события, которые сами по себе удачно складываются " 
 	        	+ "и представляют собой благоприятные возможности, наполняющие вас энергией. Их надо использовать по максимуму.", green));
 	        list.add(li);
 
@@ -382,7 +382,7 @@ public class PDFExporter {
 					bar.setCategory(age + "");
 					items[++i] = bar;
 				}
-				section.add(PDFUtil.printBars(writer, "", "Сферы жизни", "Баллы", items, 500, 300, false, false, false));
+				section.add(PDFUtil.printBars(writer, "", null, "Сферы жизни", "Баллы", items, 500, 300, false, false, false));
 				section.add(new Paragraph("Ниже приведён прогноз по этим сферам жизни", font));
 				chapter.add(Chunk.NEXTPAGE);
 
@@ -519,6 +519,11 @@ public class PDFExporter {
 
 	/**
 	 * Генерация событий по категориям
+	 * @param event персона
+	 * @param chapter раздел документа
+	 * @param age возраст
+	 * @param code код подраздела
+	 * @param spas список событий
 	 */
 	private Section printEvents(Event event, Chapter chapter, int age, int code, List<SkyPointAspect> spas) {
 		try {
@@ -619,6 +624,7 @@ public class PDFExporter {
 							String typeColor = type.getFontColor();
 							BaseColor color = PDFUtil.htmlColor2Base(typeColor);
 							section.add(new Paragraph(PDFUtil.removeTags(text, new Font(baseFont, 12, Font.NORMAL, color))));
+							section.add(Chunk.NEWLINE);
 							PDFUtil.printGender(section, dirText, female, child, true);
 						}
 					}
@@ -675,6 +681,7 @@ public class PDFExporter {
 					    			String typeColor = type.getFontColor();
 									BaseColor color = PDFUtil.htmlColor2Base(typeColor);
 									section.add(new Paragraph(PDFUtil.removeTags(text, new Font(baseFont, 12, Font.NORMAL, color))));
+									section.add(Chunk.NEWLINE);
 									PDFUtil.printGender(section, dirText, female, child, true);
 								}
 							}

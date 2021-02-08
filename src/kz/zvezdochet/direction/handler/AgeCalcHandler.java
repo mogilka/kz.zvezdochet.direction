@@ -86,7 +86,7 @@ public class AgeCalcHandler extends Handler {
 			houseFrom = agePart.useHouse();
 
 			initage = agePart.getAge();
-			finage = initage + agePart.getYears();
+			finage = initage + agePart.getYears() - 1;
 
 			//инициализируем аспекты
 			try {
@@ -95,7 +95,7 @@ public class AgeCalcHandler extends Handler {
 				e.printStackTrace();
 			}
 
-			for (int age = initage; age <= finage + 1; age++) {
+			for (int age = initage; age <= finage; age++) {
 				//дирекции планеты к другим планетам
 				if (null == selhouse && !houseFrom) {
 					for (Planet selp : planets) {
