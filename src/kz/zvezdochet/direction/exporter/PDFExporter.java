@@ -624,9 +624,9 @@ public class PDFExporter {
 							String typeColor = type.getFontColor();
 							BaseColor color = PDFUtil.htmlColor2Base(typeColor);
 							section.add(new Paragraph(PDFUtil.removeTags(text, new Font(baseFont, 12, Font.NORMAL, color))));
-							section.add(Chunk.NEWLINE);
 							PDFUtil.printGender(section, dirText, female, child, true);
 						}
+						section.add(Chunk.NEWLINE);
 					}
 					Rule rule = EventRules.ruleHouseDirection(spa, female);
 					if (rule != null)
@@ -681,10 +681,10 @@ public class PDFExporter {
 					    			String typeColor = type.getFontColor();
 									BaseColor color = PDFUtil.htmlColor2Base(typeColor);
 									section.add(new Paragraph(PDFUtil.removeTags(text, new Font(baseFont, 12, Font.NORMAL, color))));
-									section.add(Chunk.NEWLINE);
 									PDFUtil.printGender(section, dirText, female, child, true);
 								}
 							}
+							section.add(Chunk.NEWLINE);
 						}
 				}
 			}
