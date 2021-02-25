@@ -266,7 +266,7 @@ public class PDFExporter {
 			}
 			int height = 400;
 			if (ages < 2)
-				height = 150;
+				height = 140;
 			else if (ages < 4)
 				height = 200;
 			Image image = PDFUtil.printStackChart(writer, "Соотношение категорий событий", "Возраст", "Количество", bars, 500, height, true);

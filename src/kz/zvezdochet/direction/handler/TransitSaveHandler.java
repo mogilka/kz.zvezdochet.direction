@@ -105,7 +105,6 @@ public class TransitSaveHandler extends Handler {
 			Date finalDate = periodPart.getFinalDate();
 			Calendar start = Calendar.getInstance();
 			start.setTime(initDate);
-
 			Calendar end = Calendar.getInstance();
 			end.setTime(finalDate);
 
@@ -710,7 +709,8 @@ public class TransitSaveHandler extends Handler {
 												ptext += planet.getName();
 												if (!revolution)
 													ptext += " " + type.getSymbol() + " " + planet2.getName();
-											}
+											} else
+												ptext += code;
 										} else if (!separation) {
 											ptext += term ? planet.getName() : planet.getShortName();
 											if (!revolution)
