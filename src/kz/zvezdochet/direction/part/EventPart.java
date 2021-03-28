@@ -27,10 +27,8 @@ import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.CTabFolder;
 import org.eclipse.swt.custom.CTabItem;
-import org.eclipse.swt.custom.SashForm;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
-import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
@@ -128,20 +126,19 @@ public class EventPart extends ModelListView implements ICalculable {
 
 	@Override
 	protected void init(Composite parent) {
-		parent.setLayout(new FillLayout());
-
-		sashForm = new SashForm(parent, SWT.HORIZONTAL);
-		Group gr = new Group(sashForm, SWT.NONE);
-		initFilter(gr);
-		tableViewer = new TableViewer(gr, SWT.BORDER | SWT.FULL_SELECTION);
-		Table table = tableViewer.getTable();
-		table.setHeaderVisible(true);
-		table.setLinesVisible(true);
-		addColumns();
-
-		group = new Group(sashForm, SWT.NONE);
+		super.init(parent);
 		Group grCosmogram = new Group(group, SWT.NONE);
 		grCosmogram.setText("Космограмма");
+		cmpCosmogram = new CosmogramComposite(grCosmogram, SWT.NONE);
+
+//		sashForm = new SashForm(parent, SWT.HORIZONTAL);
+//		Group gr = new Group(sashForm, SWT.NONE);
+//		initFilter(gr);
+//		tableViewer = new TableViewer(gr, SWT.BORDER | SWT.FULL_SELECTION);
+//		Table table = tableViewer.getTable();
+//		table.setHeaderVisible(true);
+//		table.setLinesVisible(true);
+//		addColumns();
 
 		folder2 = new CTabFolder(grCosmogram, SWT.BORDER);
 		folder2.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
@@ -170,6 +167,8 @@ public class EventPart extends ModelListView implements ICalculable {
 		folder.pack();
 		GridLayoutFactory.swtDefaults().applyTo(grCosmogram);
 		GridDataFactory.fillDefaults().grab(true, true).applyTo(grCosmogram);
+		GridDataFactory.fillDefaults().align(SWT.CENTER, SWT.FILL).
+			hint(514, 514).span(3, 1).grab(true, false).applyTo(cmpCosmogram);
 	}
 
 	@Override
