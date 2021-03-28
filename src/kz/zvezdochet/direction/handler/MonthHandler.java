@@ -34,7 +34,8 @@ public class MonthHandler extends Handler {
 		    part.setVisible(true);
 		    partService.showPart(part, PartState.VISIBLE);
 		    MonthPart agePart = (MonthPart)part.getObject();
-		    agePart.setPerson(event);
+		    if (agePart != null)
+		    	agePart.setPerson(event);
 		} catch (Exception e) {
 			DialogUtil.alertError(e);
 			e.printStackTrace();

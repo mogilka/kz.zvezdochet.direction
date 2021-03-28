@@ -1,7 +1,9 @@
 package kz.zvezdochet.direction.part;
 
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.GregorianCalendar;
 
 import javax.annotation.PostConstruct;
 import javax.inject.Inject;
@@ -13,24 +15,31 @@ import org.eclipse.jface.fieldassist.IContentProposalListener;
 import org.eclipse.jface.fieldassist.TextContentAdapter;
 import org.eclipse.jface.layout.GridDataFactory;
 import org.eclipse.jface.layout.GridLayoutFactory;
+import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.IBaseLabelProvider;
+import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.DateTime;
 import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Table;
+import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.Text;
 
 import kz.zvezdochet.bean.Event;
 import kz.zvezdochet.bean.Place;
 import kz.zvezdochet.core.bean.Model;
 import kz.zvezdochet.core.service.DataAccessException;
+import kz.zvezdochet.core.ui.ArrayLabelProvider;
+import kz.zvezdochet.core.ui.comparator.TableSortListenerFactory;
 import kz.zvezdochet.core.ui.decoration.InfoDecoration;
+import kz.zvezdochet.core.ui.listener.ListSelectionListener;
 import kz.zvezdochet.core.ui.util.DialogUtil;
 import kz.zvezdochet.core.ui.view.ModelListView;
 import kz.zvezdochet.core.ui.view.View;
 import kz.zvezdochet.core.util.CalcUtil;
-import kz.zvezdochet.direction.provider.TransitLabelProvider;
+import kz.zvezdochet.core.util.DateUtil;
 import kz.zvezdochet.part.ICalculable;
 import kz.zvezdochet.part.Messages;
 import kz.zvezdochet.provider.PlaceProposalProvider;
@@ -45,7 +54,6 @@ public class MonthPart extends ModelListView implements ICalculable {
 	public MonthPart() {}
 
 	private Event person;
-	private Place trplace;
 
 	private DateTime dt;
 	private DateTime dt2;
@@ -57,6 +65,7 @@ public class MonthPart extends ModelListView implements ICalculable {
 
 	public void setPerson(Event person) {
 		this.person = person;
+		initPlace(person.getCurrentPlace());
 	}
 
 	@PostConstruct @Override
@@ -66,19 +75,15 @@ public class MonthPart extends ModelListView implements ICalculable {
 
 	@Override
 	public boolean check(int mode) throws Exception {
-//		if (null == dt.getSelection())
-//			dt.setSelection(new Date());
-//		if (null == dt2.getSelection())
-//			dt2.setSelection(new Date(System.currentTimeMillis() + 84600));
-		if (null == trplace)
-			trplace = new Place().getDefault();
 		if (txZone.getText().equals(""))
 			txZone.setText("0.0");
 
-//		if (!DateUtil.isDateRangeValid(dt.getSelection(), dt2.getSelection())) {
-//			DialogUtil.alertWarning("Укажите правильный период");
-//			return false;
-//		}
+		Date date = getInitialDate();
+		Date date2 = getFinalDate();
+		if (!DateUtil.isDateRangeValid(date, date2)) {
+			DialogUtil.alertWarning("Укажите правильный период");
+			return false;
+		}
 		if (null == person) {
 			DialogUtil.alertWarning("Событие не задано");
 			return false;
@@ -94,12 +99,10 @@ public class MonthPart extends ModelListView implements ICalculable {
 		Label lb = new Label(grFilter, SWT.NONE);
 		lb.setText("Начало");
 		dt = new DateTime(grFilter, SWT.DROP_DOWN);
-//		dt.setNullText(""); //$NON-NLS-1$
 
 		lb = new Label(grFilter, SWT.NONE);
 		lb.setText("Конец");
 		dt2 = new DateTime(grFilter, SWT.DROP_DOWN);
-//		dt2.setNullText(""); //$NON-NLS-1$
 
 		Group secPlace = new Group(grFilter, SWT.NONE);
 		secPlace.setText(Messages.getString("PersonView.Place")); //$NON-NLS-1$
@@ -157,11 +160,13 @@ public class MonthPart extends ModelListView implements ICalculable {
 	public void reset() {
 //		dt.setNullText("");
 //		dt2.setNullText("");
-		txPlace.setText(""); //$NON-NLS-1$
-		txLatitude.setText(""); //$NON-NLS-1$
-		txLongitude.setText(""); //$NON-NLS-1$
-		txZone.setText(""); //$NON-NLS-1$
-		txGreenwich.setText(""); //$NON-NLS-1$
+//		txPlace.setText(""); //$NON-NLS-1$
+//		txLatitude.setText(""); //$NON-NLS-1$
+//		txLongitude.setText(""); //$NON-NLS-1$
+//		txZone.setText(""); //$NON-NLS-1$
+//		txGreenwich.setText(""); //$NON-NLS-1$
+		super.reset();
+		tableViewer2.getTable().removeAll();
 	}
 
 	public Date getInitialDate() {
@@ -187,17 +192,11 @@ public class MonthPart extends ModelListView implements ICalculable {
 
 	@Override
 	protected String[] initTableColumns() {
-		return new String[] {
-			"",
-			"Транзитная планета",
-			"Аспект",
-			"Натальный объект",
-			"Направление",
-			"Величина аспекта",
-			"Знак Зодиака",
-			"Дом",
-			"Описание"
-		};
+		String[] columns = new String[32];
+		columns[0] = "";
+		for (int i = 1; i < 32; i++)
+			columns[i] = String.valueOf(i);
+		return columns;
 	}
 
 	/**
@@ -210,7 +209,7 @@ public class MonthPart extends ModelListView implements ICalculable {
 		txLatitude.setText(CalcUtil.formatNumber("###.##", place.getLatitude())); //$NON-NLS-1$
 		txLongitude.setText(CalcUtil.formatNumber("###.##", place.getLongitude())); //$NON-NLS-1$
 		txGreenwich.setText(CalcUtil.formatNumber("###.##", place.getGreenwich())); //$NON-NLS-1$
-		txZone.setText(String.valueOf(place.getGreenwich()));
+		txZone.setText(String.valueOf(place.getZone()));
 	}
 
 	/**
@@ -228,21 +227,43 @@ public class MonthPart extends ModelListView implements ICalculable {
 			public void proposalAccepted(IContentProposal proposal) {
 				Place place = (Place)((PlaceContentProposal)proposal).getObject();
 				if (place != null) {
-					trplace = place;
+					person.setCurrentPlace(place);
 					initPlace(place);
 				}
 			}
 		});
 	}
 
-	@Override
+	@SuppressWarnings("unlikely-arg-type")
 	protected void initControls() throws DataAccessException {
 		super.initControls();
+		if (person != null)
+			initPlace(person.getCurrentPlace());
 		setPlaces();
+
+		GregorianCalendar calendar = new GregorianCalendar();
+		calendar.set(Calendar.DAY_OF_MONTH, 1);
+		int month = calendar.get(Calendar.MONTH);
+		dt.setDate(calendar.get(Calendar.YEAR), month, calendar.get(Calendar.DAY_OF_MONTH));
+
+		int date = 31;
+		if (1 == month)
+			date = calendar.isLeapYear(calendar.get(Calendar.YEAR)) ? 28 : 29;
+		else if (Arrays.asList(new int[] {4, 6, 9, 11}).contains(month))
+			date = 30;
+		dt2.setDate(calendar.get(Calendar.YEAR), month, date);
+
+		tableViewer2.setContentProvider(new ArrayContentProvider());
+		tableViewer2.setLabelProvider(getLabelProvider());
+		
+		ListSelectionListener listener = getSelectionListener();
+		tableViewer2.addSelectionChangedListener(listener);
+		tableViewer2.addDoubleClickListener(listener);
 	}
 
 	public Place getPlace() {
-		return trplace;
+		Place place = person.getCurrentPlace();
+		return (null == place) ? new Place().getDefault() : person.getCurrentPlace();
 	}
 
 	public double getZone() {
@@ -251,12 +272,91 @@ public class MonthPart extends ModelListView implements ICalculable {
 
 	@Override
 	protected IBaseLabelProvider getLabelProvider() {
-		return new TransitLabelProvider();
+		return new ArrayLabelProvider();
 	}
 
 	@Override
 	public void onCalc(Object obj) {
 		// TODO Auto-generated method stub
 		
+	}
+
+	private TableViewer tableViewer2;
+
+	@Override
+	protected void initGroup() {
+		tableViewer2 = new TableViewer(group, SWT.BORDER | SWT.FULL_SELECTION);
+		Table table = tableViewer2.getTable();
+		table.setHeaderVisible(true);
+		table.setLinesVisible(true);
+		addColumns2();
+
+		GridLayoutFactory.swtDefaults().applyTo(group);
+		GridDataFactory.fillDefaults().grab(true, true).applyTo(group);
+//		GridDataFactory.fillDefaults().align(SWT.CENTER, SWT.FILL).
+//			hint(514, 514).span(3, 1).grab(true, false).applyTo(cmpCosmogram);
+	}
+
+	private void addColumns2() {
+		removeColumns2();
+		String[] columns = initTableColumns();
+		if (columns != null)
+			for (String column : columns) {
+				TableColumn tableColumn = new TableColumn(tableViewer2.getTable(), SWT.NONE);
+				tableColumn.setText(column);		
+				tableColumn.addListener(SWT.Selection, TableSortListenerFactory.getListener(
+					TableSortListenerFactory.STRING_COMPARATOR));
+			}
+	}
+
+	private void removeColumns2() {
+		for (TableColumn column : tableViewer2.getTable().getColumns())
+			column.dispose();
+	}
+
+	/**
+	 * Инициализация второй таблицы значениями из БД
+	 */
+	protected void initTable2() {
+		try {
+			showBusy(true);
+			Table table = tableViewer2.getTable();
+			if (null == data2)
+				table.removeAll();
+			else {
+				tableViewer2.setInput(data2);
+				for (int i = 0; i < table.getColumnCount(); i++)
+					table.getColumn(i).pack();
+			}
+		} catch(Exception e) {
+			e.printStackTrace();
+		} finally {
+			showBusy(false);
+		}
+	}
+
+	/**
+	 * Массив данных второй таблицы
+	 */
+	protected Object data2;
+
+	/**
+	 * Инициализация содержимого второй таблицы
+	 * @param data массив данных
+	 */
+	public void setData2(Object data) {
+		try {
+			showBusy(true);
+			this.data2 = data;
+			initTable2();	
+		} finally {
+			showBusy(false);
+		}
+	}
+
+	@Override
+	protected void arrange(Composite parent) {
+		super.arrange(parent);
+		GridDataFactory.fillDefaults().align(SWT.FILL, SWT.FILL).grab(true, true).applyTo(tableViewer2.getTable());
 	}
 }
