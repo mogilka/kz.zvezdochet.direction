@@ -171,15 +171,17 @@ public class TransitSaveHandler extends Handler {
 
 			Font red = PDFUtil.getDangerFont();
 			p = new Paragraph();
-			p.add(new Chunk("Общая погрешность прогноза составляет ±1 день. ", red));
+			String divergence = person.isRectified() ? "1 день" : "2 дня";
+			p.add(new Chunk("Общая погрешность прогноза составляет ±" + divergence + ". ", red));
 			p.add(new Chunk("Это значит, что описанное событие может произойти на день раньше, если длительность прогноза составляет более одного дня (в толковании вы это увидите).", font));
 			chapter.add(p);
 			chapter.add(Chunk.NEWLINE);
 
 	        if (!pdefault) {
+	        	divergence = person.isRectified() ? "2 дня" : "3 дня";
 				chapter.add(new Paragraph("Прогноз сделан для локации «" + place.getName() + "». "
 					+ "Если в течение прогнозного периода вы переедете в более отдалённое место (в другой часовой пояс или с ощутимой сменой географической широты), "
-					+ "то погрешность некоторых прогнозов может составить ±2 дня.", font));
+					+ "то погрешность некоторых прогнозов может составить ±" + divergence + ".", font));
 				chapter.add(Chunk.NEWLINE);
 	        }
 
