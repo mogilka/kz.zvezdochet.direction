@@ -103,6 +103,8 @@ public class AgeCalcHandler extends Handler {
 						if (selplanet != null && selp.getId().equals(selplanet.getId()))
 							match1 = true;
 						for (Planet selp2 : planets) {
+							if (selp.getId().equals(selp2.getId()))
+								continue;
 							boolean match2 = (null == selplanet);
 							if (selplanet != null && selp2.getId().equals(selplanet.getId()))
 								match2 = true;
