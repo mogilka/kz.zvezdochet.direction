@@ -62,7 +62,6 @@ public class TransitPart extends ModelListView {
 	public TransitPart() {}
 
 	private Event person;
-	private Place trplace;
 
 	private DateTime dt;
 	private DateTime dt2;
@@ -78,6 +77,7 @@ public class TransitPart extends ModelListView {
 
 	public void setPerson(Event person) {
 		this.person = person;
+		initPlace(person.getCurrentPlace());
 	}
 	
 	@PostConstruct @Override
@@ -91,8 +91,6 @@ public class TransitPart extends ModelListView {
 //			dt.setSelection(new Date());
 //		if (null == dt2.getSelection())
 //			dt2.setSelection(new Date(System.currentTimeMillis() + 84600));
-		if (null == trplace)
-			trplace = new Place().getDefault();
 		if (txZone.getText().equals(""))
 			txZone.setText("0.0");
 
@@ -268,7 +266,7 @@ public class TransitPart extends ModelListView {
 		txLatitude.setText(CalcUtil.formatNumber("###.##", place.getLatitude())); //$NON-NLS-1$
 		txLongitude.setText(CalcUtil.formatNumber("###.##", place.getLongitude())); //$NON-NLS-1$
 		txGreenwich.setText(CalcUtil.formatNumber("###.##", place.getGreenwich())); //$NON-NLS-1$
-		txZone.setText(String.valueOf(place.getGreenwich()));
+		txZone.setText(String.valueOf(place.getZone()));
 	}
 
 	/**
@@ -286,7 +284,7 @@ public class TransitPart extends ModelListView {
 			public void proposalAccepted(IContentProposal proposal) {
 				Place place = (Place)((PlaceContentProposal)proposal).getObject();
 				if (place != null) {
-					trplace = place;
+					person.setCurrentPlace(place);
 					initPlace(place);
 				}
 			}
@@ -329,7 +327,7 @@ public class TransitPart extends ModelListView {
 	}
 
 	public Place getPlace() {
-		return trplace;
+		return person.getCurrentPlace();
 	}
 
 	public double getZone() {

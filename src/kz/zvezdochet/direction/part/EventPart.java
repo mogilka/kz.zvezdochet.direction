@@ -89,7 +89,6 @@ public class EventPart extends ModelListView implements ICalculable {
 	private Event person;
 	private Event trevent;
 	private Object transitData;
-	private Place trplace;
 
 	private Label lbName;
 	private Text txName;
@@ -551,7 +550,7 @@ public class EventPart extends ModelListView implements ICalculable {
 		txLatitude.setText(CalcUtil.formatNumber("###.##", place.getLatitude())); //$NON-NLS-1$
 		txLongitude.setText(CalcUtil.formatNumber("###.##", place.getLongitude())); //$NON-NLS-1$
 		txGreenwich.setText(CalcUtil.formatNumber("###.##", place.getGreenwich())); //$NON-NLS-1$
-		txZone.setText(String.valueOf(place.getGreenwich()));
+		txZone.setText(String.valueOf(place.getZone()));
 	}
 
 	/**
@@ -569,7 +568,7 @@ public class EventPart extends ModelListView implements ICalculable {
 
 			trevent = new Event();
 			trevent.setBirth(calendar.getTime());
-			trevent.setPlace(trplace);
+			trevent.setPlace(person.getCurrentPlace());
 			double zone = (txZone.getText() != null && txZone.getText().length() > 0) ? Double.parseDouble(txZone.getText()) : 0;
 			trevent.setZone(zone);
 
@@ -592,10 +591,6 @@ public class EventPart extends ModelListView implements ICalculable {
 		StringBuffer msgBody = new StringBuffer();
 //		if (null == dtBirth.getSelection())
 //			msgBody.append(lbBirth.getText());
-		if (null == trplace) {
-			DialogUtil.alertWarning(Messages.getString("EventView.PlaceIsWrong"));
-			return false;
-		}
 		if (Handler.MODE_SAVE == mode) {
 			if (txName.getText().length() == 0) 
 				msgBody.append(lbName.getText());
@@ -683,7 +678,7 @@ public class EventPart extends ModelListView implements ICalculable {
 			public void proposalAccepted(IContentProposal proposal) {
 				Place place = (Place)((PlaceContentProposal)proposal).getObject();
 				if (place != null) {
-					trplace = place;
+					person.setCurrentPlace(place);
 					initPlace(place);
 				}
 			}
