@@ -78,7 +78,7 @@ public class AgePart extends ModelListView implements ICalculable {
 		lb.setText("Период");
 		spYears = new Spinner(grFilter, SWT.BORDER);
 		spYears.setMinimum(1);
-		spYears.setMaximum(20);
+		spYears.setMaximum(50);
 
 		lb = new Label(grFilter, SWT.NONE);
 		lb.setText("Сфера жизни");
@@ -274,7 +274,7 @@ public class AgePart extends ModelListView implements ICalculable {
 	public void onCalc(Object mode) {
 		//если выбран один год, показываем космограмму дирекций
 		int finage = getYears();
-		if (finage > 0)
+		if (finage > 1)
 			return;
 
 		Event direvent = new Event();
