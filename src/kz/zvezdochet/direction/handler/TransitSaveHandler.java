@@ -107,6 +107,8 @@ public class TransitSaveHandler extends Handler {
 			start.setTime(initDate);
 			Calendar end = Calendar.getInstance();
 			end.setTime(finalDate);
+			end.add(Calendar.DATE, 1);
+			long timems = finalDate.getTime() - initDate.getTime();
 
 			String filename = PlatformUtil.getPath(Activator.PLUGIN_ID, "/out/daily.pdf").getPath();
 			PdfWriter writer = PdfWriter.getInstance(doc, new FileOutputStream(filename));
@@ -163,12 +165,13 @@ public class TransitSaveHandler extends Handler {
 	        p.add(chunk);
 	        chapter.add(p);
 
-			p = new Paragraph();
-			p.add(new Chunk("Файл содержит большой объём информации, и если прогноз рассчитан на несколько месяцев, нет смысла пытаться его весь прочитать. "
-				+ "Используйте прогноз в начале каждой недели как путеводитель, помогающий понять тенденции и учесть риски.", font));
-			chapter.add(p);
-			chapter.add(Chunk.NEWLINE);
-
+	        if (timems / 1000 > 2592000) {
+				p = new Paragraph();
+				p.add(new Chunk("Файл содержит большой объём информации, и если прогноз рассчитан на несколько месяцев, нет смысла пытаться его весь прочитать. "
+					+ "Используйте прогноз в начале каждой недели как путеводитель, помогающий понять тенденции и учесть риски.", font));
+				chapter.add(p);
+				chapter.add(Chunk.NEWLINE);
+	        }
 			Font red = PDFUtil.getDangerFont();
 			p = new Paragraph();
 			String divergence = person.isRectified() ? "1 день" : "2 дня";
