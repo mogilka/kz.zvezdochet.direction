@@ -42,6 +42,7 @@ public class TransitCalcHandler extends Handler {
 			if (null == place)
 				place = new Place().getDefault();
 			double zone = periodPart.getZone();
+			periodPart.setMode(TransitPart.MODE_LIST);
 
 			Collection<Planet> planets = person.getPlanets().values();
 			Collection<House> houses = person.getHouses().values();

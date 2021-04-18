@@ -1,7 +1,9 @@
 package kz.zvezdochet.direction.part;
 
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.GregorianCalendar;
 import java.util.List;
 
 import javax.annotation.PostConstruct;
@@ -19,6 +21,7 @@ import org.eclipse.jface.viewers.CheckboxTableViewer;
 import org.eclipse.jface.viewers.ComboViewer;
 import org.eclipse.jface.viewers.IBaseLabelProvider;
 import org.eclipse.jface.viewers.IStructuredSelection;
+import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
@@ -26,6 +29,7 @@ import org.eclipse.swt.widgets.DateTime;
 import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Table;
+import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.Text;
 
 import kz.zvezdochet.analytics.service.SphereService;
@@ -36,6 +40,8 @@ import kz.zvezdochet.bean.Place;
 import kz.zvezdochet.bean.Planet;
 import kz.zvezdochet.core.bean.Model;
 import kz.zvezdochet.core.service.DataAccessException;
+import kz.zvezdochet.core.ui.ArrayLabelProvider;
+import kz.zvezdochet.core.ui.comparator.TableSortListenerFactory;
 import kz.zvezdochet.core.ui.decoration.InfoDecoration;
 import kz.zvezdochet.core.ui.listener.ListSelectionListener;
 import kz.zvezdochet.core.ui.provider.DictionaryLabelProvider;
@@ -44,6 +50,7 @@ import kz.zvezdochet.core.ui.view.ModelLabelProvider;
 import kz.zvezdochet.core.ui.view.ModelListView;
 import kz.zvezdochet.core.ui.view.View;
 import kz.zvezdochet.core.util.CalcUtil;
+import kz.zvezdochet.core.util.DateUtil;
 import kz.zvezdochet.direction.provider.TransitLabelProvider;
 import kz.zvezdochet.part.Messages;
 import kz.zvezdochet.provider.PlaceProposalProvider;
@@ -55,7 +62,6 @@ import kz.zvezdochet.service.PlanetService;
 /**
  * Представление транзитов события
  * @author Natalie Didenko
- *
  */
 public class TransitPart extends ModelListView {
 	@Inject
@@ -87,17 +93,15 @@ public class TransitPart extends ModelListView {
 
 	@Override
 	public boolean check(int mode) throws Exception {
-//		if (null == dt.getSelection())
-//			dt.setSelection(new Date());
-//		if (null == dt2.getSelection())
-//			dt2.setSelection(new Date(System.currentTimeMillis() + 84600));
 		if (txZone.getText().equals(""))
 			txZone.setText("0.0");
 
-//		if (!DateUtil.isDateRangeValid(dt.getSelection(), dt2.getSelection())) {
-//			DialogUtil.alertWarning("Укажите правильный период");
-//			return false;
-//		}
+		Date date = getInitialDate();
+		Date date2 = getFinalDate();
+		if (!DateUtil.isDateRangeValid(date, date2)) {
+			DialogUtil.alertWarning("Укажите правильный период");
+			return false;
+		}
 		if (null == person) {
 			DialogUtil.alertWarning("Событие не задано");
 			return false;
@@ -105,7 +109,7 @@ public class TransitPart extends ModelListView {
 		return true;
 	}
 
-	private CheckboxTableViewer tableViewer2;
+	private CheckboxTableViewer checkViewer;
 
 	@Override
 	public void initFilter(Composite parent) {
@@ -131,17 +135,17 @@ public class TransitPart extends ModelListView {
 		lb.setText("Аспекты");
 		cvAspect = new ComboViewer(grFilter, SWT.READ_ONLY | SWT.BORDER);
 
-		tableViewer2 = CheckboxTableViewer.newCheckList(grFilter, SWT.CHECK | SWT.BORDER | SWT.V_SCROLL | SWT.SINGLE);
-		Table table2 = tableViewer2.getTable();
+		checkViewer = CheckboxTableViewer.newCheckList(grFilter, SWT.CHECK | SWT.BORDER | SWT.V_SCROLL | SWT.SINGLE);
+		Table table2 = checkViewer.getTable();
 		table2.setHeaderVisible(false);
 		table2.setLinesVisible(true);
 
-		tableViewer2.setContentProvider(new ArrayContentProvider());
-		tableViewer2.setLabelProvider(new ModelLabelProvider());
+		checkViewer.setContentProvider(new ArrayContentProvider());
+		checkViewer.setLabelProvider(new ModelLabelProvider());
 		
 		ListSelectionListener listener = getSelectionListener();
-		tableViewer2.addSelectionChangedListener(listener);
-		tableViewer2.addDoubleClickListener(listener);
+		checkViewer.addSelectionChangedListener(listener);
+		checkViewer.addDoubleClickListener(listener);
 
 		Group secPlace = new Group(grFilter, SWT.NONE);
 		secPlace.setText(Messages.getString("PersonView.Place")); //$NON-NLS-1$
@@ -211,13 +215,13 @@ public class TransitPart extends ModelListView {
 
 	@Override
 	public void reset() {
-//		dt.setNullText("");
-//		dt2.setNullText("");
+		super.reset();
 		txPlace.setText(""); //$NON-NLS-1$
 		txLatitude.setText(""); //$NON-NLS-1$
 		txLongitude.setText(""); //$NON-NLS-1$
 		txZone.setText(""); //$NON-NLS-1$
 		txGreenwich.setText(""); //$NON-NLS-1$
+		tableViewer2.getTable().removeAll();
 	}
 
 	public Date getInitialDate() {
@@ -233,6 +237,7 @@ public class TransitPart extends ModelListView {
 		calendar.set(Calendar.DAY_OF_MONTH, dt2.getDay());
 		calendar.set(Calendar.MONTH, dt2.getMonth());
 		calendar.set(Calendar.YEAR, dt2.getYear());
+		calendar.add(Calendar.DATE, 1);
 		return calendar.getTime();
 	}
 
@@ -243,17 +248,26 @@ public class TransitPart extends ModelListView {
 
 	@Override
 	protected String[] initTableColumns() {
-		return new String[] {
-			"",
-			"Транзитная планета",
-			"Аспект",
-			"Натальный объект",
-			"Направление",
-			"Величина аспекта",
-			"Знак Зодиака",
-			"Дом",
-			"Описание"
+		String[] columns = {};
+		if (MODE_LIST == getMode())
+			columns = new String[] {
+				"",
+				"Транзитная планета",
+				"Аспект",
+				"Натальный объект",
+				"Направление",
+				"Величина аспекта",
+				"Знак Зодиака",
+				"Дом",
+				"Описание"
+			};
+		else {
+			columns = new String[32];
+			columns[0] = "";
+			for (int i = 1; i < 32; i++)
+				columns[i] = String.valueOf(i);
 		};
+		return columns;
 	}
 
 	/**
@@ -291,12 +305,15 @@ public class TransitPart extends ModelListView {
 		});
 	}
 
+	@SuppressWarnings("unlikely-arg-type")
 	@Override
 	protected void initControls() throws DataAccessException {
 		super.initControls();
+		if (person != null)
+			initPlace(person.getCurrentPlace());
 		setPlaces();
 		try {
-			tableViewer2.setInput(new SphereService().getList());
+			checkViewer.setInput(new SphereService().getList());
 
 			cvPlanet.setContentProvider(new ArrayContentProvider());
 			cvPlanet.setLabelProvider(new DictionaryLabelProvider());
@@ -321,13 +338,33 @@ public class TransitPart extends ModelListView {
 			aspect.setId(0L);
 			list.add(0, aspect);
 			cvAspect.setInput(list);
+
+			GregorianCalendar calendar = new GregorianCalendar();
+			calendar.set(Calendar.DAY_OF_MONTH, 1);
+			int month = calendar.get(Calendar.MONTH);
+			dt.setDate(calendar.get(Calendar.YEAR), month, calendar.get(Calendar.DAY_OF_MONTH));
+
+			int date = 31;
+			if (1 == month)
+				date = calendar.isLeapYear(calendar.get(Calendar.YEAR)) ? 28 : 29;
+			else if (Arrays.asList(new int[] {4, 6, 9, 11}).contains(month))
+				date = 30;
+			dt2.setDate(calendar.get(Calendar.YEAR), month, date);
+
+			tableViewer2.setContentProvider(new ArrayContentProvider());
+			tableViewer2.setLabelProvider(getLabelProvider());
+				
+			ListSelectionListener listener = getSelectionListener();
+			tableViewer2.addSelectionChangedListener(listener);
+			tableViewer2.addDoubleClickListener(listener);				
 		} catch (DataAccessException e) {
 			e.printStackTrace();
 		}
 	}
 
 	public Place getPlace() {
-		return person.getCurrentPlace();
+		Place place = person.getCurrentPlace();
+		return (null == place) ? new Place().getDefault() : person.getCurrentPlace();
 	}
 
 	public double getZone() {
@@ -335,12 +372,12 @@ public class TransitPart extends ModelListView {
 	}
 
 	public Object[] getSpheres() {
-		return tableViewer2.getCheckedElements();
+		return checkViewer.getCheckedElements();
 	}
 
 	@Override
 	protected IBaseLabelProvider getLabelProvider() {
-		return new TransitLabelProvider();
+		return (MODE_LIST == getMode()) ? new TransitLabelProvider() : new ArrayLabelProvider();
 	}
 
 	/**
@@ -393,5 +430,102 @@ public class TransitPart extends ModelListView {
 	 */
 	public boolean isTerm() {
 		return btTerm.getSelection();
+	}
+
+	private TableViewer tableViewer2;
+
+	public static int MODE_LIST = 0;
+	public static int MODE_TABLE = 1;
+
+	@Override
+	protected void initGroup() {
+		tableViewer2 = new TableViewer(group, SWT.BORDER | SWT.FULL_SELECTION);
+		Table table = tableViewer2.getTable();
+		table.setHeaderVisible(true);
+		table.setLinesVisible(true);
+//		addColumns2();
+
+		GridLayoutFactory.swtDefaults().applyTo(group);
+		GridDataFactory.fillDefaults().grab(true, true).applyTo(group);
+	}
+
+	@Override
+	protected void addColumns() {
+		super.addColumns();
+		if (tableViewer2 != null) {
+			String[] columns = initTableColumns();
+			if (columns != null)
+				for (String column : columns) {
+					TableColumn tableColumn = new TableColumn(tableViewer2.getTable(), SWT.NONE);
+					tableColumn.setText(column);		
+					tableColumn.addListener(SWT.Selection, TableSortListenerFactory.getListener(
+						TableSortListenerFactory.STRING_COMPARATOR));
+				}
+		}
+	}
+
+	@Override
+	protected void removeColumns() {
+		super.removeColumns();
+		if (tableViewer2 != null)
+			for (TableColumn column : tableViewer2.getTable().getColumns())
+				column.dispose();
+	}
+
+	/**
+	 * Инициализация второй таблицы значениями из БД
+	 */
+	protected void initTable2() {
+		try {
+			showBusy(true);
+			Table table = tableViewer2.getTable();
+			if (null == data2)
+				table.removeAll();
+			else {
+				tableViewer2.setInput(data2);
+				for (int i = 0; i < table.getColumnCount(); i++)
+					table.getColumn(i).pack();
+			}
+		} catch(Exception e) {
+			e.printStackTrace();
+		} finally {
+			showBusy(false);
+		}
+	}
+
+	/**
+	 * Массив данных второй таблицы
+	 */
+	protected Object data2;
+
+	/**
+	 * Инициализация содержимого второй таблицы
+	 * @param data массив данных
+	 */
+	public void setData2(Object data) {
+		try {
+			showBusy(true);
+			this.data2 = data;
+			initTable2();	
+		} finally {
+			showBusy(false);
+		}
+	}
+
+	@Override
+	protected void arrange(Composite parent) {
+		super.arrange(parent);
+		GridDataFactory.fillDefaults().align(SWT.FILL, SWT.FILL).grab(true, true).applyTo(tableViewer2.getTable());
+	}
+
+	@Override
+	public void setMode(int mode) {
+		super.setMode(mode);
+		tableViewer.setInput(null);
+		tableViewer2.setInput(null);
+		removeColumns();
+		tableViewer.setLabelProvider(getLabelProvider());
+		tableViewer2.setLabelProvider(getLabelProvider());
+		addColumns();
 	}
 }

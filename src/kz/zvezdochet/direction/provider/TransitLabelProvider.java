@@ -19,6 +19,8 @@ public class TransitLabelProvider extends ArrayLabelProvider implements ITableLa
 
 	@Override
 	public String getColumnText(Object element, int columnIndex) {
+		if (!(element instanceof SkyPointAspect))
+			return null;
 		SkyPointAspect aspect = (SkyPointAspect)element;
 		Aspect realasp = aspect.getAspect();
 		switch (columnIndex) {
@@ -36,6 +38,8 @@ public class TransitLabelProvider extends ArrayLabelProvider implements ITableLa
 	}
 	@Override
 	public Image getColumnImage(Object element, int columnIndex) {
+		if (!(element instanceof SkyPointAspect))
+			return null;
 		SkyPointAspect aspect = (SkyPointAspect)element;
 		switch (columnIndex) {
 			case 1: return aspect.getSkyPoint1() instanceof Planet
@@ -47,6 +51,8 @@ public class TransitLabelProvider extends ArrayLabelProvider implements ITableLa
 	}
 	@Override
 	public Color getForeground(Object element, int columnIndex) {
+		if (!(element instanceof SkyPointAspect))
+			return null;
 		if (2 == columnIndex) {
 			SkyPointAspect aspect = (SkyPointAspect)element;
 			if (aspect.getAspect() != null)
