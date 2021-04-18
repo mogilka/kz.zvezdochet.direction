@@ -91,10 +91,7 @@ public class TransitSaveHandler extends Handler {
 			double zone = periodPart.getZone();
 			Map<Long, House> houses = person.getHouses();
 
-			int choice = DialogUtil.alertQuestion("Вопрос", "Выберите тип прогноза:", new String[] {"Только важное", "Полный"});
-			boolean longterm = choice < 1;
-
-			choice = DialogUtil.alertQuestion("Вопрос", "Выберите тип прогноза:", new String[] {"Реалистичный", "Оптимистичный"});
+			int choice = DialogUtil.alertQuestion("Вопрос", "Выберите тип прогноза:", new String[] {"Реалистичный", "Оптимистичный"});
 			boolean optimistic = choice > 0;
 
 			//Признак использования астрологических терминов
@@ -145,7 +142,7 @@ public class TransitSaveHandler extends Handler {
 				place = new Place().getDefault();
 			boolean pdefault = place.getId().equals(place.getDefault().getId());
 			
-			text = "Тип прогноза: " + (optimistic ? "оптимистичный" : "реалистичный") + ", " + (longterm ? "самое важное" : "полный");
+			text = "Тип прогноза: " + (optimistic ? "оптимистичный" : "реалистичный") + ", полный";
 			p = new Paragraph(text, font);
 	        p.setAlignment(Element.ALIGN_CENTER);
 			chapter.add(p);
@@ -365,37 +362,6 @@ public class TransitSaveHandler extends Handler {
 			    		                			|| skyPoint.getCode().equals("Kethu"))
 			    		                		continue;
 		    		                }
-
-									if (longterm) {
-										//для домов убираем аспекты кроме релевантных для данного типа прогноза
-				    		            if (housable) {
-				    		    			/**
-				    		    			 * коды аспектов, используемых для домов в урезанном отчёте
-				    		    			 */
-				    		    			String[] paspects = optimistic ? new String[] {"CONJUNCTION"} : new String[] {"CONJUNCTION", "OPPOSITION"};
-											if (!Arrays.asList(paspects).contains(acode))
-												continue;
-				    		            } else {
-											//для минорных планет убираем аспекты кроме соединений
-											if (planet.isMain()
-													&& !acode.equals("CONJUNCTION"))
-												continue;
-	
-				    		            	if (planet.getCode().equals("Kethu")
-				    		                        && skyPoint.getCode().equals("Kethu"))
-			       		                        continue;
-	
-				    		            	if (planet.getCode().equals("Kethu")
-				    		                        || skyPoint.getCode().equals("Kethu"))
-				       		                    if (!acode.equals("CONJUNCTION"))
-				       		                        continue;
-	
-				    		                if (planet.getCode().equals("Rakhu")
-				    		                        || skyPoint.getCode().equals("Rakhu"))
-				       		                    if (acode.equals("OPPOSITION"))
-				       		                        continue;
-				    		            }
-									}
 									objects2.add(spa);
 
 								} else if (object instanceof Planet) { //ретро или директ
@@ -843,8 +809,7 @@ public class TransitSaveHandler extends Handler {
 								daysection.add(Chunk.NEWLINE);
 							}
 						}
-						if (!longterm)
-							daysection.add(Chunk.NEXTPAGE);
+						daysection.add(Chunk.NEXTPAGE);
 					}
 //					texts = null;
 
