@@ -119,12 +119,10 @@ public class TransitPart extends ModelListView {
 		Label lb = new Label(grFilter, SWT.NONE);
 		lb.setText("Начало");
 		dt = new DateTime(grFilter, SWT.DROP_DOWN);
-//		dt.setNullText(""); //$NON-NLS-1$
 
 		lb = new Label(grFilter, SWT.NONE);
 		lb.setText("Конец");
 		dt2 = new DateTime(grFilter, SWT.DROP_DOWN);
-//		dt2.setNullText(""); //$NON-NLS-1$
 
 		lb = new Label(grFilter, SWT.NONE);
 		lb.setText("Сфера жизни");
