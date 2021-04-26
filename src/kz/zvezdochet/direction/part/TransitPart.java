@@ -235,7 +235,6 @@ public class TransitPart extends ModelListView {
 		calendar.set(Calendar.DAY_OF_MONTH, dt2.getDay());
 		calendar.set(Calendar.MONTH, dt2.getMonth());
 		calendar.set(Calendar.YEAR, dt2.getYear());
-		calendar.add(Calendar.DATE, 1);
 		return calendar.getTime();
 	}
 

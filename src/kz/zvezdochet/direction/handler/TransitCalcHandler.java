@@ -64,6 +64,7 @@ public class TransitCalcHandler extends Handler {
 			start.setTime(initDate);
 			Calendar end = Calendar.getInstance();
 			end.setTime(finalDate);
+			end.add(Calendar.DATE, 1);
 
 			List<SkyPointAspect> items = new ArrayList<>();
 			SimpleDateFormat sdf = new SimpleDateFormat("EEEE, d MMMM");
