@@ -101,7 +101,8 @@ public class TransitCycleHandler extends Handler {
 			end.set(Calendar.HOUR_OF_DAY, 0);
 			end.set(Calendar.MINUTE, 0);
 			end.set(Calendar.SECOND, 0);
-			long endtime = end.getTimeInMillis();
+			long startime = initDate.getTime();
+			long endtime = finalDate.getTime();
 
 			String filename = PlatformUtil.getPath(Activator.PLUGIN_ID, "/out/cycle.pdf").getPath();
 			PdfWriter writer = PdfWriter.getInstance(doc, new FileOutputStream(filename));
@@ -229,11 +230,11 @@ public class TransitCycleHandler extends Handler {
 			String[] icodes = new String[] {
 				Ingress._EXACT, Ingress._EXACT_HOUSE,
 				Ingress._SEPARATION, Ingress._SEPARATION_HOUSE,
-				Ingress._REPEAT, Ingress._REPEAT_HOUSE
+				Ingress._REPEAT, Ingress._REPEAT_HOUSE,
+				Ingress._RETRO
 			};
 
 			//создаём аналогичный массив, но с домами вместо дат
-			int j = -1;
 			for (Map.Entry<Integer, Map<Integer, List<Long>>> entry : years.entrySet()) {
 				int y = entry.getKey();
 				Map<Integer, List<Long>> months = years.get(y);
@@ -251,11 +252,11 @@ public class TransitCycleHandler extends Handler {
 						dtexts = new TreeMap<Long, Map<String, List<Object>>>();
 
 					for (Long time : dates) {
-						++j;
 						Date date = new Date(time);
-//						System.out.println(date + ", " + end.get(Calendar.DATE));
-						System.out.println(time + ", " + (endtime - 86400));
-						boolean lastdate = (time == endtime - 86400);
+//						System.out.println(date + ", " + finalDate);
+//						System.out.println(time + ", " + endtime);
+						boolean firstdate = (time == startime);
+						boolean lastdate = (time == endtime);
 						String sdate = DateUtil.formatCustomDateTime(date, "yyyy-MM-dd") + " 12:00:00";
 						Event event = new Event();
 						Date edate = DateUtil.getDatabaseDateTime(sdate);
@@ -287,6 +288,9 @@ public class TransitCycleHandler extends Handler {
 									Planet planet = (Planet)spa.getSkyPoint1();
 									if (planet.getCode().equals("Moon"))
 										continue;
+
+//									if (planet.getCode().equals("Venus"))
+//										System.out.println();
 
 									if (planet.isMain() && !spa.isRetro())
 										continue;
@@ -341,8 +345,26 @@ public class TransitCycleHandler extends Handler {
 											}
 										}
 									} else if (key.contains("EXACT")
-											|| (key.contains("REPEAT") && 0 == j)) {
+											|| (key.contains("REPEAT") && firstdate)) {
 										objects2.add(spa);
+										DatePeriod period = new DatePeriod();
+										period.initdate = time;
+										plist.add(period);
+										periods.put(code, plist);
+									}
+								} else if (object instanceof Planet) { //ретро
+									Planet planet = (Planet)object;
+									List<Object> pobjects = new ArrayList<Object>();
+									pobjects.addAll(ingressList.get(Ingress._REPEAT));
+									pobjects.addAll(ingressList.get(Ingress._REPEAT_HOUSE));
+									for (Object object2 : pobjects) {
+										SkyPointAspect spa = (SkyPointAspect)object2;
+										if (!spa.getSkyPoint1().getId().equals(planet.getId()))
+											continue;
+										spa.setRetro(true);
+										objects2.add(spa);
+										String code = spa.getCode();
+										List<DatePeriod> plist = periods.containsKey(code) ? periods.get(code) : new ArrayList<TransitCycleHandler.DatePeriod>();
 										DatePeriod period = new DatePeriod();
 										period.initdate = time;
 										plist.add(period);
@@ -387,8 +409,6 @@ public class TransitCycleHandler extends Handler {
 					int m = entry2.getKey();
 					Calendar calendar = Calendar.getInstance();
 					calendar.set(y, m, 1);
-					String ym = new SimpleDateFormat("LLLL").format(calendar.getTime()) + " " + y;
-					Section section = PDFUtil.printSection(chapter, ym, null);
 
 					Map<Long, Map<String, List<Object>>> dtexts = mtexts.get(m);
 					if (dtexts.isEmpty())
@@ -417,7 +437,7 @@ public class TransitCycleHandler extends Handler {
 						if (empty) continue;
 
 						String shortdate = sdf.format(new Date(dentry.getKey()));
-						Section daysection = PDFUtil.printSubsection(section, shortdate, null);
+						Section daysection = PDFUtil.printSection(chapter, shortdate, null);
 
 						for (Map.Entry<String, List<Object>> itexts : imap.entrySet()) {
 							List<Object> ingresses = itexts.getValue();
@@ -430,14 +450,12 @@ public class TransitCycleHandler extends Handler {
 		    		                boolean repeat = itexts.getKey().contains("REPEAT");
 									SkyPoint skyPoint = spa.getSkyPoint2();
 									String acode = spa.getAspect().getCode();
-			    		            String rduration = spa.isRetro() ? " и более" : "";
 
 									String prefix = repeat ? "Продолжается: " : "Начинается: ";
 									AspectType type = spa.getAspect().getType();
 									String typeColor = type.getFontColor();
 									BaseColor color = PDFUtil.htmlColor2Base(typeColor);
 									Font colorbold = new Font(baseFont, 12, Font.BOLD, color);
-				    				String tduration = spa.getTransitDuration();
 
 									String til = "";
 									List<DatePeriod> plist = periods.get(spa.getCode());
@@ -447,7 +465,7 @@ public class TransitCycleHandler extends Handler {
 											if (per.finaldate > 0
 													&& time == per.initdate) {
 												Date pdate = new Date(per.finaldate);
-												til = " (до " + spf.format(pdate) + ")";
+												til = " (до " + spf.format(pdate) + " " + y + ")";
 												break;
 											}
 										}
@@ -470,8 +488,6 @@ public class TransitCycleHandler extends Handler {
 											ptext += term ? planet.getName() + " " + type.getSymbol() + " " + house.getDesignation() + " дом" : house.getName();
 
 					    				daysection.addSection(new Paragraph(ptext + til, colorbold));
-					    				if (tduration.length() > 0)
-						    				daysection.add(new Paragraph("Длительность прогноза: " + tduration + rduration, grayfont));
 
 									} else if (skyPoint instanceof Planet) {
 										long aspectid = 0;
@@ -493,8 +509,6 @@ public class TransitCycleHandler extends Handler {
 												ptext += " " + type.getSymbol() + " " + (term ? planet2.getName() : planet2.getShortName());
 										}
 										daysection.addSection(new Paragraph(ptext + til, colorbold));
-					    				if (tduration.length() > 0)
-						    				daysection.add(new Paragraph("Длительность прогноза: " + tduration + rduration, grayfont));
 									}
 	
 									if (text != null) {
@@ -503,22 +517,25 @@ public class TransitCycleHandler extends Handler {
 										p.add(new Chunk(descr, new Font(baseFont, 12, Font.NORMAL, color)));
 										daysection.add(p);
 									}
-									if (spa.isRetro()
-											&& !type.getCode().contains("POSITIVE")) {
-										Phrase phrase = new Phrase("В этот период " + planet.getName() + " находится в ", grayfont);
-										PlanetText planetText = (PlanetText)servicep.findByPlanet(planet.getId(), "retro");
-										if (planetText != null && planetText.getUrl() != null) {
-									        Chunk ch = new Chunk("ретро-фазе", PDFUtil.getLinkFont());
-									        ch.setAnchor(planetText.getUrl());
-									        phrase.add(ch);
-										} else
-											phrase.add(new Chunk("ретро-фазе", grayfont));
-										phrase.add(new Chunk(", поэтому длительность прогноза затянется, а описанные события ", grayfont));
-										String str = acode.equals("CONJUNCTION")
-											? "приобретут для вас особую важность и в будущем ещё напомнят о себе"
-											: "будут носить необратимый характер";
-										phrase.add(new Chunk(str, grayfont));
-										daysection.add(new Paragraph(phrase));
+									if (spa.isRetro() && term) {
+										if (planet.isFictitious()) //15.6.5. четверг, 21 июня 2035 15.12.4. пятница, 14 декабря 2035
+											continue;
+										if (!type.getCode().contains("POSITIVE")) {
+											Phrase phrase = new Phrase("В этот период " + planet.getName() + " находится в ", grayfont);
+											PlanetText planetText = (PlanetText)servicep.findByPlanet(planet.getId(), "retro");
+											if (planetText != null && planetText.getUrl() != null) {
+										        Chunk ch = new Chunk("ретро-фазе", PDFUtil.getLinkFont());
+										        ch.setAnchor(planetText.getUrl());
+										        phrase.add(ch);
+											} else
+												phrase.add(new Chunk("ретро-фазе", grayfont));
+											phrase.add(new Chunk(", поэтому длительность прогноза затянется, а описанные события ", grayfont));
+											String str = acode.equals("CONJUNCTION")
+												? "приобретут для вас особую важность и в будущем ещё напомнят о себе"
+												: "будут носить необратимый характер";
+											phrase.add(new Chunk(str, grayfont));
+											daysection.add(new Paragraph(phrase));
+										}
 									}
 								}
 								daysection.add(Chunk.NEWLINE);

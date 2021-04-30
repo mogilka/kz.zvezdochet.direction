@@ -227,6 +227,9 @@ public class TransitPart extends ModelListView {
 		calendar.set(Calendar.DAY_OF_MONTH, dt.getDay());
 		calendar.set(Calendar.MONTH, dt.getMonth());
 		calendar.set(Calendar.YEAR, dt.getYear());
+		calendar.set(Calendar.HOUR_OF_DAY, 0);
+		calendar.set(Calendar.MINUTE, 0);
+		calendar.set(Calendar.SECOND, 0);
 		return calendar.getTime();
 	}
 
@@ -235,6 +238,9 @@ public class TransitPart extends ModelListView {
 		calendar.set(Calendar.DAY_OF_MONTH, dt2.getDay());
 		calendar.set(Calendar.MONTH, dt2.getMonth());
 		calendar.set(Calendar.YEAR, dt2.getYear());
+		calendar.set(Calendar.HOUR_OF_DAY, 0);
+		calendar.set(Calendar.MINUTE, 0);
+		calendar.set(Calendar.SECOND, 0);
 		return calendar.getTime();
 	}
 

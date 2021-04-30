@@ -142,7 +142,7 @@ public class TransitSaveHandler extends Handler {
 				place = new Place().getDefault();
 			boolean pdefault = place.getId().equals(place.getDefault().getId());
 			
-			text = "Тип прогноза: " + (optimistic ? "оптимистичный" : "реалистичный") + ", полный";
+			text = "Тип прогноза: " + (optimistic ? "оптимистичный" : "реалистичный");
 			p = new Paragraph(text, font);
 	        p.setAlignment(Element.ALIGN_CENTER);
 			chapter.add(p);
