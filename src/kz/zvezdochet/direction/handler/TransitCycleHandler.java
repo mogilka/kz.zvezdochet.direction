@@ -82,7 +82,6 @@ public class TransitCycleHandler extends Handler {
 
 			Event person = periodPart.getPerson();
 			Place place = periodPart.getPlace();
-			double zone = periodPart.getZone();
 
 			int choice = DialogUtil.alertQuestion("Вопрос", "Выберите тип прогноза:", new String[] {"Реалистичный", "Оптимистичный"});
 			boolean optimistic = choice > 0;
@@ -261,8 +260,8 @@ public class TransitCycleHandler extends Handler {
 						Event event = new Event();
 						Date edate = DateUtil.getDatabaseDateTime(sdate);
 						event.setBirth(edate);
-						event.setPlace(place);
-						event.setZone(zone);
+						event.setPlace(place.getDefault());
+						event.setZone(0);
 						event.calc(true);
 
 						Map<String, List<Object>> ingressList = person.initIngresses(event);
