@@ -81,8 +81,6 @@ public class TransitCycleHandler extends Handler {
 			if (!periodPart.check(0)) return;
 
 			Event person = periodPart.getPerson();
-			Place place = periodPart.getPlace();
-
 			int choice = DialogUtil.alertQuestion("Вопрос", "Выберите тип прогноза:", new String[] {"Реалистичный", "Оптимистичный"});
 			boolean optimistic = choice > 0;
 
@@ -135,10 +133,6 @@ public class TransitCycleHandler extends Handler {
 	        p.setAlignment(Element.ALIGN_CENTER);
 			chapter.add(p);
 
-			if (null == place)
-				place = new Place().getDefault();
-			boolean pdefault = place.getId().equals(place.getDefault().getId());
-			
 			text = "Тип прогноза: " + (optimistic ? "оптимистичный" : "реалистичный");
 			p = new Paragraph(text, font);
 	        p.setAlignment(Element.ALIGN_CENTER);
@@ -171,14 +165,6 @@ public class TransitCycleHandler extends Handler {
 			p.add(new Chunk("Общая погрешность прогноза составляет ±" + divergence + ". ", red));
 			chapter.add(p);
 			chapter.add(Chunk.NEWLINE);
-
-	        if (!pdefault) {
-	        	divergence = person.isRectified() ? "2 дня" : "3 дня";
-				chapter.add(new Paragraph("Прогноз сделан для локации «" + place.getName() + "». "
-					+ "Если в течение прогнозного периода вы переедете в более отдалённое место (в другой часовой пояс или с ощутимой сменой географической широты), "
-					+ "то погрешность некоторых прогнозов может составить ±" + divergence + ".", font));
-				chapter.add(Chunk.NEWLINE);
-	        }
 
 			chapter.add(new Paragraph("Если длительность прогноза исчисляется днями, неделями и месяцами, то это не значит, что каждый день будет что-то происходить. "
 	        	+ "Просто вероятность описанных событий будет сохраняться в течение всего периода. "
@@ -260,7 +246,7 @@ public class TransitCycleHandler extends Handler {
 						Event event = new Event();
 						Date edate = DateUtil.getDatabaseDateTime(sdate);
 						event.setBirth(edate);
-						event.setPlace(place.getDefault());
+						event.setPlace(new Place().getDefault());
 						event.setZone(0);
 						event.calc(true);
 
@@ -280,7 +266,7 @@ public class TransitCycleHandler extends Handler {
 
 							List<Object> objects2 = ingressmap.containsKey(key) ? ingressmap.get(key) : new ArrayList<Object>();
 							String[] negatives = {"Kethu", "Lilith"};
-							String[] giants = {"Jupiter", "Saturn"};
+							String[] giants = {"Jupiter"};
 							for (Object object : objects) {
 								if (object instanceof SkyPointAspect) {
 									SkyPointAspect spa = (SkyPointAspect)object;
@@ -296,9 +282,6 @@ public class TransitCycleHandler extends Handler {
 
 									SkyPoint skyPoint = spa.getSkyPoint2();
 									String acode = spa.getAspect().getCode();
-									if (skyPoint instanceof House
-											&& !acode.equals("CONJUNCTION"))
-										continue;
 
 									if (!acode.equals("CONJUNCTION")) {
 										if (planet.isFictitious())
