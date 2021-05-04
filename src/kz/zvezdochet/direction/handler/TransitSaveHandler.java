@@ -651,7 +651,19 @@ public class TransitSaveHandler extends Handler {
 											ptext += term ? planet.getName() + " " + type.getSymbol() + " " + house.getDesignation() + " дом" : house.getName();
 
 					    				daysection.addSection(new Paragraph(ptext, colorbold));
-					    				if (tduration.length() > 0 && !repeat)
+					    				if (term) {
+											String pretext = spa.getAspect().getCode().equals("CONJUNCTION")
+												? (null == house.getGeneral() ? "с куспидом" : "с вершиной")
+												: (null == house.getGeneral() ? "к куспиду" : "к вершине");
+
+											p = new Paragraph();
+											p.add(new Chunk(planet.getMark("house"), grayfont));
+											p.add(new Chunk(spa.getAspect().getName() + " транзитной планеты ", grayfont));
+											p.add(new Chunk(planet.getSymbol(), PDFUtil.getHeaderAstroFont()));
+											p.add(new Chunk(" " + planet.getName(), grayfont));
+											p.add(new Chunk(" " + pretext + " " + house.getDesignation() + " дома", grayfont));
+											daysection.add(p);					    					
+					    				} else if (tduration.length() > 0 && !repeat)
 						    				daysection.add(new Paragraph("Длительность прогноза: " + tduration + rduration, grayfont));
 
 									} else if (skyPoint instanceof Planet) {
@@ -688,7 +700,22 @@ public class TransitSaveHandler extends Handler {
 												ptext += " " + type.getSymbol() + " " + (term ? planet2.getName() : planet2.getShortName());
 										}
 										daysection.addSection(new Paragraph(ptext, colorbold));
-					    				if (tduration.length() > 0 && !repeat)
+										if (term) {
+											String pretext = spa.getAspect().getCode().equals("CONJUNCTION")
+												? "с натальной планетой"
+												: "к натальной планете";
+
+						    				p = new Paragraph();
+						    				if (dirText != null)
+						    					p.add(new Chunk(dirText.getMark(), grayfont));
+								    		p.add(new Chunk(spa.getAspect().getName() + " транзитной планеты ", grayfont));
+						    				p.add(new Chunk(planet.getSymbol(), PDFUtil.getHeaderAstroFont()));
+						    				p.add(new Chunk(" " + planet.getName(), grayfont));
+								    		p.add(new Chunk(" " + pretext + " ", grayfont));
+						    				p.add(new Chunk(planet2.getSymbol(), PDFUtil.getHeaderAstroFont()));
+						    				p.add(new Chunk(" " + planet2.getName(), grayfont));
+						    				daysection.add(p);
+										} else if (tduration.length() > 0 && !repeat)
 						    				daysection.add(new Paragraph("Длительность прогноза: " + tduration + rduration, grayfont));
 									}
 	
@@ -708,25 +735,26 @@ public class TransitSaveHandler extends Handler {
 										p.add(new Chunk(descr, new Font(baseFont, 12, Font.NORMAL, color)));
 										daysection.add(p);
 									}
-									if (spa.isRetro()
-											&& !separation
-											&& !planet.isFictitious()
-											&& !type.getCode().contains("POSITIVE")) {
-										Phrase phrase = new Phrase("В этот период " + planet.getName() + " находится в ", grayfont);
-										PlanetText planetText = (PlanetText)servicep.findByPlanet(planet.getId(), "retro");
-										if (planetText != null && planetText.getUrl() != null) {
-									        Chunk ch = new Chunk("ретро-фазе", PDFUtil.getLinkFont());
-									        ch.setAnchor(planetText.getUrl());
-									        phrase.add(ch);
-										} else
-											phrase.add(new Chunk("ретро-фазе", grayfont));
-										phrase.add(new Chunk(", поэтому длительность прогноза затянется, а описанные события ", grayfont));
-										String str = acode.equals("CONJUNCTION")
-											? "приобретут для вас особую важность и в будущем ещё напомнят о себе"
-											: "будут носить необратимый характер";
-										phrase.add(new Chunk(str, grayfont));
-										daysection.add(new Paragraph(phrase));
-									}
+									if (term)
+										if (spa.isRetro()
+												&& !separation
+												&& !planet.isFictitious()
+												&& !type.getCode().contains("POSITIVE")) {
+											Phrase phrase = new Phrase("В этот период " + planet.getName() + " находится в ", grayfont);
+											PlanetText planetText = (PlanetText)servicep.findByPlanet(planet.getId(), "retro");
+											if (planetText != null && planetText.getUrl() != null) {
+										        Chunk ch = new Chunk("ретро-фазе", PDFUtil.getLinkFont());
+										        ch.setAnchor(planetText.getUrl());
+										        phrase.add(ch);
+											} else
+												phrase.add(new Chunk("ретро-фазе", grayfont));
+											phrase.add(new Chunk(", поэтому длительность прогноза затянется, а описанные события ", grayfont));
+											String str = acode.equals("CONJUNCTION")
+												? "приобретут для вас особую важность и в будущем ещё напомнят о себе"
+												: "будут носить необратимый характер";
+											phrase.add(new Chunk(str, grayfont));
+											daysection.add(new Paragraph(phrase));
+										}
 
 								//изменение движения планеты
 								} else if (object instanceof Planet) {
@@ -742,15 +770,17 @@ public class TransitSaveHandler extends Handler {
 
 				    				@SuppressWarnings("unchecked")
 									List<SkyPointAspect> transits = (List<SkyPointAspect>)planet.getData();
-									if (null == transits || transits.isEmpty())
-										daysection.add(new Paragraph("Как-то ощутимо на вас это не повлияет", grayfont));
-									else {
-										Planet rp = person.getPlanets().get(planet.getId());
-										if (rp.isRetrograde())
-											daysection.add(new Paragraph("В момент вашего рождения планета " + planet.getName() + " двигалась в обратном направлении, поэтому для вас сегодня станут особо актуальными следующие прогнозы:", grayfont));
-										else
-											daysection.add(new Paragraph("Сегодня " + planet.getName() + " меняет направление, поэтому снова станут актуальными следующие прогнозы:", grayfont));
-
+									if (null == transits || transits.isEmpty()) {
+										if (term)
+											daysection.add(new Paragraph("Как-то ощутимо на вас это не повлияет", grayfont));
+									} else {
+										if (term) {
+											Planet rp = person.getPlanets().get(planet.getId());
+											if (rp.isRetrograde())
+												daysection.add(new Paragraph("В момент вашего рождения планета " + planet.getName() + " двигалась в обратном направлении, поэтому для вас сегодня станут особо актуальными следующие прогнозы:", grayfont));
+											else
+												daysection.add(new Paragraph("Сегодня " + planet.getName() + " меняет направление, поэтому снова станут актуальными следующие прогнозы:", grayfont));
+										}
 										for (SkyPointAspect spa : transits) {
 											SkyPoint skyPoint = spa.getSkyPoint2();
 											AspectType type = spa.getAspect().getType();
