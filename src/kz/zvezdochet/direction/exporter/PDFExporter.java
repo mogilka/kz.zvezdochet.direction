@@ -393,50 +393,50 @@ public class PDFExporter {
 				doc.add(Chunk.NEXTPAGE);
 			}
 			
-			if (term) {
-				chapter = new ChapterAutoNumber(PDFUtil.printHeader(new Paragraph(), "Сокращения", null));
-				chapter.setNumberDepth(0);
-
-				chapter.add(new Paragraph("Раздел событий:", font));
-				list = new com.itextpdf.text.List(false, false, 10);
-				li = new ListItem();
-		        li.add(new Chunk("\u2191 — сильная планета, адекватно проявляющая себя в астрологическом доме", font));
-		        list.add(li);
-
-				li = new ListItem();
-		        li.add(new Chunk("\u2193 — ослабленная планета, источник неуверенности, стресса и препятствий", font));
-		        list.add(li);
-
-				li = new ListItem();
-		        li.add(new Chunk("обт — указанный астрологический дом является обителью планеты и облегчает ей естественное и свободное проявление", font));
-		        list.add(li);
-
-				li = new ListItem();
-		        li.add(new Chunk("экз — указанный астрологический дом является местом экзальтации планеты, усиливая её проявления и уравновешивая слабые качества", font));
-		        list.add(li);
-
-				li = new ListItem();
-		        li.add(new Chunk("пдн — указанный астрологический дом является местом падения планеты, где она чувствует себя «не в своей тарелке»", font));
-		        list.add(li);
-
-				li = new ListItem();
-		        li.add(new Chunk("изг — указанный астрологический дом является местом изгнания планеты, ослабляя её проявления и усиливает негатив", font));
-		        list.add(li);
-		        chapter.add(list);
-
-		        chapter.add(Chunk.NEWLINE);
-				chapter.add(new Paragraph("Раздел личности:", font));
-				list = new com.itextpdf.text.List(false, false, 10);
-				li = new ListItem();
-		        li.add(new Chunk("\u2191 — усиленный аспект, проявляющийся ярче других аспектов указанных планет (хорошо для позитивных сочетаний, плохо для негативных)", font));
-		        list.add(li);
-
-				li = new ListItem();
-		        li.add(new Chunk("\u2193 — ослабленный аспект, проявляющийся менее ярко по сравнению с другими аспектами указанных планет (плохо для позитивных сочетаний, хорошо для негативных)", font));
-		        list.add(li);
-		        chapter.add(list);
-				doc.add(chapter);
-			}
+//			if (term) {
+//				chapter = new ChapterAutoNumber(PDFUtil.printHeader(new Paragraph(), "Сокращения", null));
+//				chapter.setNumberDepth(0);
+//
+//				chapter.add(new Paragraph("Раздел событий:", font));
+//				list = new com.itextpdf.text.List(false, false, 10);
+//				li = new ListItem();
+//		        li.add(new Chunk("\u2191 — сильная планета, адекватно проявляющая себя в астрологическом доме", font));
+//		        list.add(li);
+//
+//				li = new ListItem();
+//		        li.add(new Chunk("\u2193 — ослабленная планета, источник неуверенности, стресса и препятствий", font));
+//		        list.add(li);
+//
+//				li = new ListItem();
+//		        li.add(new Chunk("обт — указанный астрологический дом является обителью планеты и облегчает ей естественное и свободное проявление", font));
+//		        list.add(li);
+//
+//				li = new ListItem();
+//		        li.add(new Chunk("экз — указанный астрологический дом является местом экзальтации планеты, усиливая её проявления и уравновешивая слабые качества", font));
+//		        list.add(li);
+//
+//				li = new ListItem();
+//		        li.add(new Chunk("пдн — указанный астрологический дом является местом падения планеты, где она чувствует себя «не в своей тарелке»", font));
+//		        list.add(li);
+//
+//				li = new ListItem();
+//		        li.add(new Chunk("изг — указанный астрологический дом является местом изгнания планеты, ослабляя её проявления и усиливает негатив", font));
+//		        list.add(li);
+//		        chapter.add(list);
+//
+//		        chapter.add(Chunk.NEWLINE);
+//				chapter.add(new Paragraph("Раздел личности:", font));
+//				list = new com.itextpdf.text.List(false, false, 10);
+//				li = new ListItem();
+//		        li.add(new Chunk("\u2191 — усиленный аспект, проявляющийся ярче других аспектов указанных планет (хорошо для позитивных сочетаний, плохо для негативных)", font));
+//		        list.add(li);
+//
+//				li = new ListItem();
+//		        li.add(new Chunk("\u2193 — ослабленный аспект, проявляющийся менее ярко по сравнению с другими аспектами указанных планет (плохо для позитивных сочетаний, хорошо для негативных)", font));
+//		        list.add(li);
+//		        chapter.add(list);
+//				doc.add(chapter);
+//			}
 
 	        if (chartable) {
 				chapter = new ChapterAutoNumber(PDFUtil.printHeader(new Paragraph(), "Диаграммы", null));
@@ -599,14 +599,15 @@ public class PDFExporter {
 					section.addSection(new Paragraph(text, fonth5));
 					if (term) {
 						String pretext = spa.getAspect().getCode().equals("CONJUNCTION")
-							? "с куспидом"
-							: "к куспиду";
+							? (null == house.getGeneral() ? "с куспидом" : "с вершиной")
+							: (null == house.getGeneral() ? "к куспиду" : "к вершине");
 
 						p = new Paragraph();
 	    				p.add(new Chunk(planet.getMark("house"), grayfont));
-			    		p.add(new Chunk(spa.getAspect().getName() + " ", grayfont));
-	    				p.add(new Chunk(planet.getSymbol() + "d", PDFUtil.getHeaderAstroFont()));
-			    		p.add(new Chunk(" " + pretext + " " + house.getDesignation(), grayfont));
+			    		p.add(new Chunk(spa.getAspect().getName() + " дирекционной планеты ", grayfont));
+	    				p.add(new Chunk(planet.getSymbol(), PDFUtil.getHeaderAstroFont()));
+	    				p.add(new Chunk(" " + planet.getName(), grayfont));
+			    		p.add(new Chunk(" " + pretext + " " + house.getDesignation() + " дома", grayfont));
 	    				section.add(p);
 					}
 
@@ -652,16 +653,18 @@ public class PDFExporter {
 
 			    			if (term) {
 								String pretext = spa.getAspect().getCode().equals("CONJUNCTION")
-									? "с "
-									: "к ";
+									? "с натальной планетой"
+									: "к натальной планете";
 
 			    				p = new Paragraph();
 			    				if (dirText != null)
 			    					p.add(new Chunk(dirText.getMark(), grayfont));
-					    		p.add(new Chunk(spa.getAspect().getName() + " ", grayfont));
-			    				p.add(new Chunk(planet.getSymbol() + "d", PDFUtil.getHeaderAstroFont()));
+					    		p.add(new Chunk(spa.getAspect().getName() + " дирекционной планеты ", grayfont));
+			    				p.add(new Chunk(planet.getSymbol(), PDFUtil.getHeaderAstroFont()));
+			    				p.add(new Chunk(" " + planet.getName(), grayfont));
 					    		p.add(new Chunk(" " + pretext + " ", grayfont));
-			    				p.add(new Chunk(planet2.getSymbol() + "r", PDFUtil.getHeaderAstroFont()));
+			    				p.add(new Chunk(planet2.getSymbol(), PDFUtil.getHeaderAstroFont()));
+			    				p.add(new Chunk(" " + planet2.getName(), grayfont));
 			    				section.add(p);
 			    			}
 
