@@ -16,8 +16,6 @@ import org.eclipse.e4.core.contexts.Active;
 import org.eclipse.e4.core.di.annotations.Execute;
 import org.eclipse.e4.ui.model.application.ui.basic.MPart;
 
-import org.jfree.data.time.TimeSeriesDataItem;
-
 import com.itextpdf.text.BaseColor;
 import com.itextpdf.text.Chapter;
 import com.itextpdf.text.ChapterAutoNumber;
@@ -25,6 +23,7 @@ import com.itextpdf.text.Chunk;
 import com.itextpdf.text.Document;
 import com.itextpdf.text.Element;
 import com.itextpdf.text.Font;
+import com.itextpdf.text.ListItem;
 import com.itextpdf.text.Paragraph;
 import com.itextpdf.text.Phrase;
 import com.itextpdf.text.Section;
@@ -45,15 +44,18 @@ import kz.zvezdochet.bean.SkyPointAspect;
 import kz.zvezdochet.core.handler.Handler;
 import kz.zvezdochet.core.ui.util.DialogUtil;
 import kz.zvezdochet.core.util.DateUtil;
+import kz.zvezdochet.core.util.OsUtil;
 import kz.zvezdochet.core.util.PlatformUtil;
 import kz.zvezdochet.direction.Activator;
 import kz.zvezdochet.direction.bean.DirectionText;
 import kz.zvezdochet.direction.part.TransitPart;
 import kz.zvezdochet.direction.service.DirectionAspectService;
 import kz.zvezdochet.direction.service.DirectionService;
+import kz.zvezdochet.export.bean.Bar;
 import kz.zvezdochet.export.handler.PageEventHandler;
 import kz.zvezdochet.export.util.PDFUtil;
 import kz.zvezdochet.service.AspectTypeService;
+import kz.zvezdochet.service.HouseService;
 
 /**
  * Генерация планетарных циклов за указанный период
@@ -169,12 +171,39 @@ public class TransitCycleHandler extends Handler {
 			chapter.add(new Paragraph("Если длительность прогноза исчисляется днями, неделями и месяцами, то это не значит, что каждый день будет что-то происходить. "
 	        	+ "Просто вероятность описанных событий будет сохраняться в течение всего периода. "
 	        	+ "Чаще всего прогноз ярко проявляет себя в первый же день периода, но может сбыться и позже.", font));
+
+			p = new Paragraph("Если в прогнозе упомянуты люди, которых уже нет в живых (родители, супруги, родственники), "
+				+ "значит речь идёт о людях, их заменяющих (опекуны, крёстные) или похожих на них по характеру.", font);
+			p.setSpacingBefore(10);
+			chapter.add(p);
 			chapter.add(Chunk.NEWLINE);
+
+			Font bold = new Font(baseFont, 12, Font.BOLD);
+			chapter.add(new Paragraph("Примечание:", bold));
+			com.itextpdf.text.List list = new com.itextpdf.text.List(false, false, 10);
+	        ListItem li = new ListItem();
+	        li.add(new Chunk("Чёрным цветом выделено самое важное, что с вами произойдёт.", font));
+	        list.add(li);
+
+			Font green = PDFUtil.getSuccessFont();
+			li = new ListItem();
+	        li.add(new Chunk("Зелёным цветом выделены позитивные тенденции. "
+	        	+ "К ним относятся события, которые сами по себе удачно складываются " 
+	        	+ "и представляют собой благоприятные возможности, наполняющие вас энергией. Их надо использовать по максимуму.", green));
+	        list.add(li);
+
+	        if (!optimistic) {
+				li = new ListItem();
+		        li.add(new Chunk("Красным цветом выделены негативные тенденции, которые потребуют расхода энергии. "
+		        	+ "Они указывают на сферы, от которых не нужно ждать многого. "
+		        	+ "Это признак того, что вам необходим отдых, переосмысление и мобилизация ресурсов для решения проблемы.", red));
+		        list.add(li);
+	        }
+	        chapter.add(list);
 	        doc.add(chapter);
 
 			Map<Integer, Map<Integer, List<Long>>> years = new TreeMap<Integer, Map<Integer, List<Long>>>();
-			Map<Integer, Map<Integer, Map<Long, Map<Long, List<TimeSeriesDataItem>>>>> hyears = new TreeMap<Integer, Map<Integer, Map<Long, Map<Long, List<TimeSeriesDataItem>>>>>();
-			Map<Integer, Map<Integer, Map<Long, List<TimeSeriesDataItem>>>> myears = new TreeMap<Integer, Map<Integer, Map<Long, List<TimeSeriesDataItem>>>>();
+			Map<Integer, Map<Integer, Map<Long, Integer>>> myears = new TreeMap<Integer, Map<Integer, Map<Long, Integer>>>();
 			Map<Integer, Map<Integer, Map<Long, Map<String, List<Object>>>>> texts = new TreeMap<Integer, Map<Integer, Map<Long, Map<String, List<Object>>>>>();
 
 			System.out.println("Prepared for: " + (System.currentTimeMillis() - run));
@@ -199,13 +228,9 @@ public class TransitCycleHandler extends Handler {
 				months.put(m, dates);
 				years.put(y, months);
 
-				Map<Integer, Map<Long, Map<Long, List<TimeSeriesDataItem>>>> months2 = hyears.containsKey(y) ? hyears.get(y) : new TreeMap<Integer, Map<Long, Map<Long, List<TimeSeriesDataItem>>>>();
-				months2.put(m, new TreeMap<Long, Map<Long, List<TimeSeriesDataItem>>>());
-				hyears.put(y, months2);
-
-				Map<Integer, Map<Long, List<TimeSeriesDataItem>>> months3 = myears.containsKey(y) ? myears.get(y) : new TreeMap<Integer, Map<Long, List<TimeSeriesDataItem>>>();
-				months3.put(m, new TreeMap<Long, List<TimeSeriesDataItem>>());
-				myears.put(y, months3);
+				Map<Integer, Map<Long, Integer>> months2 = myears.containsKey(y) ? myears.get(y) : new TreeMap<Integer, Map<Long, Integer>>();
+				months2.put(m, new TreeMap<Long, Integer>());
+				myears.put(y, months2);
 			}
 
 			Map<String, List<DatePeriod>> periods = new HashMap<String, List<DatePeriod>>();
@@ -227,6 +252,8 @@ public class TransitCycleHandler extends Handler {
 				if (null == mtexts)
 					mtexts = new TreeMap<Integer, Map<Long, Map<String, List<Object>>>>();
 
+				Map<Integer, Map<Long, Integer>> months2 = myears.containsKey(y) ? myears.get(y) : new TreeMap<Integer, Map<Long, Integer>>();
+
 				//считаем транзиты
 				for (Map.Entry<Integer, List<Long>> entry2 : months.entrySet()) {
 					int m = entry2.getKey();
@@ -235,6 +262,9 @@ public class TransitCycleHandler extends Handler {
 					Map<Long, Map<String, List<Object>>> dtexts = mtexts.get(m);
 					if (null == dtexts)
 						dtexts = new TreeMap<Long, Map<String, List<Object>>>();
+
+					//данные для графика
+					Map<Long, Integer> seriesh = months2.get(m);
 
 					for (Long time : dates) {
 						Date date = new Date(time);
@@ -274,8 +304,8 @@ public class TransitCycleHandler extends Handler {
 									if (planet.getCode().equals("Moon"))
 										continue;
 
-//									if (planet.getCode().equals("Venus"))
-//										System.out.println();
+//									if (planet.getCode().equals("Mars"))
+//										System.out.println(spa);
 
 									if (planet.isMain() && !spa.isRetro())
 										continue;
@@ -334,6 +364,29 @@ public class TransitCycleHandler extends Handler {
 										plist.add(period);
 										periods.put(code, plist);
 									}
+
+									//данные для диаграммы месяца
+									if (housable) {
+										if (key.contains("EXACT") || key.contains("REPEAT")) {
+											String tcode = spa.getAspect().getType().getCode();
+											int point = 0;
+											if (tcode.equals("NEUTRAL")) {
+												if (Arrays.asList(negatives).contains(planet.getCode()))
+													--point;
+												else
+													++point;
+											} else if (tcode.equals("POSITIVE"))
+												++point;
+											else if (tcode.equals("NEGATIVE"))
+												--point;
+
+											long houseid = spa.getSkyPoint2().getId();
+											//данные для диаграммы сфер жизни
+											int val = seriesh.containsKey(houseid) ? seriesh.get(houseid) : 0;
+											seriesh.put(houseid, val + point);
+										}										
+									}
+
 								} else if (object instanceof Planet) { //ретро
 									Planet planet = (Planet)object;
 									List<Object> pobjects = new ArrayList<Object>();
@@ -360,6 +413,7 @@ public class TransitCycleHandler extends Handler {
 						mtexts.put(m, dtexts);
 						texts.put(y, mtexts);
 					}
+					months2.put(m, seriesh);
 				}
 			}
 			years = null;
@@ -372,25 +426,46 @@ public class TransitCycleHandler extends Handler {
 			DirectionService service = new DirectionService();
 			DirectionAspectService servicea = new DirectionAspectService();
 			PlanetTextService servicep = new PlanetTextService();
+			HouseService serviceh = new HouseService();
 
 			AspectTypeService typeService = new AspectTypeService();
 			AspectType positiveType = (AspectType)typeService.find(3L);
 
 	        //года
-			for (Map.Entry<Integer, Map<Integer, Map<Long, Map<Long, List<TimeSeriesDataItem>>>>> entry : hyears.entrySet()) {
+			for (Map.Entry<Integer, Map<Integer, Map<Long, Integer>>> entry : myears.entrySet()) {
 				int y = entry.getKey();
 				String syear = String.valueOf(y);
 				chapter = new ChapterAutoNumber(PDFUtil.printHeader(new Paragraph(), syear + " год", null));
 				chapter.setNumberDepth(0);
 
 				//месяцы
-				Map<Integer, Map<Long, Map<Long, List<TimeSeriesDataItem>>>> months2 = hyears.get(y);
+				Map<Integer, Map<Long, Integer>> months2 = myears.get(y);
 				Map<Integer, Map<Long, Map<String, List<Object>>>> mtexts = texts.get(y);
 
-				for (Map.Entry<Integer, Map<Long, Map<Long, List<TimeSeriesDataItem>>>> entry2 : months2.entrySet()) {
+				for (Map.Entry<Integer, Map<Long, Map<String, List<Object>>>> entry2 : mtexts.entrySet()) {
 					int m = entry2.getKey();
 					Calendar calendar = Calendar.getInstance();
 					calendar.set(y, m, 1);
+					String ym = new SimpleDateFormat("LLLL").format(calendar.getTime()) + " " + y;
+					Section section = PDFUtil.printSection(chapter, ym, null);
+
+					//диаграмма месяца
+					printDiagramDescr(section, font);
+					Map<Long, Integer> seriesh = months2.get(m);
+					Bar[] items = new Bar[seriesh.size()];
+					int i = -1;
+					for (Map.Entry<Long, Integer> entry3 : seriesh.entrySet()) {
+						House house = (House)serviceh.find(entry3.getKey());
+						Bar bar = new Bar();
+				    	bar.setName(house.getName());
+					    bar.setValue(entry3.getValue());
+						bar.setColor(house.getColor());
+						bar.setCategory(ym);
+						items[++i] = bar;
+					}
+					section.add(PDFUtil.printBars(writer, "", null, "Сферы жизни", "Баллы", items, 500, 300, false, false, false));
+					section.add(new Paragraph("Ниже приведён прогноз по этим сферам жизни", font));
+					section.add(Chunk.NEWLINE);
 
 					Map<Long, Map<String, List<Object>>> dtexts = mtexts.get(m);
 					if (dtexts.isEmpty())
@@ -405,7 +480,7 @@ public class TransitCycleHandler extends Handler {
 									if (object instanceof SkyPointAspect) {
 										SkyPointAspect spa = (SkyPointAspect)object;
 										Planet planet = (Planet)spa.getSkyPoint1();
-			    		                boolean main = planet.isMain();
+			    		                boolean main = planet.isMain() && !spa.isRetro();
 			    		                if (main)
 			        		                continue;
 			    		                else {
@@ -419,7 +494,7 @@ public class TransitCycleHandler extends Handler {
 						if (empty) continue;
 
 						String shortdate = sdf.format(new Date(dentry.getKey()));
-						Section daysection = PDFUtil.printSection(chapter, shortdate, null);
+						Section daysection = PDFUtil.printSubsection(section, shortdate, null);
 
 						for (Map.Entry<String, List<Object>> itexts : imap.entrySet()) {
 							List<Object> ingresses = itexts.getValue();
@@ -529,7 +604,7 @@ public class TransitCycleHandler extends Handler {
 				}
 				doc.add(chapter);
 			}
-			hyears = null;
+			myears = null;
 	        doc.add(PDFUtil.printCopyright());
 
 	        long time = System.currentTimeMillis();
@@ -549,6 +624,35 @@ public class TransitCycleHandler extends Handler {
 		@Override
 		public String toString() {
 			return initdate + " - " + finaldate;
+		}
+	}
+
+	/**
+	 * Выводим описание диаграммы возраста
+	 * @param section раздел
+	 * @param font шрифт
+	 */
+	private void printDiagramDescr(Section section, Font font) {
+		if (OsUtil.getOS().equals(OsUtil.OS.LINUX)) {
+			String text = "Диаграмма показывает, какие сферы жизни будут актуальны в течение месяца:";
+			section.add(new Paragraph(text, font));
+	
+			com.itextpdf.text.List list = new com.itextpdf.text.List(false, false, 10);
+			ListItem li = new ListItem();
+	        li.add(new Chunk("Показатели выше нуля указывают на успех и лёгкость", new Font(baseFont, 12, Font.NORMAL, new BaseColor(0, 102, 102))));
+	        list.add(li);
+	
+			li = new ListItem();
+	        li.add(new Chunk("Показатели на нуле указывают на нейтральность ситуации", font));
+	        list.add(li);
+	
+			li = new ListItem();
+	        li.add(new Chunk("Показатели ниже нуля указывают на трудности и напряжение", new Font(baseFont, 12, Font.NORMAL, new BaseColor(102, 0, 51))));
+	        list.add(li);
+	        section.add(list);
+		} else {
+			String text = "Диаграмма показывает, какие сферы жизни будут актуальны в течение месяца:";
+			section.add(new Paragraph(text, font));			
 		}
 	}
 }
