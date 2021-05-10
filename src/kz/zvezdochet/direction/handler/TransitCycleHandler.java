@@ -200,6 +200,19 @@ public class TransitCycleHandler extends Handler {
 		        list.add(li);
 	        }
 	        chapter.add(list);
+
+	        chapter.add(Chunk.NEWLINE);
+	        chapter.add(new Paragraph("Заголовки абзацев (например, «Добро + Прибыль») используются для структурирования текста и "
+	        	+ "указывают на сферу жизни, к которой относится описываемое событие.", font));
+
+			if (person.isChild()) {
+				p = new Paragraph("Т.к. прогноз составлен на ребёнка, то следует учесть, "
+					+ "что толкования ориентированы на взрослых людей, и их нужно адаптировать к ситуации ребёнка. "
+					+ "Например, если в тексте речь идёт о работе, значит имеется в виду учёба; "
+					+ "если речь идёт о сотрудничестве, значит имеются в виду ребята из других классов и сообществ и т.п.", red);
+				p.setSpacingBefore(10);
+				chapter.add(p);				
+			}
 	        doc.add(chapter);
 
 			Map<Integer, Map<Integer, List<Long>>> years = new TreeMap<Integer, Map<Integer, List<Long>>>();
