@@ -50,6 +50,7 @@ import kz.zvezdochet.bean.SkyPointAspect;
 import kz.zvezdochet.core.handler.Handler;
 import kz.zvezdochet.core.ui.util.DialogUtil;
 import kz.zvezdochet.core.util.DateUtil;
+import kz.zvezdochet.core.util.OsUtil;
 import kz.zvezdochet.core.util.PlatformUtil;
 import kz.zvezdochet.direction.Activator;
 import kz.zvezdochet.direction.bean.DirectionText;
@@ -241,6 +242,7 @@ public class TransitSaveHandler extends Handler {
 			Map<Integer, Map<Integer, Map<Long, Map<Long, List<TimeSeriesDataItem>>>>> hyears = new TreeMap<Integer, Map<Integer, Map<Long, Map<Long, List<TimeSeriesDataItem>>>>>();
 			Map<Integer, Map<Integer, Map<Long, List<TimeSeriesDataItem>>>> myears = new TreeMap<Integer, Map<Integer, Map<Long, List<TimeSeriesDataItem>>>>();
 			Map<Integer, Map<Integer, Map<Long, Map<String, List<Object>>>>> texts = new TreeMap<Integer, Map<Integer, Map<Long, Map<String, List<Object>>>>>();
+			Map<Integer, Map<Integer, Map<Long, Integer>>> myears2 = new TreeMap<Integer, Map<Integer, Map<Long, Integer>>>();
 
 			System.out.println("Prepared for: " + (System.currentTimeMillis() - run));
 			run = System.currentTimeMillis();
@@ -268,6 +270,10 @@ public class TransitSaveHandler extends Handler {
 				Map<Integer, Map<Long, List<TimeSeriesDataItem>>> months3 = myears.containsKey(y) ? myears.get(y) : new TreeMap<Integer, Map<Long, List<TimeSeriesDataItem>>>();
 				months3.put(m, new TreeMap<Long, List<TimeSeriesDataItem>>());
 				myears.put(y, months3);
+
+				Map<Integer, Map<Long, Integer>> months4 = myears2.containsKey(y) ? myears2.get(y) : new TreeMap<Integer, Map<Long, Integer>>();
+				months4.put(m, new TreeMap<Long, Integer>());
+				myears2.put(y, months4);
 			}
 
 			Map<Integer, Map<String, Map<Integer,Integer>>> yitems = new TreeMap<Integer, Map<String,Map<Integer,Integer>>>();
@@ -294,6 +300,8 @@ public class TransitSaveHandler extends Handler {
 					negative.put(i, 0);
 				}
 
+				Map<Integer, Map<Long, Integer>> months4 = myears2.containsKey(y) ? myears2.get(y) : new TreeMap<Integer, Map<Long, Integer>>();
+
 				//считаем транзиты
 				for (Map.Entry<Integer, List<Long>> entry2 : months.entrySet()) {
 					int m = entry2.getKey();
@@ -303,6 +311,8 @@ public class TransitSaveHandler extends Handler {
 					Map<Long, Map<String, List<Object>>> dtexts = mtexts.get(m);
 					if (null == dtexts)
 						dtexts = new TreeMap<Long, Map<String, List<Object>>>();
+
+					Map<Long, Integer> seriesh = months4.get(m);
 
 					for (Long time : dates) {
 						++j;
@@ -388,6 +398,7 @@ public class TransitSaveHandler extends Handler {
 
 						Map<Long, Map<Long, Integer>> hitems = new HashMap<Long, Map<Long, Integer>>();
 						Map<Long, Integer> mitems = new HashMap<Long, Integer>();
+						String[] negatives = {"Kethu", "Lilith"};
 
 						for (Map.Entry<String, List<Object>> ientry : ingressList.entrySet()) {
 							if (ientry.getKey().contains("SEPARATION"))
@@ -427,6 +438,24 @@ public class TransitSaveHandler extends Handler {
 									val = amap.containsKey(aid) ? amap.get(aid) : 0;
 									amap.put(aid, val + 1);
 									hitems.put(id, amap);
+
+									//данные для диаграммы сфер жизни
+									if (skyPoint.getCode().equals("Moon"))
+										continue;
+									String tcode = spa.getAspect().getType().getCode();
+									int point = 0;
+									if (tcode.equals("NEUTRAL")) {
+										if (Arrays.asList(negatives).contains(skyPoint.getCode()))
+											--point;
+										else
+											++point;
+									} else if (tcode.equals("POSITIVE"))
+										++point;
+									else if (tcode.equals("NEGATIVE"))
+										--point;
+
+									val = seriesh.containsKey(id) ? seriesh.get(id) : 0;
+									seriesh.put(id, val + point);
 								}
 							}
 						}
@@ -460,6 +489,7 @@ public class TransitSaveHandler extends Handler {
 						}
 						months3.put(m, map);
 					}
+					months4.put(m, seriesh);
 				}
 				Map<String, Map<Integer,Integer>> ymap = new HashMap<String, Map<Integer,Integer>>();
 				ymap.put("positive", positive);
@@ -510,6 +540,7 @@ public class TransitSaveHandler extends Handler {
 				Map<Integer, Map<Long, Map<Long, List<TimeSeriesDataItem>>>> months2 = hyears.get(y);
 				Map<Integer, Map<Long, List<TimeSeriesDataItem>>> months3 = myears.get(y);
 				Map<Integer, Map<Long, Map<String, List<Object>>>> mtexts = texts.get(y);
+				Map<Integer, Map<Long, Integer>> months4 = myears2.get(y);
 
 				for (Map.Entry<Integer, Map<Long, Map<Long, List<TimeSeriesDataItem>>>> entry2 : months2.entrySet()) {
 					int m = entry2.getKey();
@@ -518,7 +549,7 @@ public class TransitSaveHandler extends Handler {
 					String ym = new SimpleDateFormat("LLLL").format(calendar.getTime()) + " " + y;
 					section = PDFUtil.printSection(chapter, ym, null);
 
-					//диаграмма месяца
+					//график месяца
 					Map<Long, List<TimeSeriesDataItem>> mitems = months3.get(m);
 					TimeSeriesCollection dataset = new TimeSeriesCollection();
 					for (Map.Entry<Long, List<TimeSeriesDataItem>> entry3 : mitems.entrySet()) {
@@ -536,15 +567,37 @@ public class TransitSaveHandler extends Handler {
 						section.add(image);
 						section.add(Chunk.NEWLINE);
 					}
-
 		 			p = new Paragraph();
-		 			p.add(new Chunk("Диаграммы месяца по сферам жизни приведены ", font));
+		 			p.add(new Chunk("Графики месяца по дням и сферам жизни приведены ", font));
 		        	Anchor anchor = new Anchor("ниже", fonta);
 		        	anchor.setReference("#charts" + m + "" + y);
 		 	        p.add(anchor);
 		 			section.add(p);
 					section.add(Chunk.NEWLINE);
-					
+
+					//диаграмма месяца
+					printDiagramDescr(section, font);
+					Map<Long, Integer> seriesh = months4.get(m);
+					List<Bar> ditems = new ArrayList<Bar>();
+					int i = -1;
+					for (Map.Entry<Long, Integer> entry3 : seriesh.entrySet()) {
+						int val = entry3.getValue();
+						if (Math.abs(val) < 2)
+							continue;
+						House house = houses.get(entry3.getKey());
+						Bar bar = new Bar();
+				    	bar.setName(house.getName());
+					    bar.setValue(val);
+						bar.setColor(house.getColor());
+						bar.setCategory(ym);
+						ditems.add(bar);
+					}
+					bars = new Bar[ditems.size()];
+					ditems.toArray(bars);
+					section.add(PDFUtil.printBars(writer, "", null, "Сферы жизни", "Баллы", bars, 500, 300, false, false, false));
+					section.add(new Paragraph("Далее приведён прогноз по этим сферам жизни", font));
+					section.add(Chunk.NEWLINE);
+
 					Map<Long, Map<String, List<Object>>> dtexts = mtexts.get(m);
 					if (dtexts.isEmpty())
 						continue;
@@ -735,12 +788,13 @@ public class TransitSaveHandler extends Handler {
 										p.add(new Chunk(descr, new Font(baseFont, 12, Font.NORMAL, color)));
 										daysection.add(p);
 									}
-									if (term)
-										if (spa.isRetro()
-												&& !separation
-												&& !planet.isFictitious()
-												&& !type.getCode().contains("POSITIVE")) {
-											Phrase phrase = new Phrase("В этот период " + planet.getName() + " находится в ", grayfont);
+									if (spa.isRetro()
+											&& !separation
+											&& !planet.isFictitious()
+											&& !type.getCode().contains("POSITIVE")) {
+										Phrase phrase = new Phrase();
+										if (term) {
+											phrase.add(new Chunk("В этот период " + planet.getName() + " находится в ", grayfont));
 											PlanetText planetText = (PlanetText)servicep.findByPlanet(planet.getId(), "retro");
 											if (planetText != null && planetText.getUrl() != null) {
 										        Chunk ch = new Chunk("ретро-фазе", PDFUtil.getLinkFont());
@@ -753,8 +807,15 @@ public class TransitSaveHandler extends Handler {
 												? "приобретут для вас особую важность и в будущем ещё напомнят о себе"
 												: "будут носить необратимый характер";
 											phrase.add(new Chunk(str, grayfont));
-											daysection.add(new Paragraph(phrase));
+										} else {
+											phrase.add(new Chunk("Длительность прогноза затянется, а описанные события ", grayfont));
+											String str = acode.equals("CONJUNCTION")
+												? "приобретут для вас особую важность и в будущем ещё напомнят о себе"
+												: "будут носить необратимый характер";
+											phrase.add(new Chunk(str, grayfont));											
 										}
+										daysection.add(new Paragraph(phrase));
+									}
 
 								//изменение движения планеты
 								} else if (object instanceof Planet) {
@@ -779,8 +840,10 @@ public class TransitSaveHandler extends Handler {
 											if (rp.isRetrograde())
 												daysection.add(new Paragraph("В момент вашего рождения планета " + planet.getName() + " двигалась в обратном направлении, поэтому для вас сегодня станут особо актуальными следующие прогнозы:", grayfont));
 											else
-												daysection.add(new Paragraph("Сегодня " + planet.getName() + " меняет направление, поэтому снова станут актуальными следующие прогнозы:", grayfont));
-										}
+												daysection.add(new Paragraph("Сегодня " + planet.getName() + " меняет направление, поэтому снова станут актуальны следующие прогнозы:", grayfont));
+										} else
+											daysection.add(new Paragraph("Поэтому снова станут актуальны следующие прогнозы:", grayfont));
+
 										for (SkyPointAspect spa : transits) {
 											SkyPoint skyPoint = spa.getSkyPoint2();
 											AspectType type = spa.getAspect().getType();
@@ -859,7 +922,7 @@ public class TransitSaveHandler extends Handler {
 			        section.add(Chunk.NEWLINE);
 
 					Map<Long, Map<Long, List<TimeSeriesDataItem>>> items = entry2.getValue();
-			        int i = -1;
+			        i = -1;
 					for (Map.Entry<Long, Map<Long, List<TimeSeriesDataItem>>> entryh : items.entrySet()) {
 						long houseid = entryh.getKey();
 						House house = houses.get(houseid);
@@ -903,6 +966,31 @@ public class TransitSaveHandler extends Handler {
 			e.printStackTrace();
 		} finally {
 	        doc.close();
+		}
+	}
+
+	/**
+	 * Выводим описание диаграммы возраста
+	 * @param section раздел
+	 * @param font шрифт
+	 */
+	private void printDiagramDescr(Section section, Font font) {
+		if (OsUtil.getOS().equals(OsUtil.OS.LINUX)) {
+			String text = "Следующая диаграмма показывает, какие сферы жизни будут актуальны в течение месяца:";
+			section.add(new Paragraph(text, font));
+	
+			com.itextpdf.text.List list = new com.itextpdf.text.List(false, false, 10);
+			ListItem li = new ListItem();
+	        li.add(new Chunk("Показатели выше нуля указывают на успех и лёгкость", new Font(baseFont, 12, Font.NORMAL, new BaseColor(0, 102, 102))));
+	        list.add(li);
+	
+			li = new ListItem();
+	        li.add(new Chunk("Показатели ниже нуля указывают на трудности и напряжение", new Font(baseFont, 12, Font.NORMAL, new BaseColor(102, 0, 51))));
+	        list.add(li);
+	        section.add(list);
+		} else {
+			String text = "Следующая диаграмма показывает, какие сферы жизни будут актуальны в течение месяца:";
+			section.add(new Paragraph(text, font));			
 		}
 	}
 }
