@@ -55,7 +55,6 @@ import kz.zvezdochet.export.bean.Bar;
 import kz.zvezdochet.export.handler.PageEventHandler;
 import kz.zvezdochet.export.util.PDFUtil;
 import kz.zvezdochet.service.AspectTypeService;
-import kz.zvezdochet.service.HouseService;
 
 /**
  * Генерация планетарных циклов за указанный период
@@ -83,6 +82,7 @@ public class TransitCycleHandler extends Handler {
 			if (!periodPart.check(0)) return;
 
 			Event person = periodPart.getPerson();
+			Map<Long, House> houses = person.getHouses();
 			int choice = DialogUtil.alertQuestion("Вопрос", "Выберите тип прогноза:", new String[] {"Реалистичный", "Оптимистичный"});
 			boolean optimistic = choice > 0;
 
@@ -439,7 +439,6 @@ public class TransitCycleHandler extends Handler {
 			DirectionService service = new DirectionService();
 			DirectionAspectService servicea = new DirectionAspectService();
 			PlanetTextService servicep = new PlanetTextService();
-			HouseService serviceh = new HouseService();
 
 			AspectTypeService typeService = new AspectTypeService();
 			AspectType positiveType = (AspectType)typeService.find(3L);
@@ -468,7 +467,7 @@ public class TransitCycleHandler extends Handler {
 					Bar[] items = new Bar[seriesh.size()];
 					int i = -1;
 					for (Map.Entry<Long, Integer> entry3 : seriesh.entrySet()) {
-						House house = (House)serviceh.find(entry3.getKey());
+						House house = houses.get(entry3.getKey());
 						Bar bar = new Bar();
 				    	bar.setName(house.getName());
 					    bar.setValue(entry3.getValue());
