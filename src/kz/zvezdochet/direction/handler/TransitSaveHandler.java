@@ -980,30 +980,26 @@ public class TransitSaveHandler extends Handler {
 					Map<Long, TreeMap<Integer, Integer>> mtypes = entryh.getValue();
 					if (mtypes.isEmpty())
 						continue;
-					Map<String, Object[]> types = new HashMap<String, Object[]>();
+					DefaultCategoryDataset dataset = new DefaultCategoryDataset();
 		        	for (Map.Entry<Long, TreeMap<Integer, Integer>> entrya : mtypes.entrySet()) {
 		        		TreeMap<Integer, Integer> atypes = entrya.getValue();
 						if (atypes.isEmpty())
 							continue;
 
 						Long aid = entrya.getKey();
-						List<Integer> names = new ArrayList<Integer>();
-						List<Integer> values = new ArrayList<Integer>();
+						String name = (aid < 2 ? "Важное" : (aid < 3 ? "Негатив" : "Позитив"));
 			        	for (Map.Entry<Integer, Integer> entrym : atypes.entrySet()) {
 			        		int m = entrym.getKey();
-			        		names.add(m + 1);
-			        		values.add(entrym.getValue());
+							dataset.addValue(entrym.getValue(), name, Integer.valueOf(m + 1));
 			        	}
-						String name = (aid < 2 ? "Важное" : (aid < 3 ? "Негатив" : "Позитив"));
-			        	types.put(name, new Object[] {names, values});
 		        	}
-		        	if (types.isEmpty())
-		        		continue;
-					section.addSection(new Paragraph(house.getName(), hfont));
-		        	section.add(new Paragraph(y + ": " + house.getDescription(), font));
-				    image = PDFUtil.printGraphics(writer, "", "", "Баллы", types , 500, 0, true);
-					section.add(image);
-					section.add(Chunk.NEWLINE);
+		        	if (dataset.getColumnCount() > 0) {
+						section.addSection(new Paragraph(house.getName(), hfont));
+			        	section.add(new Paragraph(y + ": " + house.getDescription(), font));
+					    image = PDFUtil.printLineChart(writer, "", "", "Баллы", dataset , 500, 0, true);
+						section.add(image);
+						section.add(Chunk.NEWLINE);
+		        	}
 				}
 				doc.add(chapter);
 			}
