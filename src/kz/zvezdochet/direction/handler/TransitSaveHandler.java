@@ -15,6 +15,7 @@ import java.util.TreeMap;
 import org.eclipse.e4.core.contexts.Active;
 import org.eclipse.e4.core.di.annotations.Execute;
 import org.eclipse.e4.ui.model.application.ui.basic.MPart;
+import org.jfree.data.category.DefaultCategoryDataset;
 import org.jfree.data.time.Day;
 import org.jfree.data.time.TimeSeries;
 import org.jfree.data.time.TimeSeriesCollection;
@@ -243,7 +244,7 @@ public class TransitSaveHandler extends Handler {
 			Map<Integer, Map<Integer, Map<Long, List<TimeSeriesDataItem>>>> myears = new TreeMap<Integer, Map<Integer, Map<Long, List<TimeSeriesDataItem>>>>();
 			Map<Integer, Map<Integer, Map<Long, Map<String, List<Object>>>>> texts = new TreeMap<Integer, Map<Integer, Map<Long, Map<String, List<Object>>>>>();
 			Map<Integer, Map<Integer, Map<Long, Integer>>> myears2 = new TreeMap<Integer, Map<Integer, Map<Long, Integer>>>();
-			Map<Integer, Map<Long, Map<Long, Map<Integer, Integer>>>> hyears2 = new TreeMap<Integer, Map<Long, Map<Long, Map<Integer, Integer>>>>();
+			Map<Integer, Map<Long, Map<Long, TreeMap<Integer, Integer>>>> hyears2 = new TreeMap<Integer, Map<Long, Map<Long, TreeMap<Integer, Integer>>>>();
 
 			System.out.println("Prepared for: " + (System.currentTimeMillis() - run));
 			run = System.currentTimeMillis();
@@ -276,13 +277,13 @@ public class TransitSaveHandler extends Handler {
 				months4.put(m, new TreeMap<Long, Integer>());
 				myears2.put(y, months4);
 
-				Map<Long, Map<Long, Map<Integer, Integer>>> yhouses = hyears2.containsKey(y) ? hyears2.get(y) : new TreeMap<Long, Map<Long, Map<Integer, Integer>>>();
+				Map<Long, Map<Long, TreeMap<Integer, Integer>>> yhouses = hyears2.containsKey(y) ? hyears2.get(y) : new TreeMap<Long, Map<Long, TreeMap<Integer, Integer>>>();
 				for (House h : houses.values())
-					yhouses.put(h.getId(), new TreeMap<Long, Map<Integer, Integer>>());
+					yhouses.put(h.getId(), new TreeMap<Long, TreeMap<Integer, Integer>>());
 				hyears2.put(y, yhouses);
 			}
 
-			Map<Integer, Map<String, Map<Integer,Integer>>> yitems = new TreeMap<Integer, Map<String,Map<Integer,Integer>>>();
+			Map<Integer, Map<String, Map<Integer,Integer>>> yitems = new TreeMap<Integer, Map<String, Map<Integer,Integer>>>();
 			/**
 			 * коды ингрессий, используемых в отчёте
 			 */
@@ -307,7 +308,7 @@ public class TransitSaveHandler extends Handler {
 				}
 
 				Map<Integer, Map<Long, Integer>> months4 = myears2.containsKey(y) ? myears2.get(y) : new TreeMap<Integer, Map<Long, Integer>>();
-				Map<Long, Map<Long, Map<Integer, Integer>>> yhouses = hyears2.containsKey(y) ? hyears2.get(y) : new TreeMap<Long, Map<Long, Map<Integer, Integer>>>();
+				Map<Long, Map<Long, TreeMap<Integer, Integer>>> yhouses = hyears2.containsKey(y) ? hyears2.get(y) : new TreeMap<Long, Map<Long, TreeMap<Integer, Integer>>>();
 
 				//считаем транзиты
 				for (Map.Entry<Integer, List<Long>> entry2 : months.entrySet()) {
@@ -466,8 +467,8 @@ public class TransitSaveHandler extends Handler {
 									seriesh.put(id, val + point);
 
 									//данные для графиков домов года
-									Map<Long, Map<Integer, Integer>> htypes = yhouses.containsKey(id) ? yhouses.get(id) : new TreeMap<Long, Map<Integer, Integer>>();
-									Map<Integer, Integer> hmonths = htypes.containsKey(aid) ? htypes.get(aid) : new TreeMap<Integer, Integer>();
+									Map<Long, TreeMap<Integer, Integer>> htypes = yhouses.containsKey(id) ? yhouses.get(id) : new TreeMap<Long, TreeMap<Integer, Integer>>();
+									TreeMap<Integer, Integer> hmonths = htypes.containsKey(aid) ? htypes.get(aid) : new TreeMap<Integer, Integer>();
 									val = hmonths.containsKey(m) ? hmonths.get(m) : 0;
 									hmonths.put(m, val + 1);
 									htypes.put(aid, hmonths);
@@ -968,37 +969,37 @@ public class TransitSaveHandler extends Handler {
 //							section.add(Chunk.NEWLINE);
 //			        	}
 //					}
-			        chapter.add(Chunk.NEXTPAGE);
+//			        chapter.add(Chunk.NEXTPAGE);
 				}
 				//графики года
-				Map<Long, Map<Long, Map<Integer, Integer>>> yhouses = hyears2.get(y);
-				for (Map.Entry<Long, Map<Long, Map<Integer, Integer>>> entryh : yhouses.entrySet()) {
+				section = PDFUtil.printSection(chapter, "Диаграммы " + y + " года", null);
+				Map<Long, Map<Long, TreeMap<Integer, Integer>>> yhouses = hyears2.get(y);
+				for (Map.Entry<Long, Map<Long, TreeMap<Integer, Integer>>> entryh : yhouses.entrySet()) {
 					long houseid = entryh.getKey();
 					House house = houses.get(houseid);
-					Map<Long, Map<Integer, Integer>> mtypes = entryh.getValue();
+					Map<Long, TreeMap<Integer, Integer>> mtypes = entryh.getValue();
 					if (mtypes.isEmpty())
 						continue;
-					section.addSection(new Paragraph(house.getName(), hfont));
-		        	section.add(new Paragraph(y + ": " + house.getDescription(), font));
-		        	Map<String, Object[]> types = new HashMap<String, Object[]>();
-		        	for (Map.Entry<Long, Map<Integer, Integer>> entrya : mtypes.entrySet()) {
-		        		Map<Integer, Integer> atypes = entrya.getValue();
+					DefaultCategoryDataset dataset = new DefaultCategoryDataset();
+		        	for (Map.Entry<Long, TreeMap<Integer, Integer>> entrya : mtypes.entrySet()) {
+		        		TreeMap<Integer, Integer> atypes = entrya.getValue();
 						if (atypes.isEmpty())
 							continue;
 
 						Long aid = entrya.getKey();
-						List<String> names = new ArrayList<String>();
-						List<Integer> values = new ArrayList<Integer>();
-
-		        		for (int m : atypes.keySet()) {
-							names.add(DateUtil.getMonthName(m));
-							values.add(atypes.get(m));
-		        		}
-		        		types.put(aid.toString(), new Object[] {names, values});
+						String name = (aid < 2 ? "Важное" : (aid < 3 ? "Негатив" : "Позитив"));
+			        	for (Map.Entry<Integer, Integer> entrym : atypes.entrySet()) {
+			        		int m = entrym.getKey();
+							dataset.addValue(entrym.getValue(), name, Integer.valueOf(m + 1));
+			        	}
 		        	}
-				    image = PDFUtil.printGraphics(writer, "", "", "Баллы", types, 500, 0, true);
-					section.add(image);
-					section.add(Chunk.NEWLINE);
+		        	if (dataset.getColumnCount() > 0) {
+						section.addSection(new Paragraph(house.getName(), hfont));
+			        	section.add(new Paragraph(y + ": " + house.getDescription(), font));
+					    image = PDFUtil.printLineChart(writer, "", "", "Баллы", dataset , 500, 0, true);
+						section.add(image);
+						section.add(Chunk.NEWLINE);
+		        	}
 				}
 				doc.add(chapter);
 			}
