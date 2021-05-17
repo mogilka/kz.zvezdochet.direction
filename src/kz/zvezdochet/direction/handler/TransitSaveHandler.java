@@ -15,7 +15,6 @@ import java.util.TreeMap;
 import org.eclipse.e4.core.contexts.Active;
 import org.eclipse.e4.core.di.annotations.Execute;
 import org.eclipse.e4.ui.model.application.ui.basic.MPart;
-import org.jfree.data.category.DefaultCategoryDataset;
 import org.jfree.data.time.Day;
 import org.jfree.data.time.TimeSeries;
 import org.jfree.data.time.TimeSeriesCollection;
@@ -204,24 +203,20 @@ public class TransitSaveHandler extends Handler {
 
 			Font fonth5 = PDFUtil.getHeaderFont();
 			chapter.add(new Paragraph("Диаграммы", fonth5));
-			chapter.add(new Paragraph("Диаграммы показывают динамику событий по дням в трёх категориях: позитив, негатив и важное. "
-				+ "По ним наглядно видно, в какие даты станут актуальны те или иные сферы вашей жизни, "
-				+ "и можно соответствующим образом скорректировать свои планы.", font));
+			chapter.add(new Paragraph("Диаграммы показывают динамику событий в трёх категориях: позитив, негатив и важное. "
+				+ "По ним видно, в какие месяцы станут актуальны те или иные сферы вашей жизни, "
+				+ "и какие дни наиболее благоприятны для ваших планов.", font));
 			chapter.add(Chunk.NEWLINE);
 
 			chapter.add(new Paragraph("Позитив и негатив:", bold));
 			list = new com.itextpdf.text.List(false, false, 10);
 			list = new com.itextpdf.text.List(false, false, 10);
 			li = new ListItem();
-	        li.add(new Chunk("«Позитив» – это хороший эмоциональный настрой и благоприятные возможности, которые нужно использовать по максимуму.", PDFUtil.getSuccessFont()));
+	        li.add(new Chunk("«Позитив» – это хороший эмоциональный настрой и благоприятные возможности, которые надо использовать по максимуму.", PDFUtil.getSuccessFont()));
 	        list.add(li);
 
 			li = new ListItem();
 	        li.add(new Chunk("«Негатив» – это напряжение и отсутствие удачи, к которым надо быть готовым. Выработайте тактику решения проблемы и не предпринимайте рисковых действий.", red));
-	        list.add(li);
-
-			li = new ListItem();
-	        li.add(new Chunk("Особого внимания заслуживают ломаные, а не точечные графики, – они указывают на череду значимых событий, особенно в сочетании с «Важным».", font));
 	        list.add(li);
 	        chapter.add(list);
 			chapter.add(Chunk.NEWLINE);
@@ -229,7 +224,11 @@ public class TransitSaveHandler extends Handler {
 			chapter.add(new Paragraph("Важное:", bold));
 			list = new com.itextpdf.text.List(false, false, 10);
 			li = new ListItem();
-	        li.add(new Chunk("«Важное» – сильнее всего влияет на ваше поведение в указанный период, особенно в сочетании с «Позитивом» и «Негативом».", font));
+	        li.add(new Chunk("«Важное» – это самая важная категория, указывающая на то, что произойдёт действительно что-то значительное.", font));
+	        list.add(li);
+
+	        li = new ListItem();
+	        li.add(new Chunk("«Важное» сильнее всего влияет на ваше поведение в указанный период, особенно в сочетании с «Позитивом» и «Негативом».", font));
 	        list.add(li);
 
 			li = new ListItem();
@@ -552,6 +551,13 @@ public class TransitSaveHandler extends Handler {
 				}
 				Image image = PDFUtil.printStackChart(writer, "Месяцы года", "Возраст", "Количество", bars, 500, 400, true);
 				section.add(image);
+
+				p = new Paragraph();
+	 			p.add(new Chunk("Диаграммы сфер жизни по месяцам приведены ", font));
+	        	Anchor anchor = new Anchor("ниже", fonta);
+	        	anchor.setReference("#charts" + y);
+	 	        p.add(anchor);
+	 			section.add(p);
 				section.add(Chunk.NEXTPAGE);
 
 //				Map<Integer, Map<Long, Map<Long, List<TimeSeriesDataItem>>>> months2 = hyears.get(y);
@@ -581,16 +587,10 @@ public class TransitSaveHandler extends Handler {
 						dataset.addSeries(timeSeries);
 		        	}
 		        	if (dataset.getSeriesCount() > 0) {
-					    image = PDFUtil.printTimeChart(writer, "", "", "Баллы", dataset, 500, 0, true);
+					    image = PDFUtil.printTimeChart(writer, "Благоприятные и неблагоприятные дни", "", "Баллы", dataset, 500, 0, true);
 						section.add(image);
 						section.add(Chunk.NEWLINE);
 					}
-		 			p = new Paragraph();
-		 			p.add(new Chunk("Графики месяца по дням и сферам жизни приведены ", font));
-		        	Anchor anchor = new Anchor("ниже", fonta);
-		        	anchor.setReference("#charts" + m + "" + y);
-		 	        p.add(anchor);
-		 			section.add(p);
 					section.add(Chunk.NEWLINE);
 
 					//диаграмма месяца
@@ -622,6 +622,12 @@ public class TransitSaveHandler extends Handler {
 						Map<String, List<Object>> imap = dentry.getValue();
 						boolean empty = true;
 						for (Map.Entry<String, List<Object>> daytexts : imap.entrySet()) {
+							if (!empty)
+								break;
+							String key = daytexts.getKey();
+    		                boolean repeat = key.contains("REPEAT");
+    		                if (repeat)
+        		                continue;
 							List<Object> ingresses = daytexts.getValue();
 							if (!ingresses.isEmpty()) {
 								for (Object object : ingresses) {
@@ -629,10 +635,14 @@ public class TransitSaveHandler extends Handler {
 										SkyPointAspect spa = (SkyPointAspect)object;
 										Planet planet = (Planet)spa.getSkyPoint1();
 			    		                boolean main = planet.isMain();
-			    		                boolean separation = daytexts.getKey().contains("SEPARATION");
-			    		                if (main && separation)
+			    		                boolean separation = key.contains("SEPARATION");
+			    		                if (main && separation) {
 			        		                continue;
-			    		                else {
+			    		                } if (planet.getCode().equals("Moon")) {
+		    		                		if (spa.getSkyPoint2() instanceof House
+		    		                				&& !spa.getAspect().getCode().equals("CONJUNCTION"))
+		    		                			continue;
+			    		                } else {
 											empty = false;
 											break;
 			    		                }
@@ -727,7 +737,7 @@ public class TransitSaveHandler extends Handler {
 												: (null == house.getGeneral() ? "к куспиду" : "к вершине");
 
 											p = new Paragraph();
-											p.add(new Chunk(planet.getMark("house"), grayfont));
+											p.add(new Chunk(planet.getMark("house") + " ", grayfont));
 											p.add(new Chunk(spa.getAspect().getName() + " транзитной планеты ", grayfont));
 											p.add(new Chunk(planet.getSymbol(), PDFUtil.getHeaderAstroFont()));
 											p.add(new Chunk(" " + planet.getName(), grayfont));
@@ -777,7 +787,7 @@ public class TransitSaveHandler extends Handler {
 
 						    				p = new Paragraph();
 						    				if (dirText != null)
-						    					p.add(new Chunk(dirText.getMark(), grayfont));
+						    					p.add(new Chunk(dirText.getMark() + " ", grayfont));
 								    		p.add(new Chunk(spa.getAspect().getName() + " транзитной планеты ", grayfont));
 						    				p.add(new Chunk(planet.getSymbol(), PDFUtil.getHeaderAstroFont()));
 						    				p.add(new Chunk(" " + planet.getName(), grayfont));
@@ -837,6 +847,11 @@ public class TransitSaveHandler extends Handler {
 								//изменение движения планеты
 								} else if (object instanceof Planet) {
 									Planet planet = (Planet)object;
+				    				@SuppressWarnings("unchecked")
+									List<SkyPointAspect> transits = (List<SkyPointAspect>)planet.getData();
+				    				boolean notransits = (null == transits || transits.isEmpty());
+				    				if (!term && notransits)
+				    					continue;
 
 									boolean motion = itexts.getKey().contains("MOTION");
 									if (!motion)
@@ -846,9 +861,7 @@ public class TransitSaveHandler extends Handler {
 									String ptext = planet.getName() + " переходит в " + direction + " движение";
 				    				daysection.addSection(new Paragraph(ptext, bold));
 
-				    				@SuppressWarnings("unchecked")
-									List<SkyPointAspect> transits = (List<SkyPointAspect>)planet.getData();
-									if (null == transits || transits.isEmpty()) {
+									if (notransits) {
 										if (term)
 											daysection.add(new Paragraph("Как-то ощутимо на вас это не повлияет", grayfont));
 									} else {
@@ -972,34 +985,42 @@ public class TransitSaveHandler extends Handler {
 //			        chapter.add(Chunk.NEXTPAGE);
 				}
 				//графики года
-				section = PDFUtil.printSection(chapter, "Диаграммы " + y + " года", null);
+				section = PDFUtil.printSection(chapter, "Диаграммы сфер жизни по месяцам " + y + " года", "charts" + y);
 				Map<Long, Map<Long, TreeMap<Integer, Integer>>> yhouses = hyears2.get(y);
+				int i = -1;
 				for (Map.Entry<Long, Map<Long, TreeMap<Integer, Integer>>> entryh : yhouses.entrySet()) {
 					long houseid = entryh.getKey();
 					House house = houses.get(houseid);
 					Map<Long, TreeMap<Integer, Integer>> mtypes = entryh.getValue();
 					if (mtypes.isEmpty())
 						continue;
-					DefaultCategoryDataset dataset = new DefaultCategoryDataset();
+					Map<String, Object[]> types = new HashMap<String, Object[]>();
 		        	for (Map.Entry<Long, TreeMap<Integer, Integer>> entrya : mtypes.entrySet()) {
 		        		TreeMap<Integer, Integer> atypes = entrya.getValue();
 						if (atypes.isEmpty())
 							continue;
 
 						Long aid = entrya.getKey();
-						String name = (aid < 2 ? "Важное" : (aid < 3 ? "Негатив" : "Позитив"));
+						List<Integer> names = new ArrayList<Integer>();
+						List<Integer> values = new ArrayList<Integer>();
 			        	for (Map.Entry<Integer, Integer> entrym : atypes.entrySet()) {
 			        		int m = entrym.getKey();
-							dataset.addValue(entrym.getValue(), name, Integer.valueOf(m + 1));
+			        		names.add(m + 1);
+			        		values.add(entrym.getValue());
 			        	}
+						String name = (aid < 2 ? "Важное" : (aid < 3 ? "Негатив" : "Позитив"));
+			        	types.put(name, new Object[] {names, values});
 		        	}
-		        	if (dataset.getColumnCount() > 0) {
-						section.addSection(new Paragraph(house.getName(), hfont));
-			        	section.add(new Paragraph(y + ": " + house.getDescription(), font));
-					    image = PDFUtil.printLineChart(writer, "", "", "Баллы", dataset , 500, 0, true);
-						section.add(image);
+		        	if (types.isEmpty())
+		        		continue;
+					section.addSection(new Paragraph(house.getName(), hfont));
+		        	section.add(new Paragraph(y + ": " + house.getDescription(), font));
+				    image = PDFUtil.printGraphics(writer, "", "Месяцы " + y, "Баллы", types , 500, 0, true);
+					section.add(image);
+					if (++i % 2 > 0)
+						section.add(Chunk.NEXTPAGE);
+					else
 						section.add(Chunk.NEWLINE);
-		        	}
 				}
 				doc.add(chapter);
 			}
