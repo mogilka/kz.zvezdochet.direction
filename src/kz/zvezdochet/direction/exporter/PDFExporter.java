@@ -116,9 +116,8 @@ public class PDFExporter {
 			chapter.setNumberDepth(0);
 
 			//шапка
-	        int ages = years;
 			String text = event.getCallname();
-			text += " - прогноз на " + CoreUtil.getAgeString(ages);
+			text += " - прогноз на " + CoreUtil.getAgeString(years);
 			Paragraph p = new Paragraph(text, font);
 	        p.setAlignment(Element.ALIGN_CENTER);
 			chapter.add(p);
@@ -142,9 +141,9 @@ public class PDFExporter {
 	        p.add(chunk);
 	        chapter.add(p);
 
-	        boolean chartable = ages > 4;
+	        boolean chartable = years > 4;
 	        chapter.add(new Paragraph("Данный прогноз не содержит конкретных дат, "
-	        	+ "но описывает самые значительные тенденции вашей жизни в ближайшие " + CoreUtil.getAgeString(ages)
+	        	+ "но описывает самые значительные тенденции вашей жизни в ближайшие " + CoreUtil.getAgeString(years)
         		+ " независимо от переездов и местоположения.", font));
 			Font red = PDFUtil.getDangerFont();
 			String months = event.isRectified() ? "2 месяца" : "1 год";
@@ -168,14 +167,12 @@ public class PDFExporter {
 			Map<Integer,Integer> positive = new HashMap<Integer,Integer>();
 			Map<Integer,Integer> negative = new HashMap<Integer,Integer>();
 
-			for (int i = 0; i < ages; i++) {
+			for (int i = 0; i < years; i++) {
 				int nextage = initage + i;
 				positive.put(nextage, 0);
 				negative.put(nextage, 0);
 			}
-
-			//инициализация статистики планет
-//			initPlanetStatistics(event, spas);
+			int finalage = initage + years - 1;
 
 			Map<Long, Map<Integer, Double>> seriesh = new HashMap<Long, Map<Integer, Double>>();
 			Map<Integer, Map<Long, Double>> seriesa = new HashMap<Integer, Map<Long, Double>>();
@@ -183,6 +180,10 @@ public class PDFExporter {
 			//события
 			Map<Integer, TreeMap<Integer, List<SkyPointAspect>>> map = new HashMap<Integer, TreeMap<Integer, List<SkyPointAspect>>>();
 			for (SkyPointAspect spa : spas) {
+				int age = (int)spa.getAge();
+				if (age > finalage)
+					continue;
+
 				Planet planet = (Planet)spa.getSkyPoint1();
 				String pcode = planet.getCode();
 				boolean isHouse = spa.getSkyPoint2() instanceof House;
@@ -200,7 +201,6 @@ public class PDFExporter {
 					}
 				}
 
-				int age = (int)spa.getAge();
 				TreeMap<Integer, List<SkyPointAspect>> agemap = map.get(age);
 				if (null == agemap) {
 					agemap = new TreeMap<Integer, List<SkyPointAspect>>();
@@ -258,21 +258,21 @@ public class PDFExporter {
 				map.put(age, agemap);
 			}
 
-			Bar[] bars = new Bar[ages * 2];
-			for (int i = 0; i < ages; i++) {
+			Bar[] bars = new Bar[years * 2];
+			for (int i = 0; i < years; i++) {
 				int nextage = initage + i;
 				String strage = CoreUtil.getAgeString(nextage);
 				bars[i] = new Bar(strage, positive.get(nextage), null, "Позитивные события", null);
-				bars[i + ages] = new Bar(strage, negative.get(nextage) * (-1), null, "Негативные события", null);
+				bars[i + years] = new Bar(strage, negative.get(nextage) * (-1), null, "Негативные события", null);
 			}
 			int height = 400;
-			if (ages < 2)
+			if (years < 2)
 				height = 140;
-			else if (ages < 4)
+			else if (years < 4)
 				height = 200;
 			Image image = PDFUtil.printStackChart(writer, "Соотношение категорий событий", "Возраст", "Количество", bars, 500, height, true);
 			chapter.add(image);
-			if (ages > 2)
+			if (years > 2)
 				chapter.add(Chunk.NEXTPAGE);
 			else
 				chapter.add(Chunk.NEWLINE);
@@ -306,7 +306,7 @@ public class PDFExporter {
 	        li.add(new Chunk("В течение года в одной и той же сфере жизни могут происходить как напряжённые, так и приятные события.", font));
 	        list.add(li);
 
-	        if (ages > 1) {
+	        if (years > 1) {
 				li = new ListItem();
 		        li.add(new Chunk("Если из возраста в возраст событие повторяется, значит оно создаст большой резонанс.", font));
 		        list.add(li);

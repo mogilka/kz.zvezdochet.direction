@@ -86,7 +86,7 @@ public class AgeCalcHandler extends Handler {
 			houseFrom = agePart.useHouse();
 
 			initage = agePart.getAge();
-			finage = initage + agePart.getYears() - 1;
+			finage = initage + agePart.getYears();
 
 			//инициализируем аспекты
 			try {
