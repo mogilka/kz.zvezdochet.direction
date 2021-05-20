@@ -107,6 +107,7 @@ public class TransitSaveHandler extends Handler {
 			end.setTime(finalDate);
 			end.add(Calendar.DATE, 1);
 			long timems = finalDate.getTime() - initDate.getTime();
+			boolean longterm = (timems / 1000 > 2592000);
 
 			String filename = PlatformUtil.getPath(Activator.PLUGIN_ID, "/out/daily.pdf").getPath();
 			PdfWriter writer = PdfWriter.getInstance(doc, new FileOutputStream(filename));
@@ -163,7 +164,7 @@ public class TransitSaveHandler extends Handler {
 	        p.add(chunk);
 	        chapter.add(p);
 
-	        if (timems / 1000 > 2592000) {
+	        if (longterm) {
 				p = new Paragraph();
 				p.add(new Chunk("Файл содержит большой объём информации, и если прогноз рассчитан на несколько месяцев, нет смысла пытаться его весь прочитать. "
 					+ "Используйте прогноз в начале каждой недели как путеводитель, помогающий понять тенденции и учесть риски.", font));
@@ -985,42 +986,44 @@ public class TransitSaveHandler extends Handler {
 //			        chapter.add(Chunk.NEXTPAGE);
 				}
 				//графики года
-				section = PDFUtil.printSection(chapter, "Диаграммы сфер жизни по месяцам " + y + " года", "charts" + y);
-				Map<Long, Map<Long, TreeMap<Integer, Integer>>> yhouses = hyears2.get(y);
-				int i = -1;
-				for (Map.Entry<Long, Map<Long, TreeMap<Integer, Integer>>> entryh : yhouses.entrySet()) {
-					long houseid = entryh.getKey();
-					House house = houses.get(houseid);
-					Map<Long, TreeMap<Integer, Integer>> mtypes = entryh.getValue();
-					if (mtypes.isEmpty())
-						continue;
-					Map<String, Object[]> types = new HashMap<String, Object[]>();
-		        	for (Map.Entry<Long, TreeMap<Integer, Integer>> entrya : mtypes.entrySet()) {
-		        		TreeMap<Integer, Integer> atypes = entrya.getValue();
-						if (atypes.isEmpty())
+				if (longterm) {
+					section = PDFUtil.printSection(chapter, "Диаграммы сфер жизни по месяцам " + y + " года", "charts" + y);
+					Map<Long, Map<Long, TreeMap<Integer, Integer>>> yhouses = hyears2.get(y);
+					int i = -1;
+					for (Map.Entry<Long, Map<Long, TreeMap<Integer, Integer>>> entryh : yhouses.entrySet()) {
+						long houseid = entryh.getKey();
+						House house = houses.get(houseid);
+						Map<Long, TreeMap<Integer, Integer>> mtypes = entryh.getValue();
+						if (mtypes.isEmpty())
 							continue;
-
-						Long aid = entrya.getKey();
-						List<Integer> names = new ArrayList<Integer>();
-						List<Integer> values = new ArrayList<Integer>();
-			        	for (Map.Entry<Integer, Integer> entrym : atypes.entrySet()) {
-			        		int m = entrym.getKey();
-			        		names.add(m + 1);
-			        		values.add(entrym.getValue());
+						Map<String, Object[]> types = new HashMap<String, Object[]>();
+			        	for (Map.Entry<Long, TreeMap<Integer, Integer>> entrya : mtypes.entrySet()) {
+			        		TreeMap<Integer, Integer> atypes = entrya.getValue();
+							if (atypes.isEmpty())
+								continue;
+	
+							Long aid = entrya.getKey();
+							List<Integer> names = new ArrayList<Integer>();
+							List<Integer> values = new ArrayList<Integer>();
+				        	for (Map.Entry<Integer, Integer> entrym : atypes.entrySet()) {
+				        		int m = entrym.getKey();
+				        		names.add(m + 1);
+				        		values.add(entrym.getValue());
+				        	}
+							String name = (aid < 2 ? "Важное" : (aid < 3 ? "Негатив" : "Позитив"));
+				        	types.put(name, new Object[] {names, values});
 			        	}
-						String name = (aid < 2 ? "Важное" : (aid < 3 ? "Негатив" : "Позитив"));
-			        	types.put(name, new Object[] {names, values});
-		        	}
-		        	if (types.isEmpty())
-		        		continue;
-					section.addSection(new Paragraph(house.getName(), hfont));
-		        	section.add(new Paragraph(y + ": " + house.getDescription(), font));
-				    image = PDFUtil.printGraphics(writer, "", "Месяцы " + y, "Баллы", types , 500, 0, true);
-					section.add(image);
-					if (++i % 2 > 0)
-						section.add(Chunk.NEXTPAGE);
-					else
-						section.add(Chunk.NEWLINE);
+			        	if (types.isEmpty())
+			        		continue;
+						section.addSection(new Paragraph(house.getName(), hfont));
+			        	section.add(new Paragraph(y + ": " + house.getDescription(), font));
+					    image = PDFUtil.printGraphics(writer, "", "Месяцы " + y, "Баллы", types , 500, 0, true);
+						section.add(image);
+						if (++i % 2 > 0)
+							section.add(Chunk.NEXTPAGE);
+						else
+							section.add(Chunk.NEWLINE);
+					}
 				}
 				doc.add(chapter);
 			}
