@@ -25,14 +25,11 @@ import com.itextpdf.text.Element;
 import com.itextpdf.text.Font;
 import com.itextpdf.text.ListItem;
 import com.itextpdf.text.Paragraph;
-import com.itextpdf.text.Phrase;
 import com.itextpdf.text.Section;
 import com.itextpdf.text.pdf.BaseFont;
 import com.itextpdf.text.pdf.PdfWriter;
 
 import kz.zvezdochet.analytics.bean.PlanetAspectText;
-import kz.zvezdochet.analytics.bean.PlanetText;
-import kz.zvezdochet.analytics.service.PlanetTextService;
 import kz.zvezdochet.bean.AspectType;
 import kz.zvezdochet.bean.Event;
 import kz.zvezdochet.bean.House;
@@ -253,8 +250,7 @@ public class TransitCycleHandler extends Handler {
 			String[] icodes = new String[] {
 				Ingress._EXACT, Ingress._EXACT_HOUSE,
 				Ingress._SEPARATION, Ingress._SEPARATION_HOUSE,
-				Ingress._REPEAT, Ingress._REPEAT_HOUSE,
-				Ingress._RETRO
+				Ingress._REPEAT, Ingress._REPEAT_HOUSE
 			};
 
 			//создаём аналогичный массив, но с домами вместо дат
@@ -309,7 +305,6 @@ public class TransitCycleHandler extends Handler {
 
 							List<Object> objects2 = ingressmap.containsKey(key) ? ingressmap.get(key) : new ArrayList<Object>();
 							String[] negatives = {"Kethu", "Lilith"};
-							String[] giants = {"Jupiter"};
 							for (Object object : objects) {
 								if (object instanceof SkyPointAspect) {
 									SkyPointAspect spa = (SkyPointAspect)object;
@@ -332,10 +327,6 @@ public class TransitCycleHandler extends Handler {
 
 										if (skyPoint instanceof Planet
 												&& ((Planet)skyPoint).isFictitious())
-											continue;
-
-										if (Arrays.asList(giants).contains(planet.getCode())
-												&& !spa.isRetro())
 											continue;
 									}
 									if (optimistic) {
@@ -399,25 +390,6 @@ public class TransitCycleHandler extends Handler {
 											seriesh.put(houseid, val + point);
 										}										
 									}
-
-								} else if (object instanceof Planet) { //ретро
-									Planet planet = (Planet)object;
-									List<Object> pobjects = new ArrayList<Object>();
-									pobjects.addAll(ingressList.get(Ingress._REPEAT));
-									pobjects.addAll(ingressList.get(Ingress._REPEAT_HOUSE));
-									for (Object object2 : pobjects) {
-										SkyPointAspect spa = (SkyPointAspect)object2;
-										if (!spa.getSkyPoint1().getId().equals(planet.getId()))
-											continue;
-										spa.setRetro(true);
-										objects2.add(spa);
-										String code = spa.getCode();
-										List<DatePeriod> plist = periods.containsKey(code) ? periods.get(code) : new ArrayList<TransitCycleHandler.DatePeriod>();
-										DatePeriod period = new DatePeriod();
-										period.initdate = time;
-										plist.add(period);
-										periods.put(code, plist);
-									}
 								}
 							}
 							ingressmap.put(key, objects2);
@@ -434,12 +406,9 @@ public class TransitCycleHandler extends Handler {
 
 			//генерируем документ
 			run = System.currentTimeMillis();
-	        Font grayfont = PDFUtil.getAnnotationFont(false);
 
 			DirectionService service = new DirectionService();
 			DirectionAspectService servicea = new DirectionAspectService();
-			PlanetTextService servicep = new PlanetTextService();
-
 			AspectTypeService typeService = new AspectTypeService();
 			AspectType positiveType = (AspectType)typeService.find(3L);
 
@@ -585,26 +554,6 @@ public class TransitCycleHandler extends Handler {
 										p = new Paragraph();
 										p.add(new Chunk(descr, new Font(baseFont, 12, Font.NORMAL, color)));
 										daysection.add(p);
-									}
-									if (spa.isRetro() && term) {
-										if (planet.isFictitious()) //15.6.5. четверг, 21 июня 2035 15.12.4. пятница, 14 декабря 2035
-											continue;
-										if (!type.getCode().contains("POSITIVE")) {
-											Phrase phrase = new Phrase("В этот период " + planet.getName() + " находится в ", grayfont);
-											PlanetText planetText = (PlanetText)servicep.findByPlanet(planet.getId(), "retro");
-											if (planetText != null && planetText.getUrl() != null) {
-										        Chunk ch = new Chunk("ретро-фазе", PDFUtil.getLinkFont());
-										        ch.setAnchor(planetText.getUrl());
-										        phrase.add(ch);
-											} else
-												phrase.add(new Chunk("ретро-фазе", grayfont));
-											phrase.add(new Chunk(", поэтому длительность прогноза затянется, а описанные события ", grayfont));
-											String str = acode.equals("CONJUNCTION")
-												? "приобретут для вас особую важность и в будущем ещё напомнят о себе"
-												: "будут носить необратимый характер";
-											phrase.add(new Chunk(str, grayfont));
-											daysection.add(new Paragraph(phrase));
-										}
 									}
 								}
 								daysection.add(Chunk.NEWLINE);
