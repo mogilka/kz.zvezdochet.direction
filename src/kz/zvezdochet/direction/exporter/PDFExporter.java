@@ -561,6 +561,7 @@ public class PDFExporter {
 			DirectionAspectService servicea = new DirectionAspectService();
 			boolean child = event.isChild();
 			String[] adult = {"II_3", "V_2", "V_3", "VII"};
+			String[] pnegative = {"Lilith", "Kethu"};
 
 			for (SkyPointAspect spa : spas) {
 				AspectType type = spa.getAspect().getType();
@@ -570,7 +571,6 @@ public class PDFExporter {
 				if (optimistic && 2 == spa.getAspect().getTypeid())
 					continue;
 
-				String[] pnegative = {"Lilith", "Kethu"};
 				Planet planet = (Planet)spa.getSkyPoint1();
 				SkyPoint skyPoint = spa.getSkyPoint2();
 				if (optimistic
@@ -578,6 +578,10 @@ public class PDFExporter {
 						&& (Arrays.asList(pnegative).contains(planet.getCode())
 							|| Arrays.asList(pnegative).contains(skyPoint.getCode())))
 					continue;
+
+				boolean negative = type.getPoints() < 0
+						|| (Arrays.asList(pnegative).contains(planet.getCode())
+							|| Arrays.asList(pnegative).contains(skyPoint.getCode()));
 
 				String acode = spa.getAspect().getCode();
 
@@ -592,8 +596,7 @@ public class PDFExporter {
 					if (term)
 						text = planet.getName() + " " + type.getSymbol() + " " + house.getDesignation() + " дом";
 					else {
-						boolean negative = type.getPoints() < 0;
-	    				String pname = negative ? planet.getNegative() : planet.getPositive();
+	    				String pname = negative ? planet.getBadName() : planet.getGoodName();
 	    				text = house.getName() + " " + type.getSymbol() + " " + pname;
 					}
 					section.addSection(new Paragraph(text, fonth5));
@@ -636,9 +639,12 @@ public class PDFExporter {
 
 				} else if (skyPoint instanceof Planet) {
 					Planet planet2 = (Planet)skyPoint;
+    				String pname = negative ? planet.getBadName() : planet.getGoodName();
+    				String pname2 = negative ? planet2.getBadName() : planet2.getGoodName();
+
 					String text = term
 						? planet.getName() + " " + type.getSymbol() + " " + planet2.getName()
-						: planet.getShortName() + " " + type.getSymbol() + " " + planet2.getShortName();
+						: pname + " " + type.getSymbol() + " " + pname2;
     				section.addSection(new Paragraph(text, fonth5));
 					List<Model> texts = servicea.finds(spa);
 					if (!texts.isEmpty())

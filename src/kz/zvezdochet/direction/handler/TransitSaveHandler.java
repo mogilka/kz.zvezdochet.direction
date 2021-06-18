@@ -95,6 +95,9 @@ public class TransitSaveHandler extends Handler {
 			int choice = DialogUtil.alertQuestion("Вопрос", "Выберите тип прогноза:", new String[] {"Реалистичный", "Оптимистичный"});
 			boolean optimistic = choice > 0;
 
+			choice = DialogUtil.alertQuestion("Вопрос", "Включить продолжающиеся события?", new String[] {"Да", "Нет"});
+			boolean repeatable = choice < 1;
+
 			//Признак использования астрологических терминов
 			boolean term = periodPart.isTerm();
 			updateStatus("Расчёт транзитов на период", false);
@@ -347,6 +350,9 @@ public class TransitSaveHandler extends Handler {
 							if (objects.isEmpty())
 								continue;
 
+							if (!repeatable && key.contains("REPEAT"))
+								continue;
+
 							if (j > 0 && key.contains("REPEAT"))
 								continue;
 
@@ -386,8 +392,10 @@ public class TransitSaveHandler extends Handler {
 									Planet planet = (Planet)object;
 								    List<SkyPointAspect> transits = new ArrayList<SkyPointAspect>();
 									List<Object> pobjects = new ArrayList<Object>();
-									pobjects.addAll(ingressList.get(Ingress._REPEAT));
-									pobjects.addAll(ingressList.get(Ingress._REPEAT_HOUSE));
+									if (repeatable) {
+										pobjects.addAll(ingressList.get(Ingress._REPEAT));
+										pobjects.addAll(ingressList.get(Ingress._REPEAT_HOUSE));
+									}
 									for (Object object2 : pobjects) {
 										SkyPointAspect spa = (SkyPointAspect)object2;
 										if (!spa.getSkyPoint1().getId().equals(planet.getId()))
@@ -529,6 +537,7 @@ public class TransitSaveHandler extends Handler {
 
 			AspectTypeService typeService = new AspectTypeService();
 			AspectType positiveType = (AspectType)typeService.find(3L);
+			String[] pnegative = {"Lilith", "Kethu"};
 
 	        //года
 			for (Map.Entry<Integer, Map<Integer, Map<Long, Map<String, List<Object>>>>> entry : texts.entrySet()) {
@@ -776,9 +785,15 @@ public class TransitSaveHandler extends Handler {
 											} else
 												ptext += code;
 										} else if (!separation) {
-											ptext += term ? planet.getName() : planet.getShortName();
+											boolean bad = type.getPoints() < 0
+												|| (type.getCode().equals("NEUTRAL")
+													&& (Arrays.asList(pnegative).contains(planet.getCode())
+														|| Arrays.asList(pnegative).contains(skyPoint.getCode())));
+						    				String pname = bad ? planet.getBadName() : planet.getGoodName();
+						    				String pname2 = bad ? planet2.getBadName() : planet2.getGoodName();
+											ptext += term ? planet.getName() : pname;
 											if (!revolution)
-												ptext += " " + type.getSymbol() + " " + (term ? planet2.getName() : planet2.getShortName());
+												ptext += " " + type.getSymbol() + " " + (term ? planet2.getName() : pname2);
 										}
 										daysection.addSection(new Paragraph(ptext, colorbold));
 										if (term) {
