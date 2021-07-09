@@ -39,7 +39,6 @@ import kz.zvezdochet.bean.SkyPoint;
 import kz.zvezdochet.bean.SkyPointAspect;
 import kz.zvezdochet.core.bean.Model;
 import kz.zvezdochet.core.service.DataAccessException;
-import kz.zvezdochet.core.util.CalcUtil;
 import kz.zvezdochet.core.util.CoreUtil;
 import kz.zvezdochet.core.util.DateUtil;
 import kz.zvezdochet.core.util.OsUtil;
@@ -720,12 +719,7 @@ public class PDFExporter {
 				for (Model type : positions) {
 					PositionType pType = (PositionType)type; 
 					String pCode = pType.getCode();
-					boolean daily = true;
-					if (!planet.getCode().equals("Sun") &&
-							(pCode.equals("HOME") || pCode.equals("EXILE")))
-						daily = DateUtil.isDaily(event.getBirth());
-
-					Sign sign = service.getSignPosition(planet, pCode, daily);
+					Sign sign = service.getSignPosition(planet, pCode, true);
 					if (sign != null && sign.getId() == planet.getSign().getId()) {
 						switch (pCode) {
 							case "HOME": planet.setSignHome(); break;
@@ -736,9 +730,8 @@ public class PDFExporter {
 					}
 
 					if (null == planet.getHouse()) continue;
-					House house = service.getHousePosition(planet, pCode, daily);
-					int hnumber = CalcUtil.trunc((planet.getHouse().getNumber() + 2) / 3);
-					if (house != null && CalcUtil.trunc((house.getNumber() + 2) / 3) == hnumber) {
+					Map<Long, House> houses = service.getHousePosition(planet, pCode, true);
+					if (houses != null && houses.containsKey(planet.getHouse().getId())) {
 						switch (pCode) {
 							case "HOME": planet.setHouseHome(); break;
 							case "EXALTATION": planet.setHouseExaltated(); break;
