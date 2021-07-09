@@ -23,6 +23,7 @@ import com.itextpdf.text.Document;
 import com.itextpdf.text.Element;
 import com.itextpdf.text.Font;
 import com.itextpdf.text.Image;
+import com.itextpdf.text.PageSize;
 import com.itextpdf.text.Paragraph;
 import com.itextpdf.text.Section;
 import com.itextpdf.text.pdf.BaseFont;
@@ -62,7 +63,7 @@ public class TransitChartHandler extends Handler {
 
 	@Execute
 	public void execute(@Active MPart activePart) {
-		Document doc = new Document();
+		Document doc = new Document(PageSize.A4.rotate());
 		try {
 			long duration = System.currentTimeMillis();
 			long run = duration;
@@ -229,7 +230,6 @@ public class TransitChartHandler extends Handler {
 			//генерируем диаграммы домов
 			run = System.currentTimeMillis();
 	        sdf = new SimpleDateFormat("dd.MM.yy");
-			int i = -1;
 			for (Map.Entry<Long, Map<Long, List<SkyPointAspect>>> entry : yhouses.entrySet()) {
 				House house = houses.get(entry.getKey());
 
@@ -265,13 +265,10 @@ public class TransitChartHandler extends Handler {
 					}
 				}
 				if (dataset.getColumnCount() > 0) {
-					if (++i > 1) {
-						i = 0;
-						chapter.add(Chunk.NEXTPAGE);
-					}
 		        	Section section = PDFUtil.printSection(chapter, house.getName(), null);
-					Image image = PDFUtil.printLineChart(writer, "", "", "Баллы", dataset, 500, 0, true);
+					Image image = PDFUtil.printLineChart(writer, "", "", "Баллы", dataset, 750, 300, true);
 					section.add(image);
+					section.add(Chunk.NEXTPAGE);
 				}
 			}
 			yhouses = null;
@@ -287,7 +284,6 @@ public class TransitChartHandler extends Handler {
 			p.setAlignment(Element.ALIGN_CENTER);
 			chapter.add(p);
 
-			i = -1;
 			for (Map.Entry<Long, Map<Long, List<SkyPointAspect>>> entry : yplanets.entrySet()) {
 				Planet planet = planets.get(entry.getKey());
 
@@ -313,14 +309,11 @@ public class TransitChartHandler extends Handler {
 					}
 				}
 				if (dataset.getColumnCount() > 0) {
-					if (++i > 1) {
-						i = 0;
-						chapter.add(Chunk.NEXTPAGE);
-					}
 					String natal = (19 == entry.getKey()) ? "Натальное " : (fpids.contains(entry.getKey()) ? "Натальная" : "Натальный");
 		        	Section section = PDFUtil.printSection(chapter, natal + " " + planet.getName(), null);
-					Image image = PDFUtil.printLineChart(writer, "", "", "Баллы", dataset, 500, 0, true);
+					Image image = PDFUtil.printLineChart(writer, "", "", "Баллы", dataset, 750, 300, true);
 					section.add(image);
+					section.add(Chunk.NEXTPAGE);
 				}
 			}
 			yplanets = null;
