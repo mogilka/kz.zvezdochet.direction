@@ -35,6 +35,7 @@ public class MonthHandler extends Handler {
 			TransitPart transitPart = (TransitPart)activePart.getObject();
 			Event person = (Event)transitPart.getPerson();
 			if (null == person) return;
+
 			Place place = transitPart.getPlace();
 			transitPart.setMode(TransitPart.MODE_TABLE);
 
@@ -96,8 +97,12 @@ public class MonthHandler extends Handler {
 	    		                			|| skyPoint.getCode().equals("Kethu"))
 	    		                		continue;
     		                }
-		                	String value = spa.getSymbol(); //TODO добавить ретро значок
+		                	String value = spa.getSymbol();
     		                if (housable) {
+        		                if (planet.getCode().equals("Moon")
+        		                		&& !acode.equals("CONJUNCTION"))
+        		                	continue;
+
     		                	String text = data2[planet.getNumber() - 1][day];
     		                	data2[planet.getNumber() - 1][day] = (null == text) ? value : text + "\n" + value;
     		                } else {
