@@ -747,7 +747,7 @@ public class TransitSaveHandler extends Handler {
 												: (null == house.getGeneral() ? "к куспиду" : "к вершине");
 
 											p = new Paragraph();
-											p.add(new Chunk(planet.getMark("house") + " ", grayfont));
+											p.add(new Chunk(planet.getMark("house", term) + " ", grayfont));
 											p.add(new Chunk(spa.getAspect().getName() + " транзитной планеты ", grayfont));
 											p.add(new Chunk(planet.getSymbol(), PDFUtil.getHeaderAstroFont()));
 											p.add(new Chunk(" " + planet.getName(), grayfont));

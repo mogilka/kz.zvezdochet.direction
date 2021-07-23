@@ -605,7 +605,7 @@ public class PDFExporter {
 							: (null == house.getGeneral() ? "к куспиду" : "к вершине");
 
 						p = new Paragraph();
-	    				p.add(new Chunk(planet.getMark("house"), grayfont));
+	    				p.add(new Chunk(planet.getMark("house", term), grayfont));
 			    		p.add(new Chunk(spa.getAspect().getName() + " дирекционной планеты ", grayfont));
 	    				p.add(new Chunk(planet.getSymbol(), PDFUtil.getHeaderAstroFont()));
 	    				p.add(new Chunk(" " + planet.getName(), grayfont));
