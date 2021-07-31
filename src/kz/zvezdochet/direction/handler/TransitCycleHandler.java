@@ -489,7 +489,9 @@ public class TransitCycleHandler extends Handler {
 									SkyPoint skyPoint = spa.getSkyPoint2();
 									String acode = spa.getAspect().getCode();
 
-									String prefix = repeat ? "Продолжается: " : "Начинается: ";
+									String prefix = "";
+									if (!planet.isFictitious())
+										prefix = repeat ? "Продолжается: " : "Начинается: ";
 									AspectType type = spa.getAspect().getType();
 									String typeColor = type.getFontColor();
 									BaseColor color = PDFUtil.htmlColor2Base(typeColor);
