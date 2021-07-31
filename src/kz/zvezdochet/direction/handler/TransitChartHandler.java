@@ -71,8 +71,6 @@ public class TransitChartHandler extends Handler {
 			if (!periodPart.check(0)) return;
 
 			Event person = periodPart.getPerson();
-			Place place = periodPart.getPlace();
-			double zone = periodPart.getZone();
 			Map<Long, House> houses = person.getHouses();
 			Map<Long, Planet> planets = person.getPlanets();
 			updateStatus("Расчёт транзитов на период", false);
@@ -112,16 +110,6 @@ public class TransitChartHandler extends Handler {
 				|| DateUtil.getYearFromDate(initDate) != DateUtil.getYearFromDate(finalDate));
 			if (days)
 				text += " — " + sdf.format(finalDate);
-			p = new Paragraph(text, font);
-	        p.setAlignment(Element.ALIGN_CENTER);
-			chapter.add(p);
-
-			if (null == place)
-				place = new Place().getDefault();
-			text = (zone >= 0 ? "UTC+" : "") + zone +
-				" " + place.getName() +
-				" " + place.getLatitude() + "°" +
-				", " + place.getLongitude() + "°";
 			p = new Paragraph(text, font);
 	        p.setAlignment(Element.ALIGN_CENTER);
 			chapter.add(p);
@@ -172,8 +160,8 @@ public class TransitChartHandler extends Handler {
 				Event event = new Event();
 				Date edate = DateUtil.getDatabaseDateTime(sdate);
 				event.setBirth(edate);
-				event.setPlace(place);
-				event.setZone(zone);
+				event.setPlace(new Place().getDefault());
+				event.setZone(0);
 				event.calc(true);
 
 				Map<String, List<Object>> ingressList = person.initIngresses(event);
