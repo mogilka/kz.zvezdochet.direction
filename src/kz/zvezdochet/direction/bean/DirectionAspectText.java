@@ -16,4 +16,17 @@ public class DirectionAspectText extends PlanetAspectText {
 	public ModelService getService() {
 		return new DirectionAspectService();
 	}
+
+	/**
+	 * Признак позитивного толкования
+	 */
+	private boolean positive;
+
+	public boolean isPositive() {
+		return positive;
+	}
+
+	public void setPositive(boolean positive) {
+		this.positive = positive;
+	}
 }

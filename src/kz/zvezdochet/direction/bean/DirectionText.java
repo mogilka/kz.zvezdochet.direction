@@ -41,4 +41,17 @@ public class DirectionText extends PlanetHouseText {
 	public void setDescription(String description) {
 		this.description = description;
 	}
+
+	/**
+	 * Признак позитивного толкования
+	 */
+	private boolean positive;
+
+	public boolean isPositive() {
+		return positive;
+	}
+
+	public void setPositive(boolean positive) {
+		this.positive = positive;
+	}
 }

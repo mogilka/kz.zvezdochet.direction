@@ -26,7 +26,6 @@ import com.itextpdf.text.Section;
 import com.itextpdf.text.pdf.BaseFont;
 import com.itextpdf.text.pdf.PdfWriter;
 
-import kz.zvezdochet.analytics.bean.PlanetAspectText;
 import kz.zvezdochet.analytics.bean.Rule;
 import kz.zvezdochet.analytics.exporter.EventRules;
 import kz.zvezdochet.bean.AspectType;
@@ -44,6 +43,7 @@ import kz.zvezdochet.core.util.DateUtil;
 import kz.zvezdochet.core.util.OsUtil;
 import kz.zvezdochet.core.util.PlatformUtil;
 import kz.zvezdochet.direction.Activator;
+import kz.zvezdochet.direction.bean.DirectionAspectText;
 import kz.zvezdochet.direction.bean.DirectionText;
 import kz.zvezdochet.direction.service.DirectionAspectService;
 import kz.zvezdochet.direction.service.DirectionService;
@@ -578,10 +578,6 @@ public class PDFExporter {
 							|| Arrays.asList(pnegative).contains(skyPoint.getCode())))
 					continue;
 
-				boolean negative = type.getPoints() < 0
-						|| (Arrays.asList(pnegative).contains(planet.getCode())
-							|| Arrays.asList(pnegative).contains(skyPoint.getCode()));
-
 				String acode = spa.getAspect().getCode();
 
 				if (skyPoint instanceof House) {
@@ -590,12 +586,13 @@ public class PDFExporter {
 
 					House house = (House)skyPoint;
 					DirectionText dirText = (DirectionText)service.find(planet, house, type);
+					boolean negative = (null == dirText) ? type.getPoints() < 0 : !dirText.isPositive();
 
 					String text = "";
 					if (term)
 						text = planet.getName() + " " + type.getSymbol() + " " + house.getDesignation() + " дом";
 					else {
-	    				String pname = negative ? planet.getBadName() : planet.getGoodName();
+	    				String pname = negative ? event.getPlanets().get(planet.getId()).getBadName() : event.getPlanets().get(planet.getId()).getGoodName();
 	    				text = house.getName() + " " + type.getSymbol() + " " + pname;
 					}
 					section.addSection(new Paragraph(text, fonth5));
@@ -637,18 +634,24 @@ public class PDFExporter {
 						section.add(new Paragraph(PDFUtil.removeTags(rule.getText(), font)));
 
 				} else if (skyPoint instanceof Planet) {
+					List<Model> texts = servicea.finds(spa);
+					boolean negative = false;
+					if (!texts.isEmpty()) {
+						DirectionAspectText dirText = (DirectionAspectText)texts.get(0);
+						negative = (null == dirText) ? type.getPoints() < 0 : !dirText.isPositive();
+					}
 					Planet planet2 = (Planet)skyPoint;
-    				String pname = negative ? planet.getBadName() : planet.getGoodName();
-    				String pname2 = negative ? planet2.getBadName() : planet2.getGoodName();
+    				String pname = negative ? event.getPlanets().get(planet.getId()).getBadName() : event.getPlanets().get(planet.getId()).getGoodName();
+    				String pname2 = negative ? event.getPlanets().get(planet2.getId()).getBadName() : event.getPlanets().get(planet2.getId()).getGoodName();
 
 					String text = term
 						? planet.getName() + " " + type.getSymbol() + " " + planet2.getName()
 						: pname + " " + type.getSymbol() + " " + pname2;
     				section.addSection(new Paragraph(text, fonth5));
-					List<Model> texts = servicea.finds(spa);
+
 					if (!texts.isEmpty())
 						for (Model model : texts) {
-							PlanetAspectText dirText = (PlanetAspectText)model;
+							DirectionAspectText dirText = (DirectionAspectText)model;
 							if (dirText != null) {
 								text = dirText.getText();
 								if ((null == text || text.isEmpty())

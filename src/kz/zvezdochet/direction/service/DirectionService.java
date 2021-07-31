@@ -80,6 +80,7 @@ public class DirectionService extends PlanetHouseService {
 		dict = (DirectionText)super.init(rs, model);
 		dict.setDescription(rs.getString("description"));
 		dict.setCode(rs.getString("code"));
+		dict.setPositive(rs.getBoolean("positive"));
 		return dict;
 	}
 }
