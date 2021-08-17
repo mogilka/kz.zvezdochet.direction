@@ -39,7 +39,7 @@ public class AgeCalcHandler extends Handler {
 	private boolean houseFrom = false;
 	List<Model> aspects = null;
 	Event event;
-	int initage, finage;
+	int initage, finage, years;
 
 	@Execute
 	public void execute(@Active MPart activePart) {
@@ -85,8 +85,9 @@ public class AgeCalcHandler extends Handler {
 			
 			houseFrom = agePart.useHouse();
 
+			years = agePart.getYears();
 			initage = agePart.getAge();
-			finage = initage + agePart.getYears();
+			finage = initage + years;
 
 			//инициализируем аспекты
 			try {
@@ -218,6 +219,8 @@ public class AgeCalcHandler extends Handler {
 					if (age < 0)
 						continue;
 					if (age < initage || age > finage)
+						continue;
+					if (1 == years && age > initage)
 						continue;
 
 					SkyPointAspect aspect = new SkyPointAspect();
