@@ -190,17 +190,20 @@ public class HTMLExporter {
 
 			row = new Tag("tr");
 			cell = new Tag("td");
+
 			DirectionService service = new DirectionService();
 			DirectionAspectService servicea = new DirectionAspectService();
+			AspectTypeService typeService = new AspectTypeService();
+
 			boolean child = age < event.MAX_TEEN_AGE;
 			for (SkyPointAspect spa : spas) {
 				AspectType type = spa.getAspect().getType();
 				String tcode = type.getCode();
 				if (tcode.contains("HIDDEN")) {
 					if (tcode.contains("NEGATIVE"))
-						type = (AspectType)new AspectTypeService().find("NEGATIVE");
+						type = (AspectType)typeService.find("NEGATIVE");
 					else if (tcode.contains("POSITIVE"))
-						type = (AspectType)new AspectTypeService().find("POSITIVE");
+						type = (AspectType)typeService.find("POSITIVE");
 				}
 				Tag h5 = new Tag("h5");
 

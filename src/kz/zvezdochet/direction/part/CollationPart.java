@@ -64,6 +64,7 @@ import kz.zvezdochet.core.ui.comparator.TableSortListenerFactory;
 import kz.zvezdochet.core.ui.decoration.InfoDecoration;
 import kz.zvezdochet.core.ui.listener.ListSelectionListener;
 import kz.zvezdochet.core.ui.util.DialogUtil;
+import kz.zvezdochet.core.ui.util.GUIutil;
 import kz.zvezdochet.core.ui.view.ModelLabelProvider;
 import kz.zvezdochet.core.ui.view.ModelPart;
 import kz.zvezdochet.core.ui.view.View;
@@ -72,7 +73,6 @@ import kz.zvezdochet.direction.bean.Collation;
 import kz.zvezdochet.direction.bean.Member;
 import kz.zvezdochet.direction.bean.Participant;
 import kz.zvezdochet.direction.provider.AspectLabelProvider;
-import kz.zvezdochet.direction.service.MemberService;
 import kz.zvezdochet.part.ICalculable;
 import kz.zvezdochet.provider.EventProposalProvider;
 import kz.zvezdochet.provider.EventProposalProvider.EventContentProposal;
@@ -222,7 +222,9 @@ public class CollationPart extends ModelPart implements ICalculable {
 
 		ToolBar toolBar = new ToolBar(folder, SWT.FLAT);
 		tiMembers = new ToolItem(toolBar, SWT.PUSH);
-		tiMembers.setImage(AbstractUIPlugin.imageDescriptorFromPlugin("kz.zvezdochet.core", "icons/applyElement.gif").createImage());
+		Image image = AbstractUIPlugin.imageDescriptorFromPlugin("kz.zvezdochet.core", "icons/applyElement.gif").createImage();
+		tiMembers.setImage(image);
+		image.dispose();
 		tiMembers.setToolTipText("Сохранить изменнённых фигурантов");
 		tiMembers.setEnabled(false);
 		tiMembers.addSelectionListener(new SelectionListener() {
@@ -255,17 +257,12 @@ public class CollationPart extends ModelPart implements ICalculable {
 					@SuppressWarnings("unchecked")
 					List<Member> members = (List<Member>)tvMembers.getInput();
 					if (members != null && members.size() > 0) {
-						MemberService service = new MemberService();
 						boolean saved = true;
 						for (Member member : members) {
 							member.setParticipant(participant);
-							try {
-								if (null == service.save(member)) {
-									saved = false;
-									break;
-								}
-							} catch (DataAccessException e) {
-								e.printStackTrace();
+							if (null == member.save()) {
+								saved = false;
+								break;
 							}
 						}
 						tiMembers.setEnabled(!saved);
@@ -442,7 +439,7 @@ public class CollationPart extends ModelPart implements ICalculable {
 			public Image getColumnImage(Object element, int columnIndex) {
 				Participant participant = (Participant)element;
 				switch (columnIndex) {
-					case 3: return participant.isWin() ? CHECKED : UNCHECKED;
+					case 3: return participant.isWin() ? GUIutil.getCheckedImage() : GUIutil.getUncheckedImage();
 				}
 				return null;
 			}
@@ -457,9 +454,6 @@ public class CollationPart extends ModelPart implements ICalculable {
 			}
 		};
 	}
-
-	private final Image CHECKED = AbstractUIPlugin.imageDescriptorFromPlugin("kz.zvezdochet.core", "icons/checked.gif").createImage();
-    private final Image UNCHECKED = AbstractUIPlugin.imageDescriptorFromPlugin("kz.zvezdochet.core", "icons/unchecked.gif").createImage();
 
     /**
      * Прорисовщик фигурантов
@@ -484,15 +478,19 @@ public class CollationPart extends ModelPart implements ICalculable {
 			@Override
 			public Image getColumnImage(Object element, int columnIndex) {
 				Member member = (Member)element;
+				Image checked = GUIutil.getCheckedImage();
+				Image unchecked = GUIutil.getUncheckedImage();
 				switch (columnIndex) {
-					case 2: return member.isHit() ? CHECKED : UNCHECKED;
-					case 3: return member.isPass() ? CHECKED : UNCHECKED;
-					case 4: return member.isMiss() ? CHECKED : UNCHECKED;
-					case 5: return member.isSave() ? CHECKED : UNCHECKED;
-					case 6: return member.isFoul() ? CHECKED : UNCHECKED;
-					case 7: return member.isSubstitute() ? CHECKED : UNCHECKED;
-					case 8: return member.isInjury() ? CHECKED : UNCHECKED;
+					case 2: return member.isHit() ? checked : unchecked;
+					case 3: return member.isPass() ? checked : unchecked;
+					case 4: return member.isMiss() ? checked : unchecked;
+					case 5: return member.isSave() ? checked : unchecked;
+					case 6: return member.isFoul() ? checked : unchecked;
+					case 7: return member.isSubstitute() ? checked : unchecked;
+					case 8: return member.isInjury() ? checked : unchecked;
 				}
+				checked.dispose();
+				unchecked.dispose();
 				return null;
 			}
 		};
@@ -700,7 +698,8 @@ public class CollationPart extends ModelPart implements ICalculable {
 		//фигуранты
 		Tab tab = new Tab();
 		tab.name = "Фигуранты";
-		tab.image = AbstractUIPlugin.imageDescriptorFromPlugin("kz.zvezdochet", "icons/contacts.gif").createImage();
+		Image image = AbstractUIPlugin.imageDescriptorFromPlugin("kz.zvezdochet", "icons/contacts.gif").createImage();
+		tab.image = image;
 
 		Group grMembers = new Group(folder, SWT.NONE);
 		grMembers.setLayout(new GridLayout());
@@ -776,7 +775,8 @@ public class CollationPart extends ModelPart implements ICalculable {
 		//аспекты
 		tab = new Tab();
 		tab.name = "Аспекты";
-		tab.image = AbstractUIPlugin.imageDescriptorFromPlugin("kz.zvezdochet", "icons/aspect.gif").createImage();
+		image = AbstractUIPlugin.imageDescriptorFromPlugin("kz.zvezdochet", "icons/aspect.gif").createImage();
+		tab.image = image;
 		Group grAspects = new Group(folder, SWT.NONE);
 	    tvAspects = new TableViewer(grAspects, SWT.BORDER | SWT.FULL_SELECTION);
 	    Table table = tvAspects.getTable();
@@ -805,7 +805,8 @@ public class CollationPart extends ModelPart implements ICalculable {
 		//дирекции
 		tab = new Tab();
 		tab.name = "Дирекции";
-		tab.image = AbstractUIPlugin.imageDescriptorFromPlugin("kz.zvezdochet.direction", "icons/direction.gif").createImage();
+		image = AbstractUIPlugin.imageDescriptorFromPlugin("kz.zvezdochet.direction", "icons/direction.gif").createImage();
+		tab.image = image;
 		Group grDirections = new Group(folder, SWT.NONE);
 	    tvDirections = new TableViewer(grDirections, SWT.BORDER | SWT.FULL_SELECTION);
 	    table = tvDirections.getTable();
@@ -833,7 +834,8 @@ public class CollationPart extends ModelPart implements ICalculable {
 		//дома
 		tab = new Tab();
 		tab.name = "Дома";
-		tab.image = AbstractUIPlugin.imageDescriptorFromPlugin("kz.zvezdochet", "icons/home.gif").createImage();
+		image = AbstractUIPlugin.imageDescriptorFromPlugin("kz.zvezdochet", "icons/home.gif").createImage();
+		tab.image = image;
 		Group grHouses = new Group(folder, SWT.NONE);
 	    tvHouses = new TableViewer(grHouses, SWT.BORDER | SWT.FULL_SELECTION);
 	    table = tvHouses.getTable();
@@ -868,7 +870,8 @@ public class CollationPart extends ModelPart implements ICalculable {
 		//аспекты
 		Tab tab = new Tab();
 		tab.name = "Аспекты";
-		tab.image = AbstractUIPlugin.imageDescriptorFromPlugin("kz.zvezdochet", "icons/aspect.gif").createImage();
+		Image image = AbstractUIPlugin.imageDescriptorFromPlugin("kz.zvezdochet", "icons/aspect.gif").createImage();
+		tab.image = image;
 		Group grAspects = new Group(subfolder, SWT.NONE);
 	    tvSubaspects = new TableViewer(grAspects, SWT.BORDER | SWT.FULL_SELECTION);
 	    Table table = tvSubaspects.getTable();
@@ -897,7 +900,8 @@ public class CollationPart extends ModelPart implements ICalculable {
 		//дирекции
 		tab = new Tab();
 		tab.name = "Дирекции";
-		tab.image = AbstractUIPlugin.imageDescriptorFromPlugin("kz.zvezdochet.direction", "icons/direction.gif").createImage();
+		image = AbstractUIPlugin.imageDescriptorFromPlugin("kz.zvezdochet.direction", "icons/direction.gif").createImage();
+		tab.image = image;
 		Group grDirections = new Group(subfolder, SWT.NONE);
 	    tvSubdirections = new TableViewer(grDirections, SWT.BORDER | SWT.FULL_SELECTION);
 	    table = tvSubdirections.getTable();
@@ -925,7 +929,9 @@ public class CollationPart extends ModelPart implements ICalculable {
 		//дома
 		tab = new Tab();
 		tab.name = "Дома";
-		tab.image = AbstractUIPlugin.imageDescriptorFromPlugin("kz.zvezdochet", "icons/home.gif").createImage();
+		image = AbstractUIPlugin.imageDescriptorFromPlugin("kz.zvezdochet", "icons/home.gif").createImage();
+		tab.image = image;
+		image.dispose();
 		Group grHouses = new Group(subfolder, SWT.NONE);
 	    tvSubhouses = new TableViewer(grHouses, SWT.BORDER | SWT.FULL_SELECTION);
 	    table = tvHouses.getTable();
