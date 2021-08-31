@@ -376,6 +376,9 @@ public class TransitSaveHandler extends Handler {
 										}
 									}
 
+									if (key.contains("SEPARATION") && planet.isFictitious())
+										continue;
+
 									boolean housable = skyPoint instanceof House;
 		    		                if (acode.equals("OPPOSITION")) {
 		    		                	if (planet.getCode().equals("Rakhu")
@@ -789,8 +792,8 @@ public class TransitSaveHandler extends Handler {
 												|| (type.getCode().equals("NEUTRAL")
 													&& (Arrays.asList(pnegative).contains(planet.getCode())
 														|| Arrays.asList(pnegative).contains(skyPoint.getCode())));
-						    				String pname = bad ? planet.getBadName() : planet.getGoodName();
-						    				String pname2 = bad ? planet2.getBadName() : planet2.getGoodName();
+						    				String pname = bad ? planet.getAspectingBadName() : planet.getAspectingName();
+						    				String pname2 = bad ? planet2.getAspectedBadName() : planet2.getAspectedName();
 											ptext += term ? planet.getName() : pname;
 											if (!revolution)
 												ptext += " " + type.getSymbol() + " " + (term ? planet2.getName() : pname2);
