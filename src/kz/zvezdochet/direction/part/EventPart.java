@@ -29,6 +29,7 @@ import org.eclipse.swt.custom.CTabFolder;
 import org.eclipse.swt.custom.CTabItem;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
+import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
@@ -74,7 +75,6 @@ import kz.zvezdochet.provider.EventProposalProvider.EventContentProposal;
 import kz.zvezdochet.provider.PlaceProposalProvider;
 import kz.zvezdochet.provider.PlaceProposalProvider.PlaceContentProposal;
 import kz.zvezdochet.service.AspectService;
-import kz.zvezdochet.service.EventService;
 
 /**
  * Представление для расчёта транзита на день
@@ -233,7 +233,9 @@ public class EventPart extends ModelListView implements ICalculable {
 		//настройки расчёта
 		Tab tab = new Tab();
 		tab.name = "Настройки";
-		tab.image = AbstractUIPlugin.imageDescriptorFromPlugin("kz.zvezdochet.runner", "icons/configure.gif").createImage();
+		Image image = AbstractUIPlugin.imageDescriptorFromPlugin("kz.zvezdochet.runner", "icons/configure.gif").createImage();
+		tab.image = image;
+		image.dispose();
 		Group group = new Group(folder, SWT.NONE);
 		group.setText("Общие");
 		group.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
@@ -243,7 +245,9 @@ public class EventPart extends ModelListView implements ICalculable {
 		//планеты
 		tab = new Tab();
 		tab.name = "Планеты";
-		tab.image = AbstractUIPlugin.imageDescriptorFromPlugin("kz.zvezdochet", "icons/planet.gif").createImage();
+		image = AbstractUIPlugin.imageDescriptorFromPlugin("kz.zvezdochet", "icons/planet.gif").createImage();
+		tab.image = image;
+		image.dispose();
 		grPlanets = new Group(folder, SWT.NONE);
 		String[] titles = { "Планета", "Координата #1", "Координата #2"	};
 		Table table = new Table(grPlanets, SWT.BORDER | SWT.V_SCROLL);
@@ -263,7 +267,9 @@ public class EventPart extends ModelListView implements ICalculable {
 		//дома
 		tab = new Tab();
 		tab.name = "Дома";
-		tab.image = AbstractUIPlugin.imageDescriptorFromPlugin("kz.zvezdochet", "icons/home.gif").createImage();
+		image = AbstractUIPlugin.imageDescriptorFromPlugin("kz.zvezdochet", "icons/home.gif").createImage();
+		tab.image = image;
+		image.dispose();
 		grHouses = new Group(folder, SWT.NONE);
 		titles = new String[] {"Дом", "Координата #1", "Координата #2"};
 		table = new Table(grHouses, SWT.BORDER | SWT.V_SCROLL);
@@ -283,7 +289,9 @@ public class EventPart extends ModelListView implements ICalculable {
 		//транзиты
 		tab = new Tab();
 		tab.name = "Транзиты";
-		tab.image = AbstractUIPlugin.imageDescriptorFromPlugin("kz.zvezdochet.direction", "icons/transit.gif").createImage();
+		image = AbstractUIPlugin.imageDescriptorFromPlugin("kz.zvezdochet.direction", "icons/transit.gif").createImage();
+		tab.image = image;
+		image.dispose();
 		grTransits = new Group(folder, SWT.NONE);
 		
 		transitViewer = new TableViewer(grTransits, SWT.BORDER | SWT.FULL_SELECTION | SWT.V_SCROLL);
@@ -526,16 +534,16 @@ public class EventPart extends ModelListView implements ICalculable {
 			super.addModel(model);
 			if (null == model.getId()) {
 				((Event)model).calc(false);
-				model = new EventService().save(model);
+				model = model.save();
 			}
 			//сразу сохраняем транзит в базу
 			Transit transit = new Transit();
 			transit.setEventid(model.getId());
 			transit.setPersonid(person.getId());
 			transit.setDescription(txDescr.getText());
-			new TransitService().save(transit);
+			transit.save();
 			reset();
-		} catch (DataAccessException e) {
+		} catch (Exception e) {
 			e.printStackTrace();
 		}
 	}
@@ -811,7 +819,9 @@ public class EventPart extends ModelListView implements ICalculable {
 		//космограмма транзитов
 		Tab tab = new Tab();
 		tab.name = "Транзиты";
-		tab.image = AbstractUIPlugin.imageDescriptorFromPlugin("kz.zvezdochet.runner", "icons/configure.gif").createImage();
+		Image image = AbstractUIPlugin.imageDescriptorFromPlugin("kz.zvezdochet.runner", "icons/configure.gif").createImage();
+		tab.image = image;
+		image.dispose();
 		Group group = new Group(folder2, SWT.NONE);
 		group.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 		cmpCosmogram = new CosmogramComposite(group, SWT.NONE);
@@ -823,7 +833,9 @@ public class EventPart extends ModelListView implements ICalculable {
 		//космограмма транзитного события
 		tab = new Tab();
 		tab.name = "Транзитный день";
-		tab.image = AbstractUIPlugin.imageDescriptorFromPlugin("kz.zvezdochet", "icons/planet.gif").createImage();
+		image = AbstractUIPlugin.imageDescriptorFromPlugin("kz.zvezdochet", "icons/planet.gif").createImage();
+		tab.image = image;
+		image.dispose();
 		group = new Group(folder2, SWT.NONE);
 		cmpCosmogram2 = new CosmogramComposite(group, SWT.NONE);
 		tab.control = group;
