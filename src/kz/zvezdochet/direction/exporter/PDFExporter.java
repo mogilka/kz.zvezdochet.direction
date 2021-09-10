@@ -118,6 +118,8 @@ public class PDFExporter {
 			String text = event.getCallname();
 			text += " - прогноз на " + CoreUtil.getAgeString(years);
 			Paragraph p = new Paragraph(text, font);
+			if (!event.isRectified())
+				p.add(new Chunk(" (не ректифицировано)", PDFUtil.getDangerFont()));
 	        p.setAlignment(Element.ALIGN_CENTER);
 			chapter.add(p);
 

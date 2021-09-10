@@ -150,6 +150,8 @@ public class TransitSaveHandler extends Handler {
 			text = "Тип прогноза: " + (optimistic ? "оптимистичный" : "реалистичный");
 			p = new Paragraph(text, font);
 	        p.setAlignment(Element.ALIGN_CENTER);
+			if (!person.isRectified())
+				p.add(new Chunk(" (не ректифицировано)", PDFUtil.getDangerFont()));
 			chapter.add(p);
 
 			Font fontgray = PDFUtil.getAnnotationFont(false);
