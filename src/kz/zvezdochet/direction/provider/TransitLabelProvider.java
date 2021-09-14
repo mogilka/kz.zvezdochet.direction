@@ -7,7 +7,6 @@ import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.widgets.Display;
 
 import kz.zvezdochet.bean.Aspect;
-import kz.zvezdochet.bean.Planet;
 import kz.zvezdochet.bean.SkyPointAspect;
 import kz.zvezdochet.core.ui.ArrayLabelProvider;
 
@@ -38,17 +37,18 @@ public class TransitLabelProvider extends ArrayLabelProvider implements ITableLa
 	}
 	@Override
 	public Image getColumnImage(Object element, int columnIndex) {
-		if (!(element instanceof SkyPointAspect))
-			return null;
-		SkyPointAspect aspect = (SkyPointAspect)element;
-		switch (columnIndex) {
-			case 1: return aspect.getSkyPoint1() instanceof Planet
-					? ((Planet)aspect.getSkyPoint1()).getImage() : null;
-			case 3: return aspect.getSkyPoint2() instanceof Planet
-					? ((Planet)aspect.getSkyPoint2()).getImage() : null;
-		}
+//		if (!(element instanceof SkyPointAspect))
+//			return null;
+//		SkyPointAspect aspect = (SkyPointAspect)element;
+//		switch (columnIndex) {
+//			case 1: return aspect.getSkyPoint1() instanceof Planet
+//					? ((Planet)aspect.getSkyPoint1()).getImage() : null;
+//			case 3: return aspect.getSkyPoint2() instanceof Planet
+//					? ((Planet)aspect.getSkyPoint2()).getImage() : null;
+//		}
 		return null;
 	}
+
 	@Override
 	public Color getForeground(Object element, int columnIndex) {
 		if (!(element instanceof SkyPointAspect))
