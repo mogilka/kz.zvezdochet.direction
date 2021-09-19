@@ -173,6 +173,9 @@ public class TransitSaveHandler extends Handler {
 				p = new Paragraph();
 				p.add(new Chunk("Файл содержит большой объём информации, и если прогноз рассчитан на несколько месяцев, нет смысла пытаться его весь прочитать. "
 					+ "Используйте прогноз в начале каждой недели как путеводитель, помогающий понять тенденции и учесть риски.", font));
+		        chunk = new Chunk("Пояснения к прогнозу", new Font(baseFont, 12, Font.UNDERLINE, PDFUtil.FONTCOLOR));
+		        chunk.setAnchor("https://zvezdochet.guru/post/223/poyasnenie-k-ezhednevnym-prognozam");
+		        p.add(chunk);
 				chapter.add(p);
 				chapter.add(Chunk.NEWLINE);
 	        }
