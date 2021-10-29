@@ -154,7 +154,7 @@ public class TransitCycleHandler extends Handler {
 
 			p = new Paragraph();
 			p.add(new Chunk("Файл содержит большой объём информации, и нет смысла пытаться его весь прочитать. "
-				+ "Используйте прогноз в начале каждого месяца как путеводитель, помогающий понять тенденции и учесть риски.", font));
+				+ "Используйте прогноз в начале каждого месяца как путеводитель, помогающий понять тенденции и учесть риски. ", font));
 	        chunk = new Chunk("Пояснения к прогнозу", new Font(baseFont, 12, Font.UNDERLINE, PDFUtil.FONTCOLOR));
 	        chunk.setAnchor("https://zvezdochet.guru/post/223/poyasnenie-k-ezhednevnym-prognozam");
 	        p.add(chunk);
