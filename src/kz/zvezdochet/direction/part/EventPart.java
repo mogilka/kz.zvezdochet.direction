@@ -576,7 +576,7 @@ public class EventPart extends ModelListView implements ICalculable {
 
 			trevent = new Event();
 			trevent.setBirth(calendar.getTime());
-			trevent.setPlace(person.getCurrentPlace());
+			trevent.setPlace(person.getFinalPlace());
 			double zone = (txZone.getText() != null && txZone.getText().length() > 0) ? Double.parseDouble(txZone.getText()) : 0;
 			trevent.setZone(zone);
 
@@ -686,7 +686,7 @@ public class EventPart extends ModelListView implements ICalculable {
 			public void proposalAccepted(IContentProposal proposal) {
 				Place place = (Place)((PlaceContentProposal)proposal).getObject();
 				if (place != null) {
-					person.setCurrentPlace(place);
+					person.setFinalplace(place);
 					initPlace(place);
 				}
 			}

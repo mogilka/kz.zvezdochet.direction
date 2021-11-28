@@ -83,7 +83,7 @@ public class TransitPart extends ModelListView {
 
 	public void setPerson(Event person) {
 		this.person = person;
-		initPlace(person.getCurrentPlace());
+		initPlace(person.getFinalPlace());
 	}
 	
 	@PostConstruct @Override
@@ -301,7 +301,7 @@ public class TransitPart extends ModelListView {
 			public void proposalAccepted(IContentProposal proposal) {
 				Place place = (Place)((PlaceContentProposal)proposal).getObject();
 				if (place != null) {
-					person.setCurrentPlace(place);
+					person.setFinalplace(place);
 					initPlace(place);
 				}
 			}
@@ -313,7 +313,7 @@ public class TransitPart extends ModelListView {
 	protected void initControls() throws DataAccessException {
 		super.initControls();
 		if (person != null)
-			initPlace(person.getCurrentPlace());
+			initPlace(person.getFinalPlace());
 		setPlaces();
 		try {
 			checkViewer.setInput(new SphereService().getList());
@@ -366,8 +366,8 @@ public class TransitPart extends ModelListView {
 	}
 
 	public Place getPlace() {
-		Place place = person.getCurrentPlace();
-		return (null == place) ? new Place().getDefault() : person.getCurrentPlace();
+		Place place = person.getFinalPlace();
+		return (null == place) ? new Place().getDefault() : person.getFinalPlace();
 	}
 
 	public double getZone() {
