@@ -434,7 +434,7 @@ public class TransitCycleHandler extends Handler {
 					Section section = PDFUtil.printSection(chapter, ym, null);
 
 					//диаграмма месяца
-					printDiagramDescr(section, font);
+					printDiagramDescr(section, font, optimistic);
 					Map<Long, Integer> seriesh = months2.get(m);
 					Bar[] items = new Bar[seriesh.size()];
 					int i = -1;
@@ -598,7 +598,7 @@ public class TransitCycleHandler extends Handler {
 	 * @param section раздел
 	 * @param font шрифт
 	 */
-	private void printDiagramDescr(Section section, Font font) {
+	private void printDiagramDescr(Section section, Font font, boolean optimistic) {
 		if (OsUtil.getOS().equals(OsUtil.OS.LINUX)) {
 			String text = "Диаграмма показывает, какие сферы жизни будут актуальны в течение месяца:";
 			section.add(new Paragraph(text, font));
@@ -607,14 +607,16 @@ public class TransitCycleHandler extends Handler {
 			ListItem li = new ListItem();
 	        li.add(new Chunk("Показатели выше нуля указывают на успех и лёгкость", new Font(baseFont, 12, Font.NORMAL, new BaseColor(0, 102, 102))));
 	        list.add(li);
-	
+
 			li = new ListItem();
 	        li.add(new Chunk("Показатели на нуле указывают на нейтральность ситуации", font));
 	        list.add(li);
 	
-			li = new ListItem();
-	        li.add(new Chunk("Показатели ниже нуля указывают на трудности и напряжение", new Font(baseFont, 12, Font.NORMAL, new BaseColor(102, 0, 51))));
-	        list.add(li);
+	        if (!optimistic) {
+				li = new ListItem();
+		        li.add(new Chunk("Показатели ниже нуля указывают на трудности и напряжение", new Font(baseFont, 12, Font.NORMAL, new BaseColor(102, 0, 51))));
+		        list.add(li);
+	        }
 	        section.add(list);
 		} else {
 			String text = "Диаграмма показывает, какие сферы жизни будут актуальны в течение месяца:";
