@@ -81,6 +81,7 @@ public class DirectionService extends PlanetHouseService {
 		dict.setDescription(rs.getString("description"));
 		dict.setCode(rs.getString("code"));
 		dict.setPositive(rs.getBoolean("positive"));
+		dict.setRetro(rs.getString("retro"));
 		return dict;
 	}
 }

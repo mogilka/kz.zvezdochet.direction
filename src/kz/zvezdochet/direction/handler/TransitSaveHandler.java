@@ -60,7 +60,6 @@ import kz.zvezdochet.direction.service.DirectionService;
 import kz.zvezdochet.export.bean.Bar;
 import kz.zvezdochet.export.handler.PageEventHandler;
 import kz.zvezdochet.export.util.PDFUtil;
-import kz.zvezdochet.service.AspectTypeService;
 
 /**
  * Генерация прогноза за указанный период по месяцам
@@ -94,9 +93,6 @@ public class TransitSaveHandler extends Handler {
 
 			int choice = DialogUtil.alertQuestion("Вопрос", "Выберите тип прогноза:", new String[] {"Реалистичный", "Оптимистичный"});
 			boolean optimistic = choice > 0;
-
-			choice = DialogUtil.alertQuestion("Вопрос", "Включить продолжающиеся события?", new String[] {"Да", "Нет"});
-			boolean repeatable = choice < 1;
 
 			//Признак использования астрологических терминов
 			boolean term = periodPart.isTerm();
@@ -355,9 +351,6 @@ public class TransitSaveHandler extends Handler {
 							if (objects.isEmpty())
 								continue;
 
-							if (!repeatable && key.contains("REPEAT"))
-								continue;
-
 							if (j > 0 && key.contains("REPEAT"))
 								continue;
 
@@ -400,10 +393,9 @@ public class TransitSaveHandler extends Handler {
 									Planet planet = (Planet)object;
 								    List<SkyPointAspect> transits = new ArrayList<SkyPointAspect>();
 									List<Object> pobjects = new ArrayList<Object>();
-									if (repeatable) {
-										pobjects.addAll(ingressList.get(Ingress._REPEAT));
-										pobjects.addAll(ingressList.get(Ingress._REPEAT_HOUSE));
-									}
+									pobjects.addAll(ingressList.get(Ingress._REPEAT));
+									pobjects.addAll(ingressList.get(Ingress._REPEAT_HOUSE));
+
 									for (Object object2 : pobjects) {
 										SkyPointAspect spa = (SkyPointAspect)object2;
 										if (!spa.getSkyPoint1().getId().equals(planet.getId()))
@@ -543,8 +535,6 @@ public class TransitSaveHandler extends Handler {
 			DirectionAspectService servicea = new DirectionAspectService();
 			PlanetTextService servicep = new PlanetTextService();
 
-			AspectTypeService typeService = new AspectTypeService();
-			AspectType positiveType = (AspectType)typeService.find(3L);
 			String[] pnegative = {"Lilith", "Kethu"};
 
 	        //года
@@ -727,16 +717,18 @@ public class TransitSaveHandler extends Handler {
 									if (skyPoint instanceof House) {
 										House house = (House)skyPoint;
 	
-			    		                if (acode.equals("CONJUNCTION")) {
-											if (planet.getCode().equals("Selena"))
-												type = positiveType;
-										} else if (planet.getCode().equals("Moon"))
+			    		                if (!acode.equals("CONJUNCTION")
+												&& planet.getCode().equals("Moon"))
 											continue;
 	
 										DirectionText dirText = (DirectionText)service.find(planet, house, type);
 										if (dirText != null) {
 											text = dirText.getDescription();
 											code = dirText.getCode();
+
+											if (dirText.getRetro() != null) {
+												text += "\n\n" + dirText.getRetro();
+											}
 										}
 										String ptext = prefix;
 										if (null == dirText
@@ -910,10 +902,8 @@ public class TransitSaveHandler extends Handler {
 											if (skyPoint instanceof House) {
 												House house = (House)skyPoint;
 			
-					    		                if (acode.equals("CONJUNCTION")) {
-													if (planet.getCode().equals("Selena"))
-														type = positiveType;
-												} else if (planet.getCode().equals("Moon"))
+					    		                if (planet.getCode().equals("Moon")
+					    		                		&& !acode.equals("CONJUNCTION"))
 													continue;
 			
 												DirectionText dirText = (DirectionText)service.find(planet, house, type);
@@ -925,23 +915,18 @@ public class TransitSaveHandler extends Handler {
 													: text;
 												daysection.add(new Paragraph(ptext, colorbold));
 
+												if (dirText.getRetro() != null) {
+													daysection.add(Chunk.NEWLINE);
+													daysection.add(new Paragraph(dirText.getRetro(), colorbold));
+												}
 											} else if (skyPoint instanceof Planet) {
 												long aspectid = 0;
-												boolean checktype = false;
 												Planet planet2 = (Planet)skyPoint;
 												boolean revolution = planet.getId().equals(planet2.getId());
-					    		                if (acode.equals("CONJUNCTION")) {
-													if (!revolution) {
-														if (planet.getCode().equals("Selena")
-																|| planet2.getCode().equals("Selena")) {
-															type = positiveType;
-															checktype = true;
-														}
-													}
-												} else if (planet.getCode().equals("Moon"))
+												if (planet.getCode().equals("Moon"))
 										            aspectid = spa.getAspect().getId();
 			
-												PlanetAspectText dirText = (PlanetAspectText)servicea.find(spa, aspectid, checktype);
+												PlanetAspectText dirText = (PlanetAspectText)servicea.find(spa, aspectid, false);
 												if (dirText != null)
 													text = dirText.getDescription();
 

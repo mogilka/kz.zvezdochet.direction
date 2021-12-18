@@ -54,4 +54,17 @@ public class DirectionText extends PlanetHouseText {
 	public void setPositive(boolean positive) {
 		this.positive = positive;
 	}
+
+	/**
+	 * Ретро-толкование транзита
+	 */
+	String retro;
+
+	public String getRetro() {
+		return retro;
+	}
+
+	public void setRetro(String retro) {
+		this.retro = retro;
+	}
 }
