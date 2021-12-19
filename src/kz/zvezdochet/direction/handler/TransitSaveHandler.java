@@ -726,9 +726,8 @@ public class TransitSaveHandler extends Handler {
 											text = dirText.getDescription();
 											code = dirText.getCode();
 
-											if (dirText.getRetro() != null) {
+											if (spa.isRetro() && dirText.getRetro() != null)
 												text += "\n\n" + dirText.getRetro();
-											}
 										}
 										String ptext = prefix;
 										if (null == dirText
