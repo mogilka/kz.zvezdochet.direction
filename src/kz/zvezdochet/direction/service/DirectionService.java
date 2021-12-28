@@ -43,14 +43,9 @@ public class DirectionService extends PlanetHouseService {
 		String sql;
 
 		AspectTypeService service = new AspectTypeService();
-		String pcode = planet.getCode();
 		if (null == aspectType)
 			aspectType = (AspectType)service.find("NEUTRAL");
 
-		if (aspectType.getCode().equals("NEUTRAL")) {
-			if (pcode.equals("Selena"))
-				aspectType = (AspectType)service.find("POSITIVE");
-		}		
 		try {
 			sql = "select * from " + tableName + 
 				" where typeid = " + aspectType.getId() +
