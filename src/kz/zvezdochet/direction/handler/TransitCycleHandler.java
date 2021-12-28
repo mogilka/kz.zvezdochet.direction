@@ -533,7 +533,7 @@ public class TransitCycleHandler extends Handler {
 					    				daysection.addSection(new Paragraph(ptext + til, colorbold));
 
 										if (spa.isRetro() && dirText.getRetro() != null)
-											daysection.add(new Paragraph(dirText.getRetro(), colorbold));
+											text += "\n\n" + dirText.getRetro();
 
 									} else if (skyPoint instanceof Planet) {
 										long aspectid = 0;
