@@ -108,8 +108,8 @@ public class MonthHandler extends Handler {
     		                } else {
     		                	String text = data[planet.getNumber() - 1][day];
     		                	data[planet.getNumber() - 1][day] = (null == text) ? value : text + "\n" + value;
-    					        if (28 == planet.getId() && 21 == skyPoint.getId())
-    					        	System.out.println(day + " " + data[planet.getNumber() - 1][day]);
+//    					        if (28 == planet.getId() && 21 == skyPoint.getId())
+//    					        	System.out.println(day + " " + data[planet.getNumber() - 1][day]);
     		                }
 						}
 					}
