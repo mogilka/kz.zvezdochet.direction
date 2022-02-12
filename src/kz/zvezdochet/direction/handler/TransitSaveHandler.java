@@ -723,11 +723,8 @@ public class TransitSaveHandler extends Handler {
 	
 										DirectionText dirText = (DirectionText)service.find(planet, house, type);
 										if (dirText != null) {
-											text = dirText.getDescription();
+											text = spa.isRetro() ? dirText.getRetro() : dirText.getDescription();
 											code = dirText.getCode();
-
-											if (spa.isRetro() && dirText.getRetro() != null)
-												text += "\n\n" + dirText.getRetro();
 										}
 										String ptext = prefix;
 										if (null == dirText
@@ -907,17 +904,12 @@ public class TransitSaveHandler extends Handler {
 			
 												DirectionText dirText = (DirectionText)service.find(planet, house, type);
 												if (dirText != null)
-													text = dirText.getDescription();
+													text = dirText.getRetro();
 
 												ptext = (null == dirText || null == dirText.getDescription())
 													? planet.getShortName() + " " + type.getSymbol() + " " + house.getName() + "<>"
 													: text;
 												daysection.add(new Paragraph(ptext, colorbold));
-
-												if (dirText.getRetro() != null) {
-													daysection.add(Chunk.NEWLINE);
-													daysection.add(new Paragraph(dirText.getRetro(), colorbold));
-												}
 											} else if (skyPoint instanceof Planet) {
 												long aspectid = 0;
 												Planet planet2 = (Planet)skyPoint;
