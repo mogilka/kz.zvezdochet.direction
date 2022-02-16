@@ -523,7 +523,7 @@ public class TransitCycleHandler extends Handler {
 	
 										DirectionText dirText = (DirectionText)service.find(planet, house, type);
 										if (dirText != null)
-											text = dirText.getDescription();
+											text = spa.isRetro() ? dirText.getRetro() : dirText.getDescription();
 										String ptext = prefix;
 										if (null == dirText)
 											ptext += planet.getShortName() + " " + type.getSymbol() + " " + house.getName() + "<>";
@@ -531,9 +531,6 @@ public class TransitCycleHandler extends Handler {
 											ptext += term ? planet.getName() + " " + type.getSymbol() + " " + house.getDesignation() + " дом" : house.getName();
 
 					    				daysection.addSection(new Paragraph(ptext + til, colorbold));
-
-										if (spa.isRetro() && dirText.getRetro() != null)
-											text += "\n\n" + dirText.getRetro();
 
 									} else if (skyPoint instanceof Planet) {
 										long aspectid = 0;
