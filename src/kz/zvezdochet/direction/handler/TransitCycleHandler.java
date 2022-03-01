@@ -523,7 +523,7 @@ public class TransitCycleHandler extends Handler {
 	
 										DirectionText dirText = (DirectionText)service.find(planet, house, type);
 										if (dirText != null)
-											text = spa.isRetro() ? dirText.getRetro() : dirText.getDescription();
+											text = spa.isRetro() && !planet.isFictitious() ? dirText.getRetro() : dirText.getDescription();
 										String ptext = prefix;
 										if (null == dirText)
 											ptext += planet.getShortName() + " " + type.getSymbol() + " " + house.getName() + "<>";

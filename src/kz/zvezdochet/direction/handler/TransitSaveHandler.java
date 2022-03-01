@@ -675,7 +675,7 @@ public class TransitSaveHandler extends Handler {
 									SkyPointAspect spa = (SkyPointAspect)object;
 									Planet planet = (Planet)spa.getSkyPoint1();
 		    		                main = planet.isMain();
-		    		                
+
 		    		                boolean exact = itexts.getKey().contains("EXACT");
 		    		                boolean separation = itexts.getKey().contains("SEPARATION");
 		    		                boolean repeat = itexts.getKey().contains("REPEAT");
@@ -723,7 +723,7 @@ public class TransitSaveHandler extends Handler {
 	
 										DirectionText dirText = (DirectionText)service.find(planet, house, type);
 										if (dirText != null) {
-											text = spa.isRetro() ? dirText.getRetro() : dirText.getDescription();
+											text = spa.isRetro() && !planet.isFictitious() ? dirText.getRetro() : dirText.getDescription();
 											code = dirText.getCode();
 										}
 										String ptext = prefix;
