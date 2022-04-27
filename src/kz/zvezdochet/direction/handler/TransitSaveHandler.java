@@ -215,7 +215,6 @@ public class TransitSaveHandler extends Handler {
 
 			chapter.add(new Paragraph("Позитив и негатив:", bold));
 			list = new com.itextpdf.text.List(false, false, 10);
-			list = new com.itextpdf.text.List(false, false, 10);
 			li = new ListItem();
 	        li.add(new Chunk("«Позитив» – это хороший эмоциональный настрой и благоприятные возможности, которые надо использовать по максимуму.", PDFUtil.getSuccessFont()));
 	        list.add(li);
@@ -241,6 +240,130 @@ public class TransitSaveHandler extends Handler {
 	        	+ "т.к. оно окажется значимым для вас и ваших близких и может иметь непредвиденные последствия.", red));
 	        list.add(li);
 	        chapter.add(list);
+
+	        if (!term) {
+				chapter.add(new Paragraph("Поиск по сферам жизни", fonth5));
+				chapter.add(new Paragraph("В начале каждого месяца есть диаграмма, показывающая, какие сферы жизни будут успешными и проблемными в этом месяце. "
+					+ "В конце каждого года приведены диаграммы сфер жизни по месяцам. "
+					+ "А если вам понадобится что-то запланировать, то можно забить в поиск по файлу ключевое слово и посмотреть связанный с этим прогноз. "
+					+ "При этом в поиске вылезут даты, где зелёным цветом выделены благоприятные прогнозы, красным - неблагоприятные прогнозы, чёрным - нейтральные и важные дни.", font));
+				chapter.add(Chunk.NEWLINE);
+	
+				chapter.add(new Paragraph("Какие ключевые слова использовать:", bold));
+				list = new com.itextpdf.text.List(false, false, 10);
+				li = new ListItem();
+				String s = "Всё, что касается самореализации, обычно описывается в разделах:";
+				long[] hids = {144,149,166,156,169,170,171,161};
+				int j = 0;
+				for (long hid : hids) {
+					if (++j > 1)
+						s += ",";
+					s += " ";
+					House house = houses.get(hid);
+					s += term ? house.getDesignation() : house.getName();
+				}
+		        li.add(new Chunk(s, font));
+		        list.add(li);
+		        	
+				li = new ListItem();
+				s = "Всё, что касается благосостояния, описано в разделах, которые озаглавлены как:";
+				hids = new long[] {145,165,151,146,147,148};
+				j = 0;
+				for (long hid : hids) {
+					if (++j > 1)
+						s += ",";
+					s += " ";
+					House house = houses.get(hid);
+					s += term ? house.getDesignation() : house.getName();
+				}
+		        li.add(new Chunk(s, font));
+		        list.add(li);
+		        	 
+				li = new ListItem();
+				s = "Всё, что касается семьи, описано в разделах:";
+				hids = new long[] {152,156,150};
+				j = 0;
+				for (long hid : hids) {
+					if (++j > 1)
+						s += ",";
+					s += " ";
+					House house = houses.get(hid);
+					s += term ? house.getDesignation() : house.getName();
+				}
+		        li.add(new Chunk(s, font));
+		        list.add(li);
+		        	 
+				li = new ListItem();
+				s = "Всё, что касается отдыха, отпуска, праздников, описано в разделе:";
+				hids = new long[] {154};
+				j = 0;
+				for (long hid : hids) {
+					if (++j > 1)
+						s += ",";
+					s += " ";
+					House house = houses.get(hid);
+					s += term ? house.getDesignation() : house.getName();
+				}
+		        li.add(new Chunk(s, font));
+		        list.add(li);
+	
+				li = new ListItem();
+				s = "Всё, что касается любви, описано в разделах:";
+				hids = new long[] {155,160};
+				j = 0;
+				for (long hid : hids) {
+					if (++j > 1)
+						s += ",";
+					s += " ";
+					House house = houses.get(hid);
+					s += term ? house.getDesignation() : house.getName();
+				}
+		        li.add(new Chunk(s, font));
+		        list.add(li);
+	
+				li = new ListItem();
+				s = "Всё, что касается работы и трудоустройства, описано в разделах:";
+				hids = new long[] {157,159,166,170};
+				j = 0;
+				for (long hid : hids) {
+					if (++j > 1)
+						s += ",";
+					s += " ";
+					House house = houses.get(hid);
+					s += term ? house.getDesignation() : house.getName();
+				}
+		        li.add(new Chunk(s, font));
+		        list.add(li);
+	
+				li = new ListItem();
+				s = "Всё, что касается решения вопросов со сторонними фирмами и специалистами, описано в разделе:";
+				hids = new long[] {161};
+				j = 0;
+				for (long hid : hids) {
+					if (++j > 1)
+						s += ",";
+					s += " ";
+					House house = houses.get(hid);
+					s += term ? house.getDesignation() : house.getName();
+				}
+		        li.add(new Chunk(s, font));
+		        list.add(li);
+		        	 
+				li = new ListItem();
+				s = "Всё, что касается поездок и транспорта, описано в разделах:";
+				hids = new long[] {148,167};
+				j = 0;
+				for (long hid : hids) {
+					if (++j > 1)
+						s += ",";
+					s += " ";
+					House house = houses.get(hid);
+					s += term ? house.getDesignation() : house.getName();
+				}
+		        li.add(new Chunk(s, font));
+		        list.add(li);
+		        chapter.add(list);
+	        }
 	        doc.add(chapter);
 
 			Map<Integer, Map<Integer, List<Long>>> years = new TreeMap<Integer, Map<Integer, List<Long>>>();
