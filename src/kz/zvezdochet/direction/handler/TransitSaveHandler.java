@@ -166,20 +166,18 @@ public class TransitSaveHandler extends Handler {
 	        chapter.add(p);
 
 	        if (longterm) {
-				p = new Paragraph();
-				p.add(new Chunk("Файл содержит большой объём информации, и если прогноз рассчитан на несколько месяцев, нет смысла пытаться его весь прочитать. "
-					+ "Используйте прогноз в начале каждой недели как путеводитель, помогающий понять тенденции и учесть риски. ", font));
-		        chunk = new Chunk("Пояснения к прогнозу", new Font(baseFont, 12, Font.UNDERLINE, PDFUtil.FONTCOLOR));
-		        chunk.setAnchor("https://zvezdochet.guru/post/223/poyasnenie-k-ezhednevnym-prognozam");
-		        p.add(chunk);
-				chapter.add(p);
+	        	chapter.add(new Paragraph("Файл содержит большой объём информации, и если прогноз рассчитан на несколько месяцев, нет смысла пытаться его весь прочитать. "
+					+ "Используйте прогноз в начале каждой недели как путеводитель, помогающий понять тенденции и учесть риски.", font));
 				chapter.add(Chunk.NEWLINE);
 	        }
 			Font red = PDFUtil.getDangerFont();
 			p = new Paragraph();
 			String divergence = person.isRectified() ? "1 день" : "2 дня";
 			p.add(new Chunk("Общая погрешность прогноза составляет ±" + divergence + ". ", red));
-			p.add(new Chunk("Это значит, что описанное событие может произойти на день раньше, если длительность прогноза составляет более одного дня (в толковании вы это увидите).", font));
+			p.add(new Chunk("Это значит, что описанное событие может произойти на день раньше, если длительность прогноза составляет более одного дня (в толковании вы это увидите). ", font));
+	        chunk = new Chunk("Пояснения к прогнозу", new Font(baseFont, 12, Font.UNDERLINE, PDFUtil.FONTCOLOR));
+	        chunk.setAnchor("https://zvezdochet.guru/post/223/poyasnenie-k-ezhednevnym-prognozam");
+	        p.add(chunk);
 			chapter.add(p);
 			chapter.add(Chunk.NEWLINE);
 
@@ -242,13 +240,24 @@ public class TransitSaveHandler extends Handler {
 	        chapter.add(list);
 
 	        if (!term) {
+	        	chapter.add(Chunk.NEXTPAGE);
 				chapter.add(new Paragraph("Поиск по сферам жизни", fonth5));
-				chapter.add(new Paragraph("В начале каждого месяца есть диаграмма, показывающая, какие сферы жизни будут успешными и проблемными в этом месяце. "
-					+ "В конце каждого года приведены диаграммы сфер жизни по месяцам. "
-					+ "А если вам понадобится что-то запланировать, то можно забить в поиск по файлу ключевое слово и посмотреть связанный с этим прогноз. "
-					+ "При этом в поиске вылезут даты, где зелёным цветом выделены благоприятные прогнозы, красным - неблагоприятные прогнозы, чёрным - нейтральные и важные дни.", font));
+				list = new com.itextpdf.text.List(false, false, 10);
+				li = new ListItem();
+		        li.add(new Chunk("В начале каждого месяца есть диаграмма, показывающая, какие сферы жизни будут успешными и проблемными в этом месяце.", font));
+		        list.add(li);
+
+				li = new ListItem();
+		        li.add(new Chunk("В конце каждого года приведены диаграммы сфер жизни по месяцам. Там показана динамика хороших и плохих тенденций.", font));
+		        list.add(li);
+
+				li = new ListItem();
+		        li.add(new Chunk("Если понадобится что-то запланировать, то можно забить в поиск по файлу ключевое слово и посмотреть связанный с этим прогноз. " +
+		        	"При этом вылезут даты, где зелёным цветом отмечены благоприятные прогнозы, красным - неблагоприятные, чёрным - нейтральные и важные дни.", font));
+		        list.add(li);
+				chapter.add(list);
+
 				chapter.add(Chunk.NEWLINE);
-	
 				chapter.add(new Paragraph("Какие ключевые слова использовать:", bold));
 				list = new com.itextpdf.text.List(false, false, 10);
 				li = new ListItem();
