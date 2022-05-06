@@ -71,7 +71,7 @@ public class MonthHandler extends Handler {
 				event.setZone(place.getZone());
 				event.calc(true);
 
-				Map<String, List<Object>> ingressList = person.initIngresses(event);
+				Map<String, List<Object>> ingressList = person.initIngresses(event, false);
 				if (ingressList.isEmpty())
 					continue;
 

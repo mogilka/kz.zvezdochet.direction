@@ -292,7 +292,7 @@ public class TransitCycleHandler extends Handler {
 						event.setZone(0);
 						event.calc(true);
 
-						Map<String, List<Object>> ingressList = person.initIngresses(event);
+						Map<String, List<Object>> ingressList = person.initIngresses(event, term);
 						if (ingressList.isEmpty())
 							continue;
 

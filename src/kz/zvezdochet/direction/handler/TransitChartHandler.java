@@ -164,7 +164,7 @@ public class TransitChartHandler extends Handler {
 				event.setZone(0);
 				event.calc(true);
 
-				Map<String, List<Object>> ingressList = person.initIngresses(event);
+				Map<String, List<Object>> ingressList = person.initIngresses(event, false);
 				if (ingressList.isEmpty())
 					continue;
 
