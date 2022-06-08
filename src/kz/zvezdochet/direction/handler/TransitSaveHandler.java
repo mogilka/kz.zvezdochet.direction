@@ -517,10 +517,14 @@ public class TransitSaveHandler extends Handler {
 		    		                	if (planet.getCode().equals("Rakhu")
 		    		                			|| planet.getCode().equals("Kethu"))
 		    		                		continue;
-		    		                	if (!housable)
-			    		                	if (skyPoint.getCode().equals("Rakhu")
-			    		                			|| skyPoint.getCode().equals("Kethu"))
-			    		                		continue;
+
+		    		                	if (housable) {
+		    		                		if (!spa.isRetro()
+		    		                				&& (planet.isMain() || planet.isFictitious()))
+											continue;
+		    		                	} else if (skyPoint.getCode().equals("Rakhu")
+			    		                		|| skyPoint.getCode().equals("Kethu"))
+			    		                	continue;
 		    		                }
 									objects2.add(spa);
 
