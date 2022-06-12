@@ -96,6 +96,9 @@ public class TransitSaveHandler extends Handler {
 			int choice = DialogUtil.alertQuestion("Вопрос", "Выберите тип прогноза:", new String[] {"Реалистичный", "Оптимистичный"});
 			boolean optimistic = choice > 0;
 
+			choice = DialogUtil.alertQuestion("Вопрос", "Выберите тип прогноза:", new String[] {"Только важное", "Полный"});
+			boolean important = (0 == choice);
+
 			//Признак использования астрологических терминов
 			boolean term = periodPart.isTerm();
 			updateStatus("Расчёт транзитов на период", false);
@@ -147,6 +150,7 @@ public class TransitSaveHandler extends Handler {
 			boolean pdefault = place.getId().equals(place.getDefault().getId());
 			
 			text = "Тип прогноза: " + (optimistic ? "оптимистичный" : "реалистичный");
+			text += ", " + (important ? "только важное" : "полный");
 			p = new Paragraph(text, font);
 	        p.setAlignment(Element.ALIGN_CENTER);
 			if (!person.isRectified())
@@ -785,7 +789,13 @@ public class TransitSaveHandler extends Handler {
 			    		                boolean separation = key.contains("SEPARATION");
 			    		                if (main && separation) {
 			        		                continue;
-			    		                } if (planet.getCode().equals("Moon")) {
+			    		                }
+//			    		                if (important) {
+//				    		                if (planet.getCode().equals("Moon")
+//				    		                		&& !spa.getAspect().getCode().equals("CONJUNCTION"))
+//		    		                			continue;
+//			    		                }
+			    		                if (planet.getCode().equals("Moon")) {
 		    		                		if (spa.getSkyPoint2() instanceof House
 		    		                				&& !spa.getAspect().getCode().equals("CONJUNCTION"))
 		    		                			continue;
@@ -813,8 +823,14 @@ public class TransitSaveHandler extends Handler {
 								if (object instanceof SkyPointAspect) {
 									SkyPointAspect spa = (SkyPointAspect)object;
 									Planet planet = (Planet)spa.getSkyPoint1();
-		    		                main = planet.isMain();
+									
+									if (important) {
+			    		                if (planet.getCode().equals("Moon")
+			    		                		&& !spa.getAspect().getCode().equals("CONJUNCTION"))
+	    		                			continue;
+		    		                }
 
+		    		                main = planet.isMain();
 		    		                boolean exact = itexts.getKey().contains("EXACT");
 		    		                boolean separation = itexts.getKey().contains("SEPARATION");
 		    		                boolean repeat = itexts.getKey().contains("REPEAT");
@@ -882,18 +898,23 @@ public class TransitSaveHandler extends Handler {
 												: (null == house.getGeneral() ? "к куспиду" : "к вершине");
 
 											p = new Paragraph();
-											p.add(new Chunk(planet.getMark("house", term) + " ", grayfont));
 											p.add(new Chunk(spa.getAspect().getName() + " транзитной планеты ", grayfont));
 											p.add(new Chunk(planet.getSymbol(), afont));
 											p.add(new Chunk(" " + planet.getName(), grayfont));
 											p.add(new Chunk(" из " + CalcUtil.roundTo(planet.getLongitude(), 2) + "° (", grayfont));
 											Sign sign = planet.getSign();
 						    				p.add(new Chunk(sign.getSymbol(), afont));
-						    				p.add(new Chunk(" " + sign.getName() + ", ", grayfont));
+						    				p.add(new Chunk(" " + sign.getName(), grayfont));
+						    				String mark = planet.getMark("sign", term);
+						    				p.add(new Chunk((mark.isEmpty() ? "" : " " + mark) + ", ", grayfont));
 						    				House house2 = planet.getHouse();
-											p.add(new Chunk(house2.getDesignation() + " дом, сектор «" + house2.getName() + "») ", grayfont));
-											p.add(new Chunk(pretext + " " + house.getDesignation() + " дома (сектор «" + house.getName() + "»)", grayfont));
-											daysection.add(p);					    					
+											p.add(new Chunk(house2.getDesignation() + " дом, сектор «" + house2.getName() + "»", grayfont));
+											mark = planet.getMark("house", term);
+						    				p.add(new Chunk((mark.isEmpty() ? "" : " " + mark) + ") ", grayfont));
+											p.add(new Chunk(pretext + " " + house.getDesignation() + " дома", grayfont));
+						    				if (!acode.equals("CONJUNCTION"))
+												p.add(new Chunk(" (сектор «" + house.getName() + "»)", grayfont));
+											daysection.add(p);
 					    				} else if (tduration.length() > 0 && !repeat)
 						    				daysection.add(new Paragraph("Длительность прогноза: " + tduration + rduration, grayfont));
 
@@ -957,11 +978,13 @@ public class TransitSaveHandler extends Handler {
 								    		p.add(new Chunk(pretext + " ", grayfont));
 						    				p.add(new Chunk(planet2.getSymbol(), afont));
 						    				p.add(new Chunk(" " + planet2.getName(), grayfont));
-											Sign sign2 = planet2.getSign();
-						    				p.add(new Chunk(" (" + sign2.getSymbol(), afont));
-						    				p.add(new Chunk(" " + sign2.getName() + ", ", grayfont));
-						    				House house2 = planet2.getHouse();
-						    				p.add(new Chunk(house2.getDesignation() + " дом, сектор «" + house2.getName() + "») ", grayfont));
+						    				if (acode.equals("CONJUNCTION")) {
+												Sign sign2 = planet2.getSign();
+							    				p.add(new Chunk(" (" + sign2.getSymbol(), afont));
+							    				p.add(new Chunk(" " + sign2.getName() + ", ", grayfont));
+							    				House house2 = planet2.getHouse();
+							    				p.add(new Chunk(house2.getDesignation() + " дом, сектор «" + house2.getName() + "») ", grayfont));
+						    				}
 						    				daysection.add(p);
 										} else if (tduration.length() > 0 && !repeat)
 						    				daysection.add(new Paragraph("Длительность прогноза: " + tduration + rduration, grayfont));
