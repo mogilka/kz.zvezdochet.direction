@@ -28,6 +28,7 @@ import com.itextpdf.text.pdf.PdfWriter;
 
 import kz.zvezdochet.analytics.bean.Rule;
 import kz.zvezdochet.analytics.exporter.EventRules;
+import kz.zvezdochet.bean.Aspect;
 import kz.zvezdochet.bean.AspectType;
 import kz.zvezdochet.bean.Event;
 import kz.zvezdochet.bean.House;
@@ -38,14 +39,17 @@ import kz.zvezdochet.bean.SkyPoint;
 import kz.zvezdochet.bean.SkyPointAspect;
 import kz.zvezdochet.core.bean.Model;
 import kz.zvezdochet.core.service.DataAccessException;
+import kz.zvezdochet.core.util.CalcUtil;
 import kz.zvezdochet.core.util.CoreUtil;
 import kz.zvezdochet.core.util.DateUtil;
 import kz.zvezdochet.core.util.OsUtil;
 import kz.zvezdochet.core.util.PlatformUtil;
 import kz.zvezdochet.direction.Activator;
 import kz.zvezdochet.direction.bean.DirectionAspectText;
+import kz.zvezdochet.direction.bean.DirectionRule;
 import kz.zvezdochet.direction.bean.DirectionText;
 import kz.zvezdochet.direction.service.DirectionAspectService;
+import kz.zvezdochet.direction.service.DirectionRuleService;
 import kz.zvezdochet.direction.service.DirectionService;
 import kz.zvezdochet.export.bean.Bar;
 import kz.zvezdochet.export.handler.PageEventHandler;
@@ -389,7 +393,7 @@ public class PDFExporter {
 				chapter.add(Chunk.NEXTPAGE);
 
 				for (Map.Entry<Integer, List<SkyPointAspect>> subentry : agemap.entrySet())
-					printEvents(event, chapter, age, subentry.getKey(), subentry.getValue());
+					printEvents(event, chapter, age, subentry.getKey(), subentry.getValue(), agemap.get(2));
 				doc.add(chapter);
 				doc.add(Chunk.NEXTPAGE);
 			}
@@ -526,8 +530,9 @@ public class PDFExporter {
 	 * @param age возраст
 	 * @param code код подраздела
 	 * @param spas список событий
+	 * @param spas2 список аспектов дирекционных планет возраста
 	 */
-	private Section printEvents(Event event, Chapter chapter, int age, int code, List<SkyPointAspect> spas) {
+	private Section printEvents(Event event, Chapter chapter, int age, int code, List<SkyPointAspect> spas, List<SkyPointAspect> spas2) {
 		try {
 			if (spas.isEmpty())
 				return null;
@@ -560,9 +565,14 @@ public class PDFExporter {
 
 			DirectionService service = new DirectionService();
 			DirectionAspectService servicea = new DirectionAspectService();
+			DirectionRuleService servicer = new DirectionRuleService();
+
 			boolean child = event.isChild();
 			String[] adult = {"II_3", "V_2", "V_3", "VII"};
 			String[] pnegative = {"Lilith", "Kethu"};
+
+			Font fonth6 = PDFUtil.getSubheaderFont();
+			Font afont = PDFUtil.getHeaderAstroFont();
 
 			for (SkyPointAspect spa : spas) {
 				AspectType type = spa.getAspect().getType();
@@ -599,16 +609,27 @@ public class PDFExporter {
 					}
 					section.addSection(new Paragraph(text, fonth5));
 					if (term) {
-						String pretext = spa.getAspect().getCode().equals("CONJUNCTION")
+						String pretext = acode.equals("CONJUNCTION")
 							? (null == house.getGeneral() ? "с куспидом" : "с вершиной")
 							: (null == house.getGeneral() ? "к куспиду" : "к вершине");
 
 						p = new Paragraph();
-	    				p.add(new Chunk(planet.getMark("house", term), grayfont));
 			    		p.add(new Chunk(spa.getAspect().getName() + " дирекционной планеты ", grayfont));
-	    				p.add(new Chunk(planet.getSymbol(), PDFUtil.getHeaderAstroFont()));
+	    				p.add(new Chunk(planet.getSymbol(), afont));
 	    				p.add(new Chunk(" " + planet.getName(), grayfont));
-			    		p.add(new Chunk(" " + pretext + " " + house.getDesignation() + " дома", grayfont));
+						p.add(new Chunk(" из " + CalcUtil.roundTo(planet.getLongitude(), 2) + "° (", grayfont));
+						Sign sign = planet.getSign();
+	    				p.add(new Chunk(sign.getSymbol(), afont));
+	    				p.add(new Chunk(" " + sign.getName(), grayfont));
+	    				String mark = planet.getMark("sign", term);
+	    				p.add(new Chunk((mark.isEmpty() ? "" : " " + mark) + ", ", grayfont));
+	    				House house2 = planet.getHouse();
+						p.add(new Chunk(house2.getDesignation() + " дом, сектор «" + house2.getName() + "»", grayfont));
+						mark = planet.getMark("house", term);
+	    				p.add(new Chunk((mark.isEmpty() ? "" : " " + mark) + ") ", grayfont));
+						p.add(new Chunk(pretext + " " + house.getDesignation() + " дома ", grayfont));
+	    				if (!acode.equals("CONJUNCTION"))
+							p.add(new Chunk("(сектор «" + house.getName() + "»)", grayfont));
 	    				section.add(p);
 					}
 
@@ -628,6 +649,57 @@ public class PDFExporter {
 							BaseColor color = PDFUtil.htmlColor2Base(typeColor);
 							section.add(new Paragraph(PDFUtil.removeTags(text, new Font(baseFont, 12, Font.NORMAL, color))));
 							PDFUtil.printGender(section, dirText, female, child, true);
+
+							//правила домов
+							List<DirectionRule> houseRules = servicer.findRules(planet, house, spa.getAspect().getType());
+							for (DirectionRule rule : houseRules) {
+								AspectType aspectType = rule.getAspectType();
+								Aspect aspect = rule.getAspect();
+								Planet planet2 = rule.getPlanet2();
+								House house2 = rule.getHouse2();
+								for (SkyPointAspect spa2 : spas2) {
+									if (aspect != null
+											&& !aspect.getId().equals(spa2.getAspect().getId()))
+										continue;
+
+									SkyPoint sp = spa2.getSkyPoint2();
+									if (aspectType.getId().equals(spa2.getAspect().getTypeid())) {
+										if (planet2.getId().equals(sp.getId())) {
+											if (house2 != null
+													&& !house2.getId().equals(sp.getHouse().getId()))
+												continue;
+
+											section.add(Chunk.NEWLINE);
+											boolean negative2 = spa2.isNegative();
+											String sign2 = negative2 ? "-" : "+";
+											String header2 = rule.getHouse().getName() + " " + 
+												sign2 + " " + 
+												(negative2 ? planet2.getNegative() : planet2.getPositive());
+											section.add(new Paragraph(header2, fonth6));
+											if (term) {
+												p = new Paragraph();
+									    		p.add(new Chunk(spa2.getAspect().getName() + " дирекционной планеты", grayfont));
+							    				p.add(new Chunk(" " + planet.getName(), grayfont));
+							    				p.add(new Chunk(" к натальной планете " + planet2.getName(), grayfont));
+									    		p.add(new Chunk(", находящейся в " + house2.getDesignation() + " доме (сектор «" + house2.getName() + "»)", grayfont));
+							    				section.add(p);
+											}
+											section.add(new Paragraph(PDFUtil.removeTags(rule.getText(), font)));
+											//PDFUtil.printGender(section, rule, female, child, true);
+										}
+									}
+								}
+							}
+							//используется для связки двух домов (дирекционного и натального)
+							if (!acode.equals("CONJUNCTION") && !acode.equals("OPPOSITION")) {
+								House h = planet.getHouse();
+								String comment = negative
+									? "Причиной этого станут следующие негативные факторы"
+									: "Это станет возможным благодаря следующим позитивным факторам";
+								String htext = negative ? h.getNegative() : h.getPositive();
+								section.add(Chunk.NEWLINE);
+								section.add(new Paragraph(comment + ": " + htext, font));
+							}
 						}
 						section.add(Chunk.NEWLINE);
 					}
@@ -661,24 +733,40 @@ public class PDFExporter {
 									continue;
 							}
 
-			    			if (term) {
-								String pretext = spa.getAspect().getCode().equals("CONJUNCTION")
+							Aspect dasp = dirText.getAspect();
+			    			if (term && null == dasp) {
+								String pretext = acode.equals("CONJUNCTION")
 									? "с натальной планетой"
 									: "к натальной планете";
 
 			    				p = new Paragraph();
-			    				if (dirText != null)
-			    					p.add(new Chunk(dirText.getMark(), grayfont));
 					    		p.add(new Chunk(spa.getAspect().getName() + " дирекционной планеты ", grayfont));
-			    				p.add(new Chunk(planet.getSymbol(), PDFUtil.getHeaderAstroFont()));
+					    		p.add(new Chunk(planet.getSymbol(), afont));
 			    				p.add(new Chunk(" " + planet.getName(), grayfont));
-					    		p.add(new Chunk(" " + pretext + " ", grayfont));
-			    				p.add(new Chunk(planet2.getSymbol(), PDFUtil.getHeaderAstroFont()));
+								p.add(new Chunk(" из " + CalcUtil.roundTo(planet.getLongitude(), 2) + "° (", grayfont));
+								Sign sign = planet.getSign();
+			    				p.add(new Chunk(sign.getSymbol(), afont));
+			    				p.add(new Chunk(" " + sign.getName(), grayfont));
+			    				String mark = planet.getMark("sign", term);
+			    				p.add(new Chunk((mark.isEmpty() ? "" : " " + mark) + ", ", grayfont));
+			    				House house = planet.getHouse();
+			    				p.add(new Chunk(house.getDesignation() + " дом, сектор «" + house.getName() + "»", grayfont));
+			    				mark = planet.getMark("house", term);
+			    				p.add(new Chunk((mark.isEmpty() ? "" : " " + mark) + ") ", grayfont));
+					    		p.add(new Chunk(pretext + " ", grayfont));
+			    				p.add(new Chunk(planet2.getSymbol(), afont));
 			    				p.add(new Chunk(" " + planet2.getName(), grayfont));
+			    				if (!acode.equals("CONJUNCTION")) {
+									Sign sign2 = planet2.getSign();
+				    				p.add(new Chunk(" (" + sign2.getSymbol(), afont));
+				    				p.add(new Chunk(" " + sign2.getName() + ", ", grayfont));
+				    				House house2 = planet2.getHouse();
+				    				p.add(new Chunk(house2.getDesignation() + " дом, сектор «" + house2.getName() + "») ", grayfont));
+			    				}
 			    				section.add(p);
 			    			}
 
-			    			if (null == dirText.getAspect()) {
+			    			if (null == dasp) {
 								if (acode.equals("QUADRATURE"))
 									section.add(new Paragraph("Уровень критичности: высокий", red));
 								else if (acode.equals("OPPOSITION"))
@@ -696,6 +784,22 @@ public class PDFExporter {
 									BaseColor color = PDFUtil.htmlColor2Base(typeColor);
 									section.add(new Paragraph(PDFUtil.removeTags(text, new Font(baseFont, 12, Font.NORMAL, color))));
 									PDFUtil.printGender(section, dirText, female, child, true);
+								}
+								//используется для связки двух домов (дирекционного и натального)
+								if (null == dasp) {
+									House h = planet.getHouse();
+									String comment = "";
+									if (acode.equals("CONJUNCTION"))
+										comment = "Всё это актуально для следующих сфер жизни: " + h.getDescription();
+									else {
+										House h2 = planet2.getHouse();
+										comment = negative
+											? "Уязвимой здесь является сфера жизни «" + h2.getName() + "». На неё повлияют следующие негативные факторы"
+											: "Данный позитивный прогноз касается сферы жизни «" + h2.getName() + "», и этому поспособствуют следующие благоприятные факторы";
+										comment += ": " + (negative ? h.getNegative() : h.getPositive());
+									}
+									section.add(Chunk.NEWLINE);
+									section.add(new Paragraph(comment, font));
 								}
 							}
 							section.add(Chunk.NEWLINE);

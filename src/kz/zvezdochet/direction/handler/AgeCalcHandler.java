@@ -227,6 +227,7 @@ public class AgeCalcHandler extends Handler {
 					point1.setLongitude(one);
 					initPlanetHouse(point1);
 					initPlanetSign(point1);
+					point1.initPositions();
 					aspect.setSkyPoint1(point1);
 					aspect.setSkyPoint2(point2);
 					aspect.setScore(res);
