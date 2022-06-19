@@ -717,10 +717,14 @@ public class PDFExporter {
 					Planet planet2 = (Planet)skyPoint;
     				String pname = negative ? event.getPlanets().get(planet.getId()).getBadName() : event.getPlanets().get(planet.getId()).getGoodName();
     				String pname2 = negative ? event.getPlanets().get(planet2.getId()).getBadName() : event.getPlanets().get(planet2.getId()).getGoodName();
+    				House house = planet.getHouse();
+    				House house2 = planet2.getHouse();
+    				String phouse = house.getName();
+    				String phouse2 = house2.getName();
 
 					String text = term
 						? planet.getName() + " " + type.getSymbol() + " " + planet2.getName()
-						: pname + " " + type.getSymbol() + " " + pname2;
+						: pname + "-" + phouse + " " + type.getSymbol() + " " + pname2 + "-" + phouse2;
     				section.addSection(new Paragraph(text, fonth5));
 
 					if (!texts.isEmpty())
@@ -749,7 +753,6 @@ public class PDFExporter {
 			    				p.add(new Chunk(" " + sign.getName(), grayfont));
 			    				String mark = planet.getMark("sign", term);
 			    				p.add(new Chunk((mark.isEmpty() ? "" : " " + mark) + ", ", grayfont));
-			    				House house = planet.getHouse();
 			    				p.add(new Chunk(house.getDesignation() + " дом, сектор «" + house.getName() + "»", grayfont));
 			    				mark = planet.getMark("house", term);
 			    				p.add(new Chunk((mark.isEmpty() ? "" : " " + mark) + ") ", grayfont));
@@ -760,7 +763,6 @@ public class PDFExporter {
 									Sign sign2 = planet2.getSign();
 				    				p.add(new Chunk(" (" + sign2.getSymbol(), afont));
 				    				p.add(new Chunk(" " + sign2.getName() + ", ", grayfont));
-				    				House house2 = planet2.getHouse();
 				    				p.add(new Chunk(house2.getDesignation() + " дом, сектор «" + house2.getName() + "») ", grayfont));
 			    				}
 			    				section.add(p);
@@ -800,6 +802,19 @@ public class PDFExporter {
 									}
 									section.add(Chunk.NEWLINE);
 									section.add(new Paragraph(comment, font));
+
+									//правило домов
+									DirectionRule rule = servicer.findRule(planet, house, spa.getAspect().getType(), planet2, house2);
+									if (rule != null) {
+										Aspect aspect = rule.getAspect();
+										if (aspect != null
+												&& !aspect.getId().equals(spa.getAspect().getId()))
+											continue;
+		
+										section.add(Chunk.NEWLINE);
+										section.add(new Paragraph(PDFUtil.removeTags(rule.getText(), font)));
+										//PDFUtil.printGender(section, rule, female, child, true);
+									}
 								}
 							}
 							section.add(Chunk.NEWLINE);

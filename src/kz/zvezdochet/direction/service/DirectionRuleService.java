@@ -27,9 +27,10 @@ public class DirectionRuleService extends PlanetHouseRuleService {
 
 	/**
 	 * Поиск толкования дирекции планеты к дому
-	 * @param planet планета
-	 * @param house астрологический дом
-	 * @return описание позиции планеты в доме
+	 * @param planet дирекционная планета
+	 * @param house дирекционный астрологический дом
+	 * @param type дирекционный тип аспекта
+	 * @return массив толкований
 	 * @throws DataAccessException
 	 */
 	public List<DirectionRule> findRules(Planet planet, House house, AspectType type) throws DataAccessException {
@@ -75,5 +76,42 @@ public class DirectionRuleService extends PlanetHouseRuleService {
 	@Override
 	public Model create() {
 		return new DirectionRule();
+	}
+
+	/**
+	 * Поиск толкования дирекционной планеты к натальной
+	 * @param planet дирекционная планета
+	 * @param house дирекционный астрологический дом
+	 * @param type дирекционный тип аспекта
+	 * @return толкование
+	 * @throws DataAccessException
+	 */
+	public DirectionRule findRule(Planet planet, House house, AspectType type, Planet planet2, House house2) throws DataAccessException {
+        PreparedStatement ps = null;
+        ResultSet rs = null;
+		String sql;
+		try {
+			sql = "select * from " + tableName + 
+				" where planetid = " + planet.getId() +
+				" and houseid = " + house.getId() +
+				" and planet2id = " + planet2.getId() +
+				" and house2id = " + house2.getId() +
+				" and typeid = " + type.getId();
+			ps = Connector.getInstance().getConnection().prepareStatement(sql);
+//			System.out.println(planet + " " + house);
+			rs = ps.executeQuery();
+			if (rs.next())
+				return init(rs, null);
+		} catch (Exception e) {
+			e.printStackTrace();
+		} finally {
+			try { 
+				if (rs != null) rs.close();
+				if (ps != null) ps.close();
+			} catch (SQLException e) { 
+				e.printStackTrace(); 
+			}
+		}
+		return null;
 	}
 }
