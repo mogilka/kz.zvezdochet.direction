@@ -6,7 +6,8 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
-import kz.zvezdochet.analytics.service.PlanetHouseRuleService;
+import kz.zvezdochet.analytics.service.PlanetHouseService;
+import kz.zvezdochet.bean.Aspect;
 import kz.zvezdochet.bean.AspectType;
 import kz.zvezdochet.bean.House;
 import kz.zvezdochet.bean.Planet;
@@ -14,12 +15,15 @@ import kz.zvezdochet.core.bean.Model;
 import kz.zvezdochet.core.service.DataAccessException;
 import kz.zvezdochet.core.tool.Connector;
 import kz.zvezdochet.direction.bean.DirectionRule;
+import kz.zvezdochet.service.AspectService;
+import kz.zvezdochet.service.HouseService;
+import kz.zvezdochet.service.PlanetService;
 
 /**
  * Сервис дирекции планеты к астрологическому дому
  * @author Natalie Didenko
  */
-public class DirectionRuleService extends PlanetHouseRuleService {
+public class DirectionRuleService extends PlanetHouseService {
 
 	public DirectionRuleService() {
 		tableName = "directionrule";
@@ -70,6 +74,9 @@ public class DirectionRuleService extends PlanetHouseRuleService {
 	public DirectionRule init(ResultSet rs, Model model) throws DataAccessException, SQLException {
 		DirectionRule dict = (model != null) ? (DirectionRule)model : (DirectionRule)create();
 		dict = (DirectionRule)super.init(rs, model);
+		dict.setPlanet2((Planet)new PlanetService().find(rs.getLong("Planet2ID")));
+		dict.setHouse2((House)new HouseService().find(rs.getLong("House2ID")));
+		dict.setAspect((Aspect)new AspectService().find(rs.getLong("aspectid")));
 		return dict;
 	}
 
