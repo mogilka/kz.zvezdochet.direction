@@ -37,10 +37,12 @@ import kz.zvezdochet.bean.House;
 import kz.zvezdochet.bean.Ingress;
 import kz.zvezdochet.bean.Place;
 import kz.zvezdochet.bean.Planet;
+import kz.zvezdochet.bean.Sign;
 import kz.zvezdochet.bean.SkyPoint;
 import kz.zvezdochet.bean.SkyPointAspect;
 import kz.zvezdochet.core.handler.Handler;
 import kz.zvezdochet.core.ui.util.DialogUtil;
+import kz.zvezdochet.core.util.CalcUtil;
 import kz.zvezdochet.core.util.DateUtil;
 import kz.zvezdochet.core.util.OsUtil;
 import kz.zvezdochet.core.util.PlatformUtil;
@@ -278,11 +280,7 @@ public class TransitCycleHandler extends Handler {
 			/**
 			 * коды ингрессий, используемых в документе
 			 */
-			String[] icodes = new String[] {
-				Ingress._EXACT, Ingress._EXACT_HOUSE,
-				Ingress._SEPARATION, Ingress._SEPARATION_HOUSE,
-				Ingress._REPEAT, Ingress._REPEAT_HOUSE
-			};
+			String[] icodes = Ingress.getKeys();
 
 			//создаём аналогичный массив, но с домами вместо дат
 			for (Map.Entry<Integer, Map<Integer, List<Long>>> entry : years.entrySet()) {
@@ -441,7 +439,22 @@ public class TransitCycleHandler extends Handler {
 											yhouses.put(houseid, htypes);
 										}
 									}
-								}
+								} else if (object instanceof Planet) { //ретро или директ
+									Planet planet = (Planet)object;
+								    List<SkyPointAspect> transits = new ArrayList<SkyPointAspect>();
+									List<Object> pobjects = new ArrayList<Object>();
+									pobjects.addAll(ingressList.get(Ingress._REPEAT));
+									pobjects.addAll(ingressList.get(Ingress._REPEAT_HOUSE));
+
+									for (Object object2 : pobjects) {
+										SkyPointAspect spa = (SkyPointAspect)object2;
+										if (!spa.getSkyPoint1().getId().equals(planet.getId()))
+											continue;
+										transits.add(spa);
+									}
+									planet.setData(transits);
+									objects2.add(planet);
+								} 
 							}
 							ingressmap.put(key, objects2);
 						}
@@ -464,6 +477,8 @@ public class TransitCycleHandler extends Handler {
 			AspectTypeService typeService = new AspectTypeService();
 			AspectType positiveType = (AspectType)typeService.find(3L);
 			Font hfont = new Font(baseFont, 16, Font.BOLD, PDFUtil.FONTCOLOR);
+	        Font grayfont = PDFUtil.getAnnotationFont(false);
+	        Font afont = PDFUtil.getHeaderAstroFont();
 
 	        //года
 			for (Map.Entry<Integer, Map<Integer, Map<Long, Integer>>> entry : myears.entrySet()) {
@@ -598,6 +613,126 @@ public class TransitCycleHandler extends Handler {
 										p = new Paragraph();
 										p.add(new Chunk(descr, new Font(baseFont, 12, Font.NORMAL, color)));
 										daysection.add(p);
+									}
+								} else if (object instanceof Planet) {
+									Planet planet = (Planet)object;
+				    				@SuppressWarnings("unchecked")
+									List<SkyPointAspect> transits = (List<SkyPointAspect>)planet.getData();
+				    				boolean notransits = (null == transits || transits.isEmpty());
+//				    				if (!term && notransits) {
+//					    				daysection.add(new Paragraph("Нет данных", font));
+//					    				daysection.add(Chunk.NEWLINE);
+//				    					continue;
+//				    				}
+									boolean motion = itexts.getKey().contains("MOTION");
+									if (!motion)
+										continue;
+									boolean direct = itexts.getKey().equals(Ingress._DIRECT);
+									String direction = direct ? "директное" : "обратное";
+									String ptext = planet.getName() + " переходит в " + direction + " движение";
+				    				daysection.addSection(new Paragraph(ptext, bold));
+
+									if (notransits) {
+										daysection.add(new Paragraph("Как-то ощутимо на вас это не повлияет", grayfont));
+									} else {
+										if (term) {
+											Planet rp = person.getPlanets().get(planet.getId());
+											if (rp.isRetrograde())
+												daysection.add(new Paragraph("В момент вашего рождения планета " + planet.getName() + " двигалась в обратном направлении, поэтому для вас сегодня станут особо актуальными следующие прогнозы:", font));
+											else
+												daysection.add(new Paragraph("Сегодня " + planet.getName() + " меняет направление, поэтому снова станут актуальны следующие прогнозы:", font));
+										} else
+											daysection.add(new Paragraph("Поэтому снова станут актуальны следующие прогнозы:", grayfont));
+
+										for (SkyPointAspect spa : transits) {
+											SkyPoint skyPoint = spa.getSkyPoint2();
+											AspectType type = spa.getAspect().getType();
+											String acode = spa.getAspect().getCode();
+											String typeColor = type.getFontColor();
+											BaseColor color = PDFUtil.htmlColor2Base(typeColor);
+											Font colorbold = new Font(baseFont, 12, Font.NORMAL, color);
+											daysection.add(Chunk.NEWLINE);
+
+											if (skyPoint instanceof House) {
+												House house = (House)skyPoint;
+			
+					    		                if (planet.getCode().equals("Moon")
+					    		                		&& !acode.equals("CONJUNCTION"))
+													continue;
+			
+												DirectionText dirText = (DirectionText)service.find(planet, house, type);
+												if (dirText != null)
+													text = dirText.getRetro();
+
+												ptext = (null == dirText || null == dirText.getDescription())
+													? planet.getShortName() + " " + type.getSymbol() + " " + house.getName() + "<>"
+													: text;
+
+							    				if (term) {
+													String pretext = spa.getAspect().getCode().equals("CONJUNCTION")
+														? (null == house.getGeneral() ? "с куспидом" : "с вершиной")
+														: (null == house.getGeneral() ? "к куспиду" : "к вершине");
+
+													p = new Paragraph();
+													p.add(new Chunk(planet.getMark("house", term) + " ", grayfont));
+													p.add(new Chunk(spa.getAspect().getName() + " транзитной ретро-планеты ", grayfont));
+													p.add(new Chunk(planet.getSymbol(), afont));
+													p.add(new Chunk(" " + planet.getName(), grayfont));
+													p.add(new Chunk(" из " + CalcUtil.roundTo(planet.getLongitude(), 2) + "° (", grayfont));
+													Sign sign = planet.getSign();
+								    				p.add(new Chunk(sign.getSymbol(), afont));
+								    				p.add(new Chunk(" " + sign.getName() + ", ", grayfont));
+								    				House house2 = planet.getHouse();
+													p.add(new Chunk(house2.getDesignation() + " дом, сектор «" + house2.getName() + "») ", grayfont));
+													p.add(new Chunk(pretext + " " + house.getDesignation() + " дома (сектор «" + house.getName() + "»)", grayfont));
+													daysection.add(p);					    					
+							    				}
+												daysection.add(new Paragraph(ptext, colorbold));
+											} else if (skyPoint instanceof Planet) {
+												long aspectid = 0;
+												Planet planet2 = (Planet)skyPoint;
+												boolean revolution = planet.getId().equals(planet2.getId());
+												if (planet.getCode().equals("Moon"))
+										            aspectid = spa.getAspect().getId();
+			
+												PlanetAspectText dirText = (PlanetAspectText)servicea.find(spa, aspectid, false);
+												if (dirText != null)
+													text = dirText.getDescription();
+
+												ptext = (null == dirText || null == dirText.getDescription())
+													? planet.getShortName() + (revolution ? "" : " " + type.getSymbol() + " " + planet2.getShortName() + "<>")
+													: text;
+
+												if (term) {
+													String pretext = spa.getAspect().getCode().equals("CONJUNCTION")
+														? "с натальной планетой"
+														: "к натальной планете";
+
+								    				p = new Paragraph();
+								    				if (dirText != null)
+								    					p.add(new Chunk(dirText.getMark() + " ", grayfont));
+										    		p.add(new Chunk(spa.getAspect().getName() + " транзитной ретро-планеты ", grayfont));
+								    				p.add(new Chunk(planet.getSymbol(), afont));
+								    				p.add(new Chunk(" " + planet.getName(), grayfont));
+													p.add(new Chunk(" из " + CalcUtil.roundTo(planet.getLongitude(), 2) + "° (", grayfont));
+													Sign sign = planet.getSign();
+								    				p.add(new Chunk(sign.getSymbol(), afont));
+								    				p.add(new Chunk(" " + sign.getName() + ", ", grayfont));
+								    				House house = planet.getHouse();
+								    				p.add(new Chunk(house.getDesignation() + " дом, сектор «" + house.getName() + "») ", grayfont));
+										    		p.add(new Chunk(pretext + " ", grayfont));
+								    				p.add(new Chunk(planet2.getSymbol(), afont));
+								    				p.add(new Chunk(" " + planet2.getName(), grayfont));
+													Sign sign2 = planet2.getSign();
+								    				p.add(new Chunk(" (" + sign2.getSymbol(), afont));
+								    				p.add(new Chunk(" " + sign2.getName() + ", ", grayfont));
+								    				House house2 = planet2.getHouse();
+								    				p.add(new Chunk(house2.getDesignation() + " дом, сектор «" + house2.getName() + "») ", grayfont));
+								    				daysection.add(p);
+												}
+												daysection.add(new Paragraph(ptext, colorbold));												
+											}
+										}
 									}
 								}
 								daysection.add(Chunk.NEWLINE);
