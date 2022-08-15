@@ -843,26 +843,26 @@ public class PDFExporter {
 				for (Model type : positions) {
 					PositionType pType = (PositionType)type; 
 					String pCode = pType.getCode();
-					Sign sign = service.getSignPosition(planet, pCode, true);
-					if (sign != null && sign.getId() == planet.getSign().getId()) {
-						switch (pCode) {
-							case "HOME": planet.setSignHome(); break;
-							case "EXALTATION": planet.setSignExaltated(); break;
-							case "EXILE": planet.setSignExile(); break;
-							case "DECLINE": planet.setSignDeclined(); break;
-						}
-					}
+//					Sign sign = service.getSignPosition(planet, pCode, true);
+//					if (sign != null && sign.getId() == planet.getSign().getId()) {
+//						switch (pCode) {
+//							case "HOME": planet.setSignHome(); break;
+//							case "EXALTATION": planet.setSignExaltated(); break;
+//							case "EXILE": planet.setSignExile(); break;
+//							case "DECLINE": planet.setSignDeclined(); break;
+//						}
+//					}
 
 					if (null == planet.getHouse()) continue;
-					Map<Long, House> houses = service.getHousePosition(planet, pCode, true);
-					if (houses != null && houses.containsKey(planet.getHouse().getId())) {
-						switch (pCode) {
-							case "HOME": planet.setHouseHome(); break;
-							case "EXALTATION": planet.setHouseExaltated(); break;
-							case "EXILE": planet.setHouseExile(); break;
-							case "DECLINE": planet.setHouseDeclined(); break;
-						}
-					}
+//					Map<Long, House> houses = service.getHousePosition(planet, pCode, true);
+//					if (houses != null && houses.containsKey(planet.getHouse().getId())) {
+//						switch (pCode) {
+//							case "HOME": planet.setHouseHome(); break;
+//							case "EXALTATION": planet.setHouseExaltated(); break;
+//							case "EXILE": planet.setHouseExile(); break;
+//							case "DECLINE": planet.setHouseDeclined(); break;
+//						}
+//					}
 				}
 
 				//аспекты, влияющие на статус планеты
