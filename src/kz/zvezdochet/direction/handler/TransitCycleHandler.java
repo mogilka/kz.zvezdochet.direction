@@ -23,6 +23,7 @@ import com.itextpdf.text.Chunk;
 import com.itextpdf.text.Document;
 import com.itextpdf.text.Element;
 import com.itextpdf.text.Font;
+import com.itextpdf.text.Image;
 import com.itextpdf.text.ListItem;
 import com.itextpdf.text.Paragraph;
 import com.itextpdf.text.Section;
@@ -82,6 +83,7 @@ public class TransitCycleHandler extends Handler {
 			Map<Long, House> houses = person.getHouses();
 			int choice = DialogUtil.alertQuestion("Вопрос", "Выберите тип прогноза:", new String[] {"Реалистичный", "Оптимистичный"});
 			boolean optimistic = choice > 0;
+			int category = DialogUtil.alertQuestion("Вопрос", "Выберите тип прогноза:", new String[] {"Полный", "Работа"});
 
 			//Признак использования астрологических терминов
 			boolean term = periodPart.isTerm();
@@ -133,6 +135,10 @@ public class TransitCycleHandler extends Handler {
 			chapter.add(p);
 
 			text = "Тип прогноза: " + (optimistic ? "оптимистичный" : "реалистичный");
+			if (category > 0) {
+				if (1 == category)
+					text += ", категория «Работа»"; 
+			}
 			p = new Paragraph(text, font);
 	        p.setAlignment(Element.ALIGN_CENTER);
 			chapter.add(p);
@@ -218,6 +224,23 @@ public class TransitCycleHandler extends Handler {
 			Map<Integer, Map<Integer, List<Long>>> years = new TreeMap<Integer, Map<Integer, List<Long>>>();
 			Map<Integer, Map<Integer, Map<Long, Integer>>> myears = new TreeMap<Integer, Map<Integer, Map<Long, Integer>>>();
 			Map<Integer, Map<Integer, Map<Long, Map<String, List<Object>>>>> texts = new TreeMap<Integer, Map<Integer, Map<Long, Map<String, List<Object>>>>>();
+			Map<Integer, Map<Long, Map<Long, TreeMap<Integer, Integer>>>> hyears2 = new TreeMap<Integer, Map<Long, Map<Long, TreeMap<Integer, Integer>>>>();
+
+			Map<Integer, Long[]> categoriesh = new HashMap<Integer, Long[]>() {
+				private static final long serialVersionUID = -1169666525576512947L;
+				{
+			        put(1, new Long[] {144L,145L,146L,147L,148L,149L,153L,156L,157L,159L,161L,162L,165L,166L,167L,170L,171L,174L});
+			    }
+			};
+			Long[] categoryhids = categoriesh.get(category);
+
+			Map<Integer, Long[]> categories = new HashMap<Integer, Long[]>() {
+				private static final long serialVersionUID = 7520222202103390519L;
+				{
+			        put(1, new Long[] {19L,23L,25L,21L,26L,27L,28L,29L,30L,31L,34L});
+			    }
+			};
+			Long[] categorypids = categories.get(category);
 
 			System.out.println("Prepared for: " + (System.currentTimeMillis() - run));
 			run = System.currentTimeMillis();
@@ -244,11 +267,16 @@ public class TransitCycleHandler extends Handler {
 				Map<Integer, Map<Long, Integer>> months2 = myears.containsKey(y) ? myears.get(y) : new TreeMap<Integer, Map<Long, Integer>>();
 				months2.put(m, new TreeMap<Long, Integer>());
 				myears.put(y, months2);
+
+				Map<Long, Map<Long, TreeMap<Integer, Integer>>> yhouses = hyears2.containsKey(y) ? hyears2.get(y) : new TreeMap<Long, Map<Long, TreeMap<Integer, Integer>>>();
+				for (House h : houses.values())
+					yhouses.put(h.getId(), new TreeMap<Long, TreeMap<Integer, Integer>>());
+				hyears2.put(y, yhouses);
 			}
 
 			Map<String, List<DatePeriod>> periods = new HashMap<String, List<DatePeriod>>();
 			/**
-			 * коды ингрессий, используемых в отчёте
+			 * коды ингрессий, используемых в документе
 			 */
 			String[] icodes = new String[] {
 				Ingress._EXACT, Ingress._EXACT_HOUSE,
@@ -265,6 +293,7 @@ public class TransitCycleHandler extends Handler {
 					mtexts = new TreeMap<Integer, Map<Long, Map<String, List<Object>>>>();
 
 				Map<Integer, Map<Long, Integer>> months2 = myears.containsKey(y) ? myears.get(y) : new TreeMap<Integer, Map<Long, Integer>>();
+				Map<Long, Map<Long, TreeMap<Integer, Integer>>> yhouses = hyears2.containsKey(y) ? hyears2.get(y) : new TreeMap<Long, Map<Long, TreeMap<Integer, Integer>>>();
 
 				//считаем транзиты
 				for (Map.Entry<Integer, List<Long>> entry2 : months.entrySet()) {
@@ -275,7 +304,7 @@ public class TransitCycleHandler extends Handler {
 					if (null == dtexts)
 						dtexts = new TreeMap<Long, Map<String, List<Object>>>();
 
-					//данные для графика
+					//данные для графика месяца
 					Map<Long, Integer> seriesh = months2.get(m);
 
 					for (Long time : dates) {
@@ -322,14 +351,21 @@ public class TransitCycleHandler extends Handler {
 										continue;
 
 									SkyPoint skyPoint = spa.getSkyPoint2();
-									String acode = spa.getAspect().getCode();
+									boolean housable = skyPoint instanceof House;
+									if (housable) {
+		    		                	if (category > 0 && !Arrays.asList(categoryhids).contains(skyPoint.getId()))
+		    		                		continue;
+		    		                } else {
+		    		                	if (category > 0 && !Arrays.asList(categorypids).contains(skyPoint.getId()))
+		    		                		continue;
+		    		                }									
 
+									String acode = spa.getAspect().getCode();
 									if (!acode.equals("CONJUNCTION")) {
 										if (planet.isFictitious())
 											continue;
 
-										if (skyPoint instanceof Planet
-												&& ((Planet)skyPoint).isFictitious())
+										if (!housable && ((Planet)skyPoint).isFictitious())
 											continue;
 									}
 									if (optimistic) {
@@ -343,7 +379,6 @@ public class TransitCycleHandler extends Handler {
 										}
 									}
 
-									boolean housable = skyPoint instanceof House;
 		    		                if (acode.equals("OPPOSITION")) {
 		    		                	if (planet.getCode().equals("Rakhu")
 		    		                			|| planet.getCode().equals("Kethu"))
@@ -375,6 +410,7 @@ public class TransitCycleHandler extends Handler {
 									//данные для диаграммы месяца
 									if (housable) {
 										if (key.contains("EXACT") || key.contains("REPEAT")) {
+											//long id = skyPoint.getId();
 											String tcode = spa.getAspect().getType().getCode();
 											int point = 0;
 											if (tcode.equals("NEUTRAL")) {
@@ -391,7 +427,19 @@ public class TransitCycleHandler extends Handler {
 											//данные для диаграммы сфер жизни
 											int val = seriesh.containsKey(houseid) ? seriesh.get(houseid) : 0;
 											seriesh.put(houseid, val + point);
-										}										
+
+											//данные для графиков домов года
+											Map<Long, TreeMap<Integer, Integer>> htypes = yhouses.containsKey(houseid) ? yhouses.get(houseid) : new TreeMap<Long, TreeMap<Integer, Integer>>();
+											long aid = code.equals("NEUTRAL")
+													&& (skyPoint.getCode().equals("Lilith") || skyPoint.getCode().equals("Kethu"))
+												? 2 : spa.getAspect().getTypeid();
+
+											TreeMap<Integer, Integer> hmonths = htypes.containsKey(aid) ? htypes.get(aid) : new TreeMap<Integer, Integer>();
+											val = hmonths.containsKey(m) ? hmonths.get(m) : 0;
+											hmonths.put(m, val + 1);
+											htypes.put(aid, hmonths);
+											yhouses.put(houseid, htypes);
+										}
 									}
 								}
 							}
@@ -402,6 +450,7 @@ public class TransitCycleHandler extends Handler {
 						texts.put(y, mtexts);
 					}
 					months2.put(m, seriesh);
+					hyears2.put(y, yhouses);
 				}
 			}
 			years = null;
@@ -414,6 +463,7 @@ public class TransitCycleHandler extends Handler {
 			DirectionAspectService servicea = new DirectionAspectService();
 			AspectTypeService typeService = new AspectTypeService();
 			AspectType positiveType = (AspectType)typeService.find(3L);
+			Font hfont = new Font(baseFont, 16, Font.BOLD, PDFUtil.FONTCOLOR);
 
 	        //года
 			for (Map.Entry<Integer, Map<Integer, Map<Long, Integer>>> entry : myears.entrySet()) {
@@ -460,19 +510,8 @@ public class TransitCycleHandler extends Handler {
 						for (Map.Entry<String, List<Object>> daytexts : imap.entrySet()) {
 							List<Object> ingresses = daytexts.getValue();
 							if (!ingresses.isEmpty()) {
-								for (Object object : ingresses) {
-									if (object instanceof SkyPointAspect) {
-										SkyPointAspect spa = (SkyPointAspect)object;
-										Planet planet = (Planet)spa.getSkyPoint1();
-			    		                boolean main = planet.isMain() && !spa.isRetro();
-			    		                if (main)
-			        		                continue;
-			    		                else {
-											empty = false;
-											break;
-			    		                }
-									}
-								}
+								empty = false;
+								break;
 							}
 						}
 						if (empty) continue;
@@ -567,6 +606,44 @@ public class TransitCycleHandler extends Handler {
 					}
 //					texts = null;
 			        chapter.add(Chunk.NEXTPAGE);
+				}
+				//графики года
+				Section section = PDFUtil.printSection(chapter, "Диаграммы сфер жизни по месяцам " + y + " года", "charts" + y);
+				Map<Long, Map<Long, TreeMap<Integer, Integer>>> yhouses = hyears2.get(y);
+				int i = -1;
+				for (Map.Entry<Long, Map<Long, TreeMap<Integer, Integer>>> entryh : yhouses.entrySet()) {
+					long houseid = entryh.getKey();
+					House house = houses.get(houseid);
+					Map<Long, TreeMap<Integer, Integer>> mtypes = entryh.getValue();
+					if (mtypes.isEmpty())
+						continue;
+					Map<String, Object[]> types = new HashMap<String, Object[]>();
+		        	for (Map.Entry<Long, TreeMap<Integer, Integer>> entrya : mtypes.entrySet()) {
+		        		TreeMap<Integer, Integer> atypes = entrya.getValue();
+						if (atypes.isEmpty())
+							continue;
+
+						Long aid = entrya.getKey();
+						List<Integer> names = new ArrayList<Integer>();
+						List<Integer> values = new ArrayList<Integer>();
+			        	for (Map.Entry<Integer, Integer> entrym : atypes.entrySet()) {
+			        		int m = entrym.getKey();
+			        		names.add(m + 1);
+			        		values.add(entrym.getValue());
+			        	}
+						String name = (aid < 2 ? "Важное" : (aid < 3 ? "Негатив" : "Позитив"));
+			        	types.put(name, new Object[] {names, values});
+		        	}
+		        	if (types.isEmpty())
+		        		continue;
+					section.addSection(new Paragraph(house.getName(), hfont));
+		        	section.add(new Paragraph(y + ": " + house.getDescription(), font));
+				    Image image = PDFUtil.printGraphics(writer, "", "Месяцы " + y, "Баллы", types , 500, 0, true);
+					section.add(image);
+					if (++i % 2 > 0)
+						section.add(Chunk.NEXTPAGE);
+					else
+						section.add(Chunk.NEWLINE);
 				}
 				doc.add(chapter);
 			}
