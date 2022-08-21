@@ -133,7 +133,8 @@ public class TransitSaveHandler extends Handler {
 			PDFUtil.printHeader(p, "Ежедневный прогноз", null);
 			chapter.add(p);
 
-			String text = person.getCallname() + ", прогноз на период: ";
+			String text = (person.isCelebrity() ? person.getName() : person.getCallname());
+			text += ", прогноз на период: ";
 			SimpleDateFormat sdf = new SimpleDateFormat("EEEE, d MMMM yyyy");
 			text += sdf.format(initDate);
 			boolean days = (DateUtil.getDateFromDate(initDate) != DateUtil.getDateFromDate(finalDate)

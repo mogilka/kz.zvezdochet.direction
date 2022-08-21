@@ -119,7 +119,7 @@ public class PDFExporter {
 			chapter.setNumberDepth(0);
 
 			//шапка
-			String text = event.getCallname();
+			String text = (event.isCelebrity() ? event.getName() : event.getCallname());
 			text += " - прогноз на " + CoreUtil.getAgeString(years);
 			Paragraph p = new Paragraph(text, font);
 			if (!event.isRectified())
