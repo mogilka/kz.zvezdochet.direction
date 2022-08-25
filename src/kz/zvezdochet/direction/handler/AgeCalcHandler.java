@@ -188,8 +188,9 @@ public class AgeCalcHandler extends Handler {
 			if (point2 instanceof House) {
 				if (res >= 179 && res < 180)
 					++res;
-			} else if (point1.getCode().equals("Kethu") || point2.getCode().equals("Kethu")) {
-				++res;
+			} else if (res > 5) {
+				if (point1.getCode().equals("Kethu") || point2.getCode().equals("Kethu"))
+					++res;
 			}
 
 			//определяем, является ли аспект стандартным
