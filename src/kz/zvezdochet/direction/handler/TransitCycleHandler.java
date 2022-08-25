@@ -586,6 +586,31 @@ public class TransitCycleHandler extends Handler {
 
 					    				daysection.addSection(new Paragraph(ptext + til, colorbold));
 
+					    				if (term) {
+											String pretext = spa.getAspect().getCode().equals("CONJUNCTION")
+												? (null == house.getGeneral() ? "с куспидом" : "с вершиной")
+												: (null == house.getGeneral() ? "к куспиду" : "к вершине");
+
+											p = new Paragraph();
+											p.add(new Chunk(spa.getAspect().getName() + " транзитной планеты ", grayfont));
+											p.add(new Chunk(planet.getSymbol(), afont));
+											p.add(new Chunk(" " + planet.getName(), grayfont));
+											p.add(new Chunk(" из " + CalcUtil.roundTo(planet.getLongitude(), 2) + "° (", grayfont));
+											Sign sign = planet.getSign();
+						    				p.add(new Chunk(sign.getSymbol(), afont));
+						    				p.add(new Chunk(" " + sign.getName(), grayfont));
+						    				String mark = planet.getMark("sign", term);
+						    				p.add(new Chunk((mark.isEmpty() ? "" : " " + mark) + ", ", grayfont));
+						    				House house2 = planet.getHouse();
+											p.add(new Chunk(house2.getDesignation() + " дом, сектор «" + house2.getName() + "»", grayfont));
+											mark = planet.getMark("house", term);
+						    				p.add(new Chunk((mark.isEmpty() ? "" : " " + mark) + ") ", grayfont));
+											p.add(new Chunk(pretext + " " + house.getDesignation() + " дома", grayfont));
+						    				if (!acode.equals("CONJUNCTION"))
+												p.add(new Chunk(" (сектор «" + house.getName() + "»)", grayfont));
+											daysection.add(p);
+					    				}
+
 									} else if (skyPoint instanceof Planet) {
 										long aspectid = 0;
 										boolean checktype = false;
@@ -606,6 +631,36 @@ public class TransitCycleHandler extends Handler {
 												ptext += " " + type.getSymbol() + " " + (term ? planet2.getName() : planet2.getShortName());
 										}
 										daysection.addSection(new Paragraph(ptext + til, colorbold));
+
+										if (term) {
+											String pretext = spa.getAspect().getCode().equals("CONJUNCTION")
+												? "с натальной планетой"
+												: "к натальной планете";
+
+						    				p = new Paragraph();
+						    				if (dirText != null)
+						    					p.add(new Chunk(dirText.getMark() + " ", grayfont));
+								    		p.add(new Chunk(spa.getAspect().getName() + " транзитной планеты ", grayfont));
+						    				p.add(new Chunk(planet.getSymbol(), afont));
+						    				p.add(new Chunk(" " + planet.getName(), grayfont));
+											p.add(new Chunk(" из " + CalcUtil.roundTo(planet.getLongitude(), 2) + "° (", grayfont));
+											Sign sign = planet.getSign();
+						    				p.add(new Chunk(sign.getSymbol(), afont));
+						    				p.add(new Chunk(" " + sign.getName() + ", ", grayfont));
+						    				House house = planet.getHouse();
+						    				p.add(new Chunk(house.getDesignation() + " дом, сектор «" + house.getName() + "») ", grayfont));
+								    		p.add(new Chunk(pretext + " ", grayfont));
+						    				p.add(new Chunk(planet2.getSymbol(), afont));
+						    				p.add(new Chunk(" " + planet2.getName(), grayfont));
+						    				if (acode.equals("CONJUNCTION")) {
+												Sign sign2 = planet2.getSign();
+							    				p.add(new Chunk(" (" + sign2.getSymbol(), afont));
+							    				p.add(new Chunk(" " + sign2.getName() + ", ", grayfont));
+							    				House house2 = planet2.getHouse();
+							    				p.add(new Chunk(house2.getDesignation() + " дом, сектор «" + house2.getName() + "») ", grayfont));
+						    				}
+						    				daysection.add(p);
+										}
 									}
 	
 									if (text != null) {
