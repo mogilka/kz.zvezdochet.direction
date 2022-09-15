@@ -33,6 +33,7 @@ import kz.zvezdochet.bean.AspectType;
 import kz.zvezdochet.bean.Event;
 import kz.zvezdochet.bean.House;
 import kz.zvezdochet.bean.Planet;
+import kz.zvezdochet.bean.PlanetHousePosition;
 import kz.zvezdochet.bean.PositionType;
 import kz.zvezdochet.bean.Sign;
 import kz.zvezdochet.bean.SkyPoint;
@@ -55,6 +56,7 @@ import kz.zvezdochet.export.bean.Bar;
 import kz.zvezdochet.export.handler.PageEventHandler;
 import kz.zvezdochet.export.util.PDFUtil;
 import kz.zvezdochet.service.HouseService;
+import kz.zvezdochet.service.PlanetHousePositionService;
 import kz.zvezdochet.service.PlanetService;
 import kz.zvezdochet.service.PositionTypeService;
 import kz.zvezdochet.util.HouseMap;
@@ -566,6 +568,7 @@ public class PDFExporter {
 			DirectionService service = new DirectionService();
 			DirectionAspectService servicea = new DirectionAspectService();
 			DirectionRuleService servicer = new DirectionRuleService();
+			PlanetHousePositionService positionService = new PlanetHousePositionService();
 
 			boolean child = event.isChild();
 			String[] adult = {"II_3", "V_2", "V_3", "VII"};
@@ -591,6 +594,7 @@ public class PDFExporter {
 					continue;
 
 				String acode = spa.getAspect().getCode();
+				boolean conj = acode.equals("CONJUNCTION");
 
 				if (skyPoint instanceof House) {
 					if (child && Arrays.asList(adult).contains(skyPoint.getCode()))
@@ -627,10 +631,26 @@ public class PDFExporter {
 						p.add(new Chunk(house2.getDesignation() + " дом, сектор «" + house2.getName() + "»", grayfont));
 						mark = planet.getMark("house", term);
 	    				p.add(new Chunk((mark.isEmpty() ? "" : " " + mark) + ") ", grayfont));
-						p.add(new Chunk(pretext + " " + house.getDesignation() + " дома ", grayfont));
-	    				if (!acode.equals("CONJUNCTION"))
-							p.add(new Chunk("(сектор «" + house.getName() + "»)", grayfont));
+						p.add(new Chunk(pretext + " " + house.getDesignation() + " дома", grayfont));
+	    				if (!conj)
+							p.add(new Chunk(" (сектор «" + house.getName() + "»)", grayfont));
+
+	    				if (!planet.isFictitious()) {
+		    				PlanetHousePosition position = positionService.find(planet);
+		    				if (position != null) {
+		    					long id = position.getType().getId();
+		    					boolean anegative = spa.isNegative();
+		    					boolean match = ((id < 3 && !anegative)
+		    						|| (id > 2 && anegative));
+		    					if (match) {
+			    					String s = ". " + position.getDescription() + ". " + position.getType().getDescription();
+			    					p.add(new Chunk(s, grayfont));
+		    					}
+			    			}
+	    				}
 	    				section.add(p);
+	    				if (conj)
+	    					section.add(Chunk.NEWLINE);
 					}
 
 					if (dirText != null) {
