@@ -29,7 +29,7 @@ public class DirectionAspectService extends PlanetAspectService {
 		dict = (DirectionAspectText)super.init(rs, model);
 		dict.setDescription(rs.getString("description"));
 		dict.setCode(rs.getString("code"));
-		dict.setPositive(rs.getBoolean("positive"));
+		dict.setRetro(rs.getString("retro"));
 		return dict;
 	}
 }

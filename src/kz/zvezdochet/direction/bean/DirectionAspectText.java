@@ -29,4 +29,17 @@ public class DirectionAspectText extends PlanetAspectText {
 	public void setPositive(boolean positive) {
 		this.positive = positive;
 	}
+
+	/**
+	 * Ретро-толкование
+	 */
+	private String retro;
+
+	public String getRetro() {
+		return retro;
+	}
+
+	public void setRetro(String retro) {
+		this.retro = retro;
+	}
 }

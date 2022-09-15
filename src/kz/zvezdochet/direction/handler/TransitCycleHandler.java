@@ -545,6 +545,7 @@ public class TransitCycleHandler extends Handler {
 		    		                boolean repeat = itexts.getKey().contains("REPEAT");
 									SkyPoint skyPoint = spa.getSkyPoint2();
 									String acode = spa.getAspect().getCode();
+									boolean retro = spa.isRetro();
 
 									String prefix = "";
 									if (!planet.isFictitious())
@@ -577,7 +578,7 @@ public class TransitCycleHandler extends Handler {
 	
 										DirectionText dirText = (DirectionText)service.find(planet, house, type);
 										if (dirText != null)
-											text = spa.isRetro() && !planet.isFictitious() ? dirText.getRetro() : dirText.getDescription();
+											text = retro && !planet.isFictitious() ? dirText.getRetro() : dirText.getDescription();
 										String ptext = prefix;
 										if (null == dirText)
 											ptext += planet.getShortName() + " " + type.getSymbol() + " " + house.getName() + "<>";
@@ -592,7 +593,7 @@ public class TransitCycleHandler extends Handler {
 												: (null == house.getGeneral() ? "к куспиду" : "к вершине");
 
 											p = new Paragraph();
-											p.add(new Chunk(spa.getAspect().getName() + " транзитной планеты ", grayfont));
+											p.add(new Chunk(spa.getAspect().getName() + " транзитной " + (retro ? "ретро-" : "") + "планеты ", grayfont));
 											p.add(new Chunk(planet.getSymbol(), afont));
 											p.add(new Chunk(" " + planet.getName(), grayfont));
 											p.add(new Chunk(" из " + CalcUtil.roundTo(planet.getLongitude(), 2) + "° (", grayfont));
@@ -640,7 +641,7 @@ public class TransitCycleHandler extends Handler {
 						    				p = new Paragraph();
 						    				if (dirText != null)
 						    					p.add(new Chunk(dirText.getMark() + " ", grayfont));
-								    		p.add(new Chunk(spa.getAspect().getName() + " транзитной планеты ", grayfont));
+								    		p.add(new Chunk(spa.getAspect().getName() + " транзитной " + (retro ? "ретро-" : "") + "планеты ", grayfont));
 						    				p.add(new Chunk(planet.getSymbol(), afont));
 						    				p.add(new Chunk(" " + planet.getName(), grayfont));
 											p.add(new Chunk(" из " + CalcUtil.roundTo(planet.getLongitude(), 2) + "° (", grayfont));

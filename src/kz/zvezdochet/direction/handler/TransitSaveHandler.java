@@ -55,6 +55,7 @@ import kz.zvezdochet.core.util.DateUtil;
 import kz.zvezdochet.core.util.OsUtil;
 import kz.zvezdochet.core.util.PlatformUtil;
 import kz.zvezdochet.direction.Activator;
+import kz.zvezdochet.direction.bean.DirectionAspectText;
 import kz.zvezdochet.direction.bean.DirectionText;
 import kz.zvezdochet.direction.part.TransitPart;
 import kz.zvezdochet.direction.service.DirectionAspectService;
@@ -824,6 +825,7 @@ public class TransitSaveHandler extends Handler {
 								if (object instanceof SkyPointAspect) {
 									SkyPointAspect spa = (SkyPointAspect)object;
 									Planet planet = (Planet)spa.getSkyPoint1();
+									boolean retro = spa.isRetro();
 									
 									if (important) {
 			    		                if (planet.getCode().equals("Moon")
@@ -879,7 +881,7 @@ public class TransitSaveHandler extends Handler {
 	
 										DirectionText dirText = (DirectionText)service.find(planet, house, type);
 										if (dirText != null) {
-											text = spa.isRetro() && !planet.isFictitious() ? dirText.getRetro() : dirText.getDescription();
+											text = retro && !planet.isFictitious() ? dirText.getRetro() : dirText.getDescription();
 											code = dirText.getCode();
 										}
 										String ptext = prefix;
@@ -899,7 +901,7 @@ public class TransitSaveHandler extends Handler {
 												: (null == house.getGeneral() ? "к куспиду" : "к вершине");
 
 											p = new Paragraph();
-											p.add(new Chunk(spa.getAspect().getName() + " транзитной планеты ", grayfont));
+											p.add(new Chunk(spa.getAspect().getName() + " транзитной " + (retro ? "ретро-" : "") + "планеты ", grayfont));
 											p.add(new Chunk(planet.getSymbol(), afont));
 											p.add(new Chunk(" " + planet.getName(), grayfont));
 											p.add(new Chunk(" из " + CalcUtil.roundTo(planet.getLongitude(), 2) + "° (", grayfont));
@@ -928,9 +930,9 @@ public class TransitSaveHandler extends Handler {
 												&& !acode.equals("CONJUNCTION"))
 								            aspectid = spa.getAspect().getId();
 
-										PlanetAspectText dirText = (PlanetAspectText)servicea.find(spa, aspectid, checktype);
+										DirectionAspectText dirText = (DirectionAspectText)servicea.find(spa, aspectid, checktype);
 										if (dirText != null) {
-											text = dirText.getDescription();
+											text = retro && !planet.isFictitious() ? dirText.getRetro() : dirText.getDescription();
 											code = dirText.getCode();
 										}
 										String ptext = prefix;
@@ -967,7 +969,7 @@ public class TransitSaveHandler extends Handler {
 						    				p = new Paragraph();
 						    				if (dirText != null)
 						    					p.add(new Chunk(dirText.getMark() + " ", grayfont));
-								    		p.add(new Chunk(spa.getAspect().getName() + " транзитной планеты ", grayfont));
+								    		p.add(new Chunk(spa.getAspect().getName() + " транзитной " + (retro ? "ретро-" : "") + "планеты ", grayfont));
 						    				p.add(new Chunk(planet.getSymbol(), afont));
 						    				p.add(new Chunk(" " + planet.getName(), grayfont));
 											p.add(new Chunk(" из " + CalcUtil.roundTo(planet.getLongitude(), 2) + "° (", grayfont));
@@ -1007,7 +1009,7 @@ public class TransitSaveHandler extends Handler {
 										p.add(new Chunk(descr, new Font(baseFont, 12, Font.NORMAL, color)));
 										daysection.add(p);
 									}
-									if (spa.isRetro()
+									if (retro
 											&& !separation
 											&& !planet.isFictitious()
 											&& !type.getCode().contains("POSITIVE")) {
