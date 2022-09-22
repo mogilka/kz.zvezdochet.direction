@@ -188,12 +188,18 @@ public class TransitChartHandler extends Handler {
 							continue;
 
 						SkyPoint skyPoint2 = spa.getSkyPoint2();
-						if (skyPoint2 instanceof House
-								&& !spa.getAspect().getCode().equals("CONJUNCTION"))
-							continue;
-
 						long hid = skyPoint2.getId();
 						if (skyPoint2 instanceof House) {
+							if (skyPoint.getCode().equals("Kethu"))
+								continue;
+
+							boolean conj = spa.getAspect().getCode().equals("CONJUNCTION");
+							if (!conj && skyPoint.isMain() && !spa.isRetro())
+								continue;
+
+							if (!conj && skyPoint.isFictitious())
+								continue;
+
 							Map<Long, List<SkyPointAspect>> dmap = yhouses.containsKey(hid) ? yhouses.get(hid) : new TreeMap<Long, List<SkyPointAspect>>();
 							List<SkyPointAspect> pmap = dmap.containsKey(time) ? dmap.get(time) : new ArrayList<SkyPointAspect>();
 							pmap.add(spa);
@@ -235,19 +241,15 @@ public class TransitChartHandler extends Handler {
 					for (int j = 0; j < series.size(); j++) {
 						SkyPointAspect spa = series.get(j);
 						Aspect aspect = spa.getAspect();
-						boolean conj = aspect.getCode().equals("CONJUNCTION");
 						Planet planet = planets.get(spa.getSkyPoint1().getId());
-						if (!conj
-								&& (planet.isMain() || planet.getCode().equals("Kethu")))
-							continue;
 						String sign = "";
 						double index = planet.getNumber();
-						if (!conj) {
+						if (!aspect.getCode().equals("CONJUNCTION")) {
 							sign += aspect.getType().getSymbol();
-//							if (aspect.getType().getPoints() > 0)
-//								index += 16;
-//							else
-//								index -= 16;
+							if (2 == aspect.getTypeid())
+								index *= -1;
+							else
+								index *= 2;
 						}
 						dataset.addValue(index, planet.getCode() + sign, sdf.format(new Date(d)));
 					}
