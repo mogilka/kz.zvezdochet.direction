@@ -668,7 +668,6 @@ public class PDFExporter {
 							String typeColor = type.getFontColor();
 							BaseColor color = PDFUtil.htmlColor2Base(typeColor);
 							section.add(new Paragraph(PDFUtil.removeTags(text, new Font(baseFont, 12, Font.NORMAL, color))));
-							PDFUtil.printGender(section, dirText, female, child, true);
 
 							//правила домов
 							List<DirectionRule> houseRules = servicer.findRules(planet, house, spa.getAspect().getType());
@@ -720,6 +719,7 @@ public class PDFExporter {
 								section.add(Chunk.NEWLINE);
 								section.add(new Paragraph(comment + ": " + htext, font));
 							}
+							PDFUtil.printGender(section, dirText, female, child, true);
 						}
 						section.add(Chunk.NEWLINE);
 					}
