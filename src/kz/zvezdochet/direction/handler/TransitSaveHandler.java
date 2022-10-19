@@ -36,7 +36,6 @@ import com.itextpdf.text.Section;
 import com.itextpdf.text.pdf.BaseFont;
 import com.itextpdf.text.pdf.PdfWriter;
 
-import kz.zvezdochet.analytics.bean.PlanetAspectText;
 import kz.zvezdochet.analytics.bean.PlanetText;
 import kz.zvezdochet.analytics.service.PlanetTextService;
 import kz.zvezdochet.bean.AspectType;
@@ -1086,7 +1085,7 @@ public class TransitSaveHandler extends Handler {
 			
 												DirectionText dirText = (DirectionText)service.find(planet, house, type);
 												if (dirText != null)
-													text = dirText.getRetro();
+													text = direct ? dirText.getDescription() : dirText.getRetro();
 
 												ptext = (null == dirText || null == dirText.getDescription())
 													? planet.getShortName() + " " + type.getSymbol() + " " + house.getName() + "<>"
@@ -1119,9 +1118,9 @@ public class TransitSaveHandler extends Handler {
 												if (planet.getCode().equals("Moon"))
 										            aspectid = spa.getAspect().getId();
 			
-												PlanetAspectText dirText = (PlanetAspectText)servicea.find(spa, aspectid, false);
+												DirectionAspectText dirText = (DirectionAspectText)servicea.find(spa, aspectid, false);
 												if (dirText != null)
-													text = dirText.getDescription();
+													text = direct ? dirText.getDescription() : dirText.getRetro();
 
 												ptext = (null == dirText || null == dirText.getDescription())
 													? planet.getShortName() + (revolution ? "" : " " + type.getSymbol() + " " + planet2.getShortName() + "<>")
