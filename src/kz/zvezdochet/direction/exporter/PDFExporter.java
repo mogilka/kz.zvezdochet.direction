@@ -713,7 +713,7 @@ public class PDFExporter {
 							if (!acode.equals("CONJUNCTION") && !acode.equals("OPPOSITION")) {
 								House h = planet.getHouse();
 								String comment = negative
-									? "Причиной этого станут следующие негативные факторы"
+									? "Сопутствовать этому будут следующие негативные факторы"
 									: "Это станет возможным благодаря следующим позитивным факторам";
 								String htext = negative ? h.getNegative() : h.getPositive();
 								section.add(Chunk.NEWLINE);
