@@ -44,6 +44,7 @@ import org.eclipse.swt.widgets.TableItem;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
 
+import kz.zvezdochet.Messages;
 import kz.zvezdochet.bean.Aspect;
 import kz.zvezdochet.bean.Event;
 import kz.zvezdochet.bean.House;
@@ -69,7 +70,6 @@ import kz.zvezdochet.direction.provider.TransitLabelProvider;
 import kz.zvezdochet.direction.service.TransitService;
 import kz.zvezdochet.part.CosmogramComposite;
 import kz.zvezdochet.part.ICalculable;
-import kz.zvezdochet.part.Messages;
 import kz.zvezdochet.provider.EventProposalProvider;
 import kz.zvezdochet.provider.EventProposalProvider.EventContentProposal;
 import kz.zvezdochet.provider.PlaceProposalProvider;

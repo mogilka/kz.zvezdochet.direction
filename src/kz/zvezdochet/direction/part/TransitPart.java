@@ -32,6 +32,7 @@ import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.Text;
 
+import kz.zvezdochet.Messages;
 import kz.zvezdochet.analytics.service.SphereService;
 import kz.zvezdochet.bean.Aspect;
 import kz.zvezdochet.bean.Event;
@@ -52,7 +53,6 @@ import kz.zvezdochet.core.ui.view.View;
 import kz.zvezdochet.core.util.CalcUtil;
 import kz.zvezdochet.core.util.DateUtil;
 import kz.zvezdochet.direction.provider.TransitLabelProvider;
-import kz.zvezdochet.part.Messages;
 import kz.zvezdochet.provider.PlaceProposalProvider;
 import kz.zvezdochet.provider.PlaceProposalProvider.PlaceContentProposal;
 import kz.zvezdochet.service.AspectService;
