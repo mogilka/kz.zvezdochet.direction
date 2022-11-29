@@ -2,6 +2,7 @@ package kz.zvezdochet.direction.service;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.Locale;
 
 import kz.zvezdochet.analytics.service.PlanetAspectService;
 import kz.zvezdochet.core.bean.Model;
@@ -15,7 +16,8 @@ import kz.zvezdochet.direction.bean.DirectionAspectText;
 public class DirectionAspectService extends PlanetAspectService {
 
 	public DirectionAspectService() {
-		tableName = "directionaspects";
+		String lang = Locale.getDefault().getLanguage();
+		tableName = lang.equals("ru") ? "directionaspects" : "us_directionaspects";
 	}
 
 	@Override

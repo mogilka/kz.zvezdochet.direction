@@ -72,7 +72,7 @@ public class CalcCollationHandler extends Handler {
 				Event pevent = participant.getEvent();
 				if (!pevent.isCalculated()) {
 					pevent.calc(false);
-					updateStatus("Расчётная конфигурация " + pevent.getName() + " создана", false);
+					updateStatus("Расчётная конфигурация " + pevent.getName("ru") + " создана", false);
 				}
 				map = makeTransits(event, pevent);
 				participant.setAspects((List<SkyPointAspect>)map.get("Аспекты"));
@@ -88,7 +88,7 @@ public class CalcCollationHandler extends Handler {
 						Event mevent = member.getEvent();
 						if (!mevent.isCalculated()) {
 							mevent.calc(false);
-							updateStatus("Расчётная конфигурация " + mevent.getName() + " создана", false);
+							updateStatus("Расчётная конфигурация " + mevent.getName("ru") + " создана", false);
 						}
 
 						//суммируем данные всех фигурантов участника

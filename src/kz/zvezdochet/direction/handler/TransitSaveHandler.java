@@ -122,7 +122,7 @@ public class TransitSaveHandler extends Handler {
 	    	Font afont = PDFUtil.getHeaderAstroFont();
 
 	        //metadata
-	        PDFUtil.getMetaData(doc, "Ежедневный прогноз");
+	        PDFUtil.getMetaData(doc, "Ежедневный прогноз", "ru");
 
 	        //раздел
 			Chapter chapter = new ChapterAutoNumber("Ежедневный прогноз");
@@ -133,7 +133,7 @@ public class TransitSaveHandler extends Handler {
 			PDFUtil.printHeader(p, "Ежедневный прогноз", null);
 			chapter.add(p);
 
-			String text = (person.isCelebrity() ? person.getName() : person.getCallname());
+			String text = (person.isCelebrity() ? person.getName("ru") : person.getCallname("ru"));
 			text += ", прогноз на период: ";
 			SimpleDateFormat sdf = new SimpleDateFormat("EEEE, d MMMM yyyy");
 			text += sdf.format(initDate);
@@ -168,8 +168,8 @@ public class TransitSaveHandler extends Handler {
 	        p.setAlignment(Element.ALIGN_CENTER);
 			p.setSpacingAfter(20);
 	        p.add(new Chunk("Автор: ", fontgray));
-	        Chunk chunk = new Chunk(PDFUtil.AUTHOR, new Font(baseFont, 10, Font.UNDERLINE, PDFUtil.FONTCOLOR));
-	        chunk.setAnchor(PDFUtil.WEBSITE);
+	        Chunk chunk = new Chunk(PDFUtil.getAuthor("ru"), new Font(baseFont, 10, Font.UNDERLINE, PDFUtil.FONTCOLOR));
+	        chunk.setAnchor(PDFUtil.getWebsite("ru"));
 	        p.add(chunk);
 	        chapter.add(p);
 
@@ -907,11 +907,11 @@ public class TransitSaveHandler extends Handler {
 											Sign sign = planet.getSign();
 						    				p.add(new Chunk(sign.getSymbol(), afont));
 						    				p.add(new Chunk(" " + sign.getName(), grayfont));
-						    				String mark = planet.getMark("sign", term);
+						    				String mark = planet.getMark("sign", term, "ru");
 						    				p.add(new Chunk((mark.isEmpty() ? "" : " " + mark) + ", ", grayfont));
 						    				House house2 = planet.getHouse();
 											p.add(new Chunk(house2.getDesignation() + " дом, сектор «" + house2.getName() + "»", grayfont));
-											mark = planet.getMark("house", term);
+											mark = planet.getMark("house", term, "ru");
 						    				p.add(new Chunk((mark.isEmpty() ? "" : " " + mark) + ") ", grayfont));
 											p.add(new Chunk(pretext + " " + house.getDesignation() + " дома", grayfont));
 						    				if (!acode.equals("CONJUNCTION"))
@@ -1097,7 +1097,7 @@ public class TransitSaveHandler extends Handler {
 														: (null == house.getGeneral() ? "к куспиду" : "к вершине");
 
 													p = new Paragraph();
-													p.add(new Chunk(planet.getMark("house", term) + " ", grayfont));
+													p.add(new Chunk(planet.getMark("house", term, "ru") + " ", grayfont));
 													p.add(new Chunk(spa.getAspect().getName() + " транзитной ретро-планеты ", grayfont));
 													p.add(new Chunk(planet.getSymbol(), afont));
 													p.add(new Chunk(" " + planet.getName(), grayfont));
@@ -1256,7 +1256,7 @@ public class TransitSaveHandler extends Handler {
 				doc.add(chapter);
 			}
 //			hyears = null;
-	        doc.add(PDFUtil.printCopyright());
+	        doc.add(PDFUtil.printCopyright("ru"));
 
 	        long time = System.currentTimeMillis();
 			System.out.println("Finished for: " + (time - run));

@@ -429,7 +429,7 @@ public class CollationPart extends ModelPart implements ICalculable {
 				Event event = participant.getEvent();
 				switch (columnIndex) {
 					case 0: return (null == participant.getId()) ? "" : participant.getId().toString();
-					case 1: return event.getName();
+					case 1: return event.getName("ru");
 					case 2: return DateUtil.formatDateTime(event.getBirth());
 					case 3: return Event.calcs[event.getRectification()];
 				}
@@ -470,7 +470,7 @@ public class CollationPart extends ModelPart implements ICalculable {
 				Event event = member.getEvent();
 				switch (columnIndex) {
 					case 0: return (null == member.getId()) ? "" : member.getId().toString();
-					case 1: return event.getName();
+					case 1: return event.getName("ru");
 					case 2: return DateUtil.formatDateTime(event.getBirth());
 				}
 				return null;
@@ -515,7 +515,7 @@ public class CollationPart extends ModelPart implements ICalculable {
 		if (null == collation.getEvent())
 			txEvent.setText("");
 		else
-			txEvent.setText(collation.getEvent().getName());
+			txEvent.setText(collation.getEvent().getName("ru"));
 		txDescription.setText(collation.getDescription());
 		initParticipants(collation.getParticipants(), false);
 		initMembers(null);

@@ -139,13 +139,13 @@ public class DayTimesExportHandler extends Handler {
 				font = PDFUtil.getRegularFont();
 
 		        //metadata
-		        PDFUtil.getMetaData(doc, "Прогноз событий");
+		        PDFUtil.getMetaData(doc, "Прогноз событий", "ru");
 	
 		        //раздел
 				chapter = new ChapterAutoNumber(PDFUtil.printHeader(new Paragraph(), "Общая информация", null));
 				chapter.setNumberDepth(0);
 	
-				String text = person.getCallname() + " – Посуточный прогноз на период:\n";
+				String text = person.getCallname("ru") + " – Посуточный прогноз на период:\n";
 				text += sdf.format(initDate);
 				days = (DateUtil.getDateFromDate(initDate) != DateUtil.getDateFromDate(finalDate)
 						|| DateUtil.getMonthFromDate(initDate) != DateUtil.getMonthFromDate(finalDate)
@@ -179,8 +179,8 @@ public class DayTimesExportHandler extends Handler {
 		        p.setAlignment(Element.ALIGN_CENTER);
 				p.setSpacingAfter(20);
 		        p.add(new Chunk("Автор: ", fontgray));
-		        Chunk chunk = new Chunk(PDFUtil.AUTHOR, new Font(baseFont, 10, Font.UNDERLINE, PDFUtil.FONTCOLOR));
-		        chunk.setAnchor(PDFUtil.WEBSITE);
+		        Chunk chunk = new Chunk(PDFUtil.getAuthor("ru"), new Font(baseFont, 10, Font.UNDERLINE, PDFUtil.FONTCOLOR));
+		        chunk.setAnchor(PDFUtil.getWebsite("ru"));
 		        p.add(chunk);
 		        chapter.add(p);
 	
@@ -493,7 +493,7 @@ public class DayTimesExportHandler extends Handler {
 										List<TextGender> genders = dirText.getGenderTexts(female, child);
 										for (TextGender gender : genders) {
 											li = new ListItem();
-									        li.add(new Chunk(PDFUtil.getGenderHeader(gender.getType()) + ": ", abfont));
+									        li.add(new Chunk(PDFUtil.getGenderHeader(gender.getType(), "ru") + ": ", abfont));
 											li.add(new Phrase(PDFUtil.removeTags(gender.getText(), afont)));
 											li.setSpacingAfter(10);
 									        alist.add(li);
@@ -720,7 +720,7 @@ public class DayTimesExportHandler extends Handler {
 					doc.add(chapter);
 				}			
 				doc.add(Chunk.NEWLINE);
-		        doc.add(PDFUtil.printCopyright());
+		        doc.add(PDFUtil.printCopyright("ru"));
 			}
 		} catch(Exception e) {
 			e.printStackTrace();

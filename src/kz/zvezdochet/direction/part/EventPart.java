@@ -184,7 +184,7 @@ public class EventPart extends ModelListView implements ICalculable {
 			public String getColumnText(Object element, int columnIndex) {
 				Event event = (Event)element;
 				switch (columnIndex) {
-					case 0: return event.getName();
+					case 0: return event.getName("ru");
 					case 1: return DateUtil.formatDateTime(event.getBirth());
 				}
 				return null;

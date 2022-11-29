@@ -91,7 +91,7 @@ public class TransitChartHandler extends Handler {
 	    	Font font = PDFUtil.getRegularFont();
 
 	        //metadata
-	        PDFUtil.getMetaData(doc, "Транзиты по домам");
+	        PDFUtil.getMetaData(doc, "Транзиты по домам", "ru");
 
 	        //раздел
 			Chapter chapter = new ChapterAutoNumber("Транзиты по домам");
@@ -102,7 +102,7 @@ public class TransitChartHandler extends Handler {
 			PDFUtil.printHeader(p, "Транзиты по домам", null);
 			chapter.add(p);
 
-			String text = person.getCallname() + ": ";
+			String text = person.getCallname("ru") + ": ";
 			SimpleDateFormat sdf = new SimpleDateFormat("EEEE, d MMMM yyyy");
 			text += sdf.format(initDate);
 			boolean days = (DateUtil.getDateFromDate(initDate) != DateUtil.getDateFromDate(finalDate)
@@ -124,8 +124,8 @@ public class TransitChartHandler extends Handler {
 	        p.setAlignment(Element.ALIGN_CENTER);
 			p.setSpacingAfter(20);
 	        p.add(new Chunk("Автор: ", fontgray));
-	        Chunk chunk = new Chunk(PDFUtil.AUTHOR, new Font(baseFont, 10, Font.UNDERLINE, PDFUtil.FONTCOLOR));
-	        chunk.setAnchor(PDFUtil.WEBSITE);
+	        Chunk chunk = new Chunk(PDFUtil.getAuthor("ru"), new Font(baseFont, 10, Font.UNDERLINE, PDFUtil.FONTCOLOR));
+	        chunk.setAnchor(PDFUtil.getWebsite("ru"));
 	        p.add(chunk);
 	        chapter.add(p);
 
@@ -309,7 +309,7 @@ public class TransitChartHandler extends Handler {
 			yplanets = null;
 			doc.add(chapter);
 			doc.add(Chunk.NEWLINE);
-	        doc.add(PDFUtil.printCopyright());
+	        doc.add(PDFUtil.printCopyright("ru"));
 
 	        long time = System.currentTimeMillis();
 			System.out.println("Finished for: " + (time - run));

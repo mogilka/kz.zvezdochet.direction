@@ -114,14 +114,14 @@ public class PDFExporter {
 	        doc.open();
 
 	        //metadata
-	        PDFUtil.getMetaData(doc, "Долгосрочный прогноз");
+	        PDFUtil.getMetaData(doc, "Долгосрочный прогноз", "ru");
 
 	        //раздел
 			Chapter chapter = new ChapterAutoNumber(PDFUtil.printHeader(new Paragraph(), "Долгосрочный прогноз", null));
 			chapter.setNumberDepth(0);
 
 			//шапка
-			String text = (event.isCelebrity() ? event.getName() : event.getCallname());
+			String text = (event.isCelebrity() ? event.getName("ru") : event.getCallname("ru"));
 			text += " - прогноз на " + CoreUtil.getAgeString(years);
 			Paragraph p = new Paragraph(text, font);
 			if (!event.isRectified())
@@ -143,8 +143,8 @@ public class PDFExporter {
 	        p.setAlignment(Element.ALIGN_CENTER);
 			p.setSpacingAfter(20);
 	        p.add(new Chunk("Автор: ", fontgray));
-	        Chunk chunk = new Chunk(PDFUtil.AUTHOR, new Font(baseFont, 10, Font.UNDERLINE, PDFUtil.FONTCOLOR));
-	        chunk.setAnchor(PDFUtil.WEBSITE);
+	        Chunk chunk = new Chunk(PDFUtil.getAuthor("ru"), new Font(baseFont, 10, Font.UNDERLINE, PDFUtil.FONTCOLOR));
+	        chunk.setAnchor(PDFUtil.getWebsite("ru"));
 	        p.add(chunk);
 	        chapter.add(p);
 
@@ -517,7 +517,7 @@ public class PDFExporter {
 		        }
 				doc.add(chapter);
 	        }
-	        doc.add(PDFUtil.printCopyright());
+	        doc.add(PDFUtil.printCopyright("ru"));
 		} catch(Exception e) {
 			e.printStackTrace();
 		} finally {
@@ -625,11 +625,11 @@ public class PDFExporter {
 						Sign sign = planet.getSign();
 	    				p.add(new Chunk(sign.getSymbol(), afont));
 	    				p.add(new Chunk(" " + sign.getName(), grayfont));
-	    				String mark = planet.getMark("sign", term);
+	    				String mark = planet.getMark("sign", term, "ru");
 	    				p.add(new Chunk((mark.isEmpty() ? "" : " " + mark) + ", ", grayfont));
 	    				House house2 = planet.getHouse();
 						p.add(new Chunk(house2.getDesignation() + " дом, сектор «" + house2.getName() + "»", grayfont));
-						mark = planet.getMark("house", term);
+						mark = planet.getMark("house", term, "ru");
 	    				p.add(new Chunk((mark.isEmpty() ? "" : " " + mark) + ") ", grayfont));
 						p.add(new Chunk(pretext + " " + house.getDesignation() + " дома", grayfont));
 	    				if (!conj)
@@ -719,7 +719,7 @@ public class PDFExporter {
 								section.add(Chunk.NEWLINE);
 								section.add(new Paragraph(comment + ": " + htext, font));
 							}
-							PDFUtil.printGender(section, dirText, female, child, true);
+							PDFUtil.printGender(section, dirText, female, child, true, "ru");
 						}
 						section.add(Chunk.NEWLINE);
 					}
@@ -771,10 +771,10 @@ public class PDFExporter {
 								Sign sign = planet.getSign();
 			    				p.add(new Chunk(sign.getSymbol(), afont));
 			    				p.add(new Chunk(" " + sign.getName(), grayfont));
-			    				String mark = planet.getMark("sign", term);
+			    				String mark = planet.getMark("sign", term, "ru");
 			    				p.add(new Chunk((mark.isEmpty() ? "" : " " + mark) + ", ", grayfont));
 			    				p.add(new Chunk(house.getDesignation() + " дом, сектор «" + house.getName() + "»", grayfont));
-			    				mark = planet.getMark("house", term);
+			    				mark = planet.getMark("house", term, "ru");
 			    				p.add(new Chunk((mark.isEmpty() ? "" : " " + mark) + ") ", grayfont));
 					    		p.add(new Chunk(pretext + " ", grayfont));
 			    				p.add(new Chunk(planet2.getSymbol(), afont));
@@ -805,7 +805,7 @@ public class PDFExporter {
 					    			String typeColor = type.getFontColor();
 									BaseColor color = PDFUtil.htmlColor2Base(typeColor);
 									section.add(new Paragraph(PDFUtil.removeTags(text, new Font(baseFont, 12, Font.NORMAL, color))));
-									PDFUtil.printGender(section, dirText, female, child, true);
+									PDFUtil.printGender(section, dirText, female, child, true, "ru");
 								}
 								//используется для связки двух домов (дирекционного и натального)
 								if (null == dasp) {

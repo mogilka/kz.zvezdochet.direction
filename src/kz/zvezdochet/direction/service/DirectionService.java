@@ -3,6 +3,7 @@ package kz.zvezdochet.direction.service;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.Locale;
 
 import kz.zvezdochet.analytics.service.PlanetHouseService;
 import kz.zvezdochet.bean.AspectType;
@@ -21,7 +22,8 @@ import kz.zvezdochet.service.AspectTypeService;
 public class DirectionService extends PlanetHouseService {
 
 	public DirectionService() {
-		tableName = "directionhouses";
+		String lang = Locale.getDefault().getLanguage();
+		tableName = lang.equals("ru") ? "directionhouses" : "us_directionhouses";
 	}
 
 	@Override
