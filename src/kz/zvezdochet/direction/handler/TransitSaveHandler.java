@@ -1,6 +1,7 @@
 package kz.zvezdochet.direction.handler;
 
 import java.io.FileOutputStream;
+import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -9,6 +10,7 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.TreeMap;
 
@@ -54,6 +56,7 @@ import kz.zvezdochet.core.util.DateUtil;
 import kz.zvezdochet.core.util.OsUtil;
 import kz.zvezdochet.core.util.PlatformUtil;
 import kz.zvezdochet.direction.Activator;
+import kz.zvezdochet.direction.Messages;
 import kz.zvezdochet.direction.bean.DirectionAspectText;
 import kz.zvezdochet.direction.bean.DirectionText;
 import kz.zvezdochet.direction.part.TransitPart;
@@ -93,6 +96,9 @@ public class TransitSaveHandler extends Handler {
 			double zone = periodPart.getZone();
 			Map<Long, House> houses = person.getHouses();
 
+			String lang = Locale.getDefault().getLanguage();
+			boolean rus = lang.equals("ru");
+
 			int choice = DialogUtil.alertQuestion("Вопрос", "Выберите тип прогноза:", new String[] {"Реалистичный", "Оптимистичный"});
 			boolean optimistic = choice > 0;
 
@@ -122,19 +128,20 @@ public class TransitSaveHandler extends Handler {
 	    	Font afont = PDFUtil.getHeaderAstroFont();
 
 	        //metadata
-	        PDFUtil.getMetaData(doc, "Ежедневный прогноз", "ru");
+	    	String text = Messages.getString("Daily forecast");
+	        PDFUtil.getMetaData(doc, text, lang);
 
 	        //раздел
-			Chapter chapter = new ChapterAutoNumber("Ежедневный прогноз");
+			Chapter chapter = new ChapterAutoNumber(text);
 			chapter.setNumberDepth(0);
 
 			//шапка
 			Paragraph p = new Paragraph();
-			PDFUtil.printHeader(p, "Ежедневный прогноз", null);
+			PDFUtil.printHeader(p, text, null);
 			chapter.add(p);
 
-			String text = (person.isCelebrity() ? person.getName("ru") : person.getCallname("ru"));
-			text += ", прогноз на период: ";
+			text = (person.isCelebrity() ? person.getName(lang) : person.getCallname(lang));
+			text += ", " + Messages.getString("forecast for the period") + ": ";
 			SimpleDateFormat sdf = new SimpleDateFormat("EEEE, d MMMM yyyy");
 			text += sdf.format(initDate);
 			boolean days = (DateUtil.getDateFromDate(initDate) != DateUtil.getDateFromDate(finalDate)
@@ -150,16 +157,16 @@ public class TransitSaveHandler extends Handler {
 				place = new Place().getDefault();
 			boolean pdefault = place.getId().equals(place.getDefault().getId());
 			
-			text = "Тип прогноза: " + (optimistic ? "оптимистичный" : "реалистичный");
-			text += ", " + (important ? "только важное" : "полный");
+			text = Messages.getString("Forecast type") + ": " + (optimistic ? Messages.getString("optimistic") : Messages.getString("realistic"));
+			text += ", " + (important ? Messages.getString("only important") : Messages.getString("full"));
 			p = new Paragraph(text, font);
 	        p.setAlignment(Element.ALIGN_CENTER);
 			if (!person.isRectified())
-				p.add(new Chunk(" (не ректифицировано)", PDFUtil.getDangerFont()));
+				p.add(new Chunk(" (" + kz.zvezdochet.core.Messages.getString("not rectified") + ")", PDFUtil.getDangerFont()));
 			chapter.add(p);
 
 			Font fontgray = PDFUtil.getAnnotationFont(false);
-			text = "Дата составления: " + DateUtil.fulldtf.format(new Date());
+			text = kz.zvezdochet.core.Messages.getString("Created at") + ": " + DateFormat.getDateInstance(DateFormat.FULL, Locale.getDefault()).format(new Date());
 			p = new Paragraph(text, fontgray);
 	        p.setAlignment(Element.ALIGN_CENTER);
 			chapter.add(p);
@@ -167,9 +174,9 @@ public class TransitSaveHandler extends Handler {
 			p = new Paragraph();
 	        p.setAlignment(Element.ALIGN_CENTER);
 			p.setSpacingAfter(20);
-	        p.add(new Chunk("Автор: ", fontgray));
-	        Chunk chunk = new Chunk(PDFUtil.getAuthor("ru"), new Font(baseFont, 10, Font.UNDERLINE, PDFUtil.FONTCOLOR));
-	        chunk.setAnchor(PDFUtil.getWebsite("ru"));
+	        p.add(new Chunk(kz.zvezdochet.core.Messages.getString("Author") + ": ", fontgray));
+	        Chunk chunk = new Chunk(PDFUtil.getAuthor(lang), new Font(baseFont, 10, Font.UNDERLINE, PDFUtil.FONTCOLOR));
+	        chunk.setAnchor(PDFUtil.getWebsite(lang));
 	        p.add(chunk);
 	        chapter.add(p);
 
@@ -184,14 +191,14 @@ public class TransitSaveHandler extends Handler {
 			p.add(new Chunk("Общая погрешность прогноза составляет ±" + divergence + ". ", red));
 			p.add(new Chunk("Это значит, что описанное событие может произойти на день раньше, если длительность прогноза составляет более одного дня (в толковании вы это увидите). ", font));
 	        chunk = new Chunk("Пояснения к прогнозу", new Font(baseFont, 12, Font.UNDERLINE, PDFUtil.FONTCOLOR));
-	        chunk.setAnchor("https://zvezdochet.guru/post/223/poyasnenie-k-ezhednevnym-prognozam");
+	        chunk.setAnchor(rus ? "https://zvezdochet.guru/post/223/poyasnenie-k-ezhednevnym-prognozam" : "https://zvezdochet.guru/post/225/explanation-of-daily-forecasts");
 	        p.add(chunk);
 			chapter.add(p);
 			chapter.add(Chunk.NEWLINE);
 
 	        if (!pdefault) {
 	        	divergence = person.isRectified() ? "2 дня" : "3 дня";
-				chapter.add(new Paragraph("Прогноз сделан для локации «" + place.getName() + "». "
+				chapter.add(new Paragraph("Прогноз сделан для локации «" + place.getName(lang) + "». "
 					+ "Если в течение прогнозного периода вы переедете в более отдалённое место (в другой часовой пояс или с ощутимой сменой географической широты), "
 					+ "то погрешность некоторых прогнозов может составить ±" + divergence + ".", font));
 				chapter.add(Chunk.NEWLINE);
@@ -907,11 +914,11 @@ public class TransitSaveHandler extends Handler {
 											Sign sign = planet.getSign();
 						    				p.add(new Chunk(sign.getSymbol(), afont));
 						    				p.add(new Chunk(" " + sign.getName(), grayfont));
-						    				String mark = planet.getMark("sign", term, "ru");
+						    				String mark = planet.getMark("sign", term, lang);
 						    				p.add(new Chunk((mark.isEmpty() ? "" : " " + mark) + ", ", grayfont));
 						    				House house2 = planet.getHouse();
 											p.add(new Chunk(house2.getDesignation() + " дом, сектор «" + house2.getName() + "»", grayfont));
-											mark = planet.getMark("house", term, "ru");
+											mark = planet.getMark("house", term, lang);
 						    				p.add(new Chunk((mark.isEmpty() ? "" : " " + mark) + ") ", grayfont));
 											p.add(new Chunk(pretext + " " + house.getDesignation() + " дома", grayfont));
 						    				if (!acode.equals("CONJUNCTION"))
@@ -1097,7 +1104,7 @@ public class TransitSaveHandler extends Handler {
 														: (null == house.getGeneral() ? "к куспиду" : "к вершине");
 
 													p = new Paragraph();
-													p.add(new Chunk(planet.getMark("house", term, "ru") + " ", grayfont));
+													p.add(new Chunk(planet.getMark("house", term, lang) + " ", grayfont));
 													p.add(new Chunk(spa.getAspect().getName() + " транзитной ретро-планеты ", grayfont));
 													p.add(new Chunk(planet.getSymbol(), afont));
 													p.add(new Chunk(" " + planet.getName(), grayfont));
@@ -1256,7 +1263,7 @@ public class TransitSaveHandler extends Handler {
 				doc.add(chapter);
 			}
 //			hyears = null;
-	        doc.add(PDFUtil.printCopyright("ru"));
+	        doc.add(PDFUtil.printCopyright(lang));
 
 	        long time = System.currentTimeMillis();
 			System.out.println("Finished for: " + (time - run));
