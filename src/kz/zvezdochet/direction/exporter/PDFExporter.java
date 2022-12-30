@@ -153,7 +153,7 @@ public class PDFExporter {
 	        	+ "но описывает самые значительные тенденции вашей жизни в ближайшие " + CoreUtil.getAgeString(years)
         		+ " независимо от переездов и местоположения.", font));
 			Font red = PDFUtil.getDangerFont();
-			String months = event.isRectified() ? "2 месяца" : "1 год";
+			String months = event.isRectified() ? "6 месяцев" : "1 год";
 			chapter.add(new Paragraph("Максимальная погрешность прогноза ±" + months + ".", red));
 
 			p = new Paragraph("Если в прогнозе упомянуты люди, которых уже нет в живых (родители, супруги, родственники), "
@@ -601,132 +601,140 @@ public class PDFExporter {
 						continue;
 
 					House house = (House)skyPoint;
-					DirectionText dirText = (DirectionText)service.find(planet, house, type);
-					boolean negative = (null == dirText) ? type.getPoints() < 0 : !dirText.isPositive();
+					List<Model> dirTexts = service.finds(planet, house, type);
+					for (Model model : dirTexts) {
+						DirectionText dirText = (DirectionText)model;
+						Aspect diraspect = dirText.getAspect();
+						boolean aspectable = (diraspect != null);
+						if (aspectable && !diraspect.getId().equals(spa.getAspect().getId()))
+							continue;
 
-					String text = "";
-					if (term)
-						text = planet.getName() + " " + type.getSymbol() + " " + house.getDesignation() + " дом";
-					else {
-	    				String pname = negative ? event.getPlanets().get(planet.getId()).getBadName() : event.getPlanets().get(planet.getId()).getGoodName();
-	    				text = house.getName() + " " + type.getSymbol() + " " + pname;
-					}
-					section.addSection(new Paragraph(text, fonth5));
-					if (term) {
-						String pretext = acode.equals("CONJUNCTION")
-							? (null == house.getGeneral() ? "с куспидом" : "с вершиной")
-							: (null == house.getGeneral() ? "к куспиду" : "к вершине");
-
-						p = new Paragraph();
-			    		p.add(new Chunk(spa.getAspect().getName() + " дирекционной планеты ", grayfont));
-	    				p.add(new Chunk(planet.getSymbol(), afont));
-	    				p.add(new Chunk(" " + planet.getName(), grayfont));
-						p.add(new Chunk(" из " + CalcUtil.roundTo(planet.getLongitude(), 2) + "° (", grayfont));
-						Sign sign = planet.getSign();
-	    				p.add(new Chunk(sign.getSymbol(), afont));
-	    				p.add(new Chunk(" " + sign.getName(), grayfont));
-	    				String mark = planet.getMark("sign", term, "ru");
-	    				p.add(new Chunk((mark.isEmpty() ? "" : " " + mark) + ", ", grayfont));
-	    				House house2 = planet.getHouse();
-						p.add(new Chunk(house2.getDesignation() + " дом, сектор «" + house2.getName() + "»", grayfont));
-						mark = planet.getMark("house", term, "ru");
-	    				p.add(new Chunk((mark.isEmpty() ? "" : " " + mark) + ") ", grayfont));
-						p.add(new Chunk(pretext + " " + house.getDesignation() + " дома", grayfont));
-	    				if (!conj)
-							p.add(new Chunk(" (сектор «" + house.getName() + "»)", grayfont));
-
-	    				if (!planet.isFictitious()) {
-		    				PlanetHousePosition position = positionService.find(planet);
-		    				if (position != null) {
-		    					long id = position.getType().getId();
-		    					boolean anegative = spa.isNegative();
-		    					boolean match = ((id < 3 && !anegative)
-		    						|| (id > 2 && anegative));
-		    					if (match) {
-			    					String s = ". " + position.getDescription() + ". " + position.getType().getDescription();
-			    					p.add(new Chunk(s, grayfont));
-		    					}
-			    			}
-	    				}
-	    				section.add(p);
-	    				if (conj)
-	    					section.add(Chunk.NEWLINE);
-					}
-
-					if (dirText != null) {
-						if (acode.equals("QUADRATURE"))
-							section.add(new Paragraph("Уровень критичности: высокий", red));
-						else if (acode.equals("OPPOSITION"))
-							section.add(new Paragraph("Уровень критичности: средний", red));
-						else if (acode.equals("TRIN"))
-							section.add(new Paragraph("Уровень успеха: высокий", orange));
-						else if (acode.equals("SEXTILE"))
-							section.add(new Paragraph("Уровень успеха: средний", orange));
-
-						text = dirText.getText();
-						if (text != null) {
-							String typeColor = type.getFontColor();
-							BaseColor color = PDFUtil.htmlColor2Base(typeColor);
-							section.add(new Paragraph(PDFUtil.removeTags(text, new Font(baseFont, 12, Font.NORMAL, color))));
-
-							//правила домов
-							List<DirectionRule> houseRules = servicer.findRules(planet, house, spa.getAspect().getType());
-							for (DirectionRule rule : houseRules) {
-								AspectType aspectType = rule.getAspectType();
-								Aspect aspect = rule.getAspect();
-								Planet planet2 = rule.getPlanet2();
-								House house2 = rule.getHouse2();
-								for (SkyPointAspect spa2 : spas2) {
-									if (aspect != null
-											&& !aspect.getId().equals(spa2.getAspect().getId()))
-										continue;
-
-									SkyPoint sp = spa2.getSkyPoint2();
-									if (aspectType.getId().equals(spa2.getAspect().getTypeid())) {
-										if (planet2.getId().equals(sp.getId())) {
-											if (house2 != null
-													&& !house2.getId().equals(sp.getHouse().getId()))
-												continue;
-
-											section.add(Chunk.NEWLINE);
-											boolean negative2 = spa2.isNegative();
-											String sign2 = negative2 ? "-" : "+";
-											String header2 = rule.getHouse().getName() + " " + 
-												sign2 + " " + 
-												(negative2 ? planet2.getNegative() : planet2.getPositive());
-											section.add(new Paragraph(header2, fonth6));
-											if (term) {
-												p = new Paragraph();
-									    		p.add(new Chunk(spa2.getAspect().getName() + " дирекционной планеты", grayfont));
-							    				p.add(new Chunk(" " + planet.getName(), grayfont));
-							    				p.add(new Chunk(" к натальной планете " + planet2.getName(), grayfont));
-									    		p.add(new Chunk(", находящейся в " + house2.getDesignation() + " доме (сектор «" + house2.getName() + "»)", grayfont));
-							    				section.add(p);
+						boolean negative = (null == dirText) ? type.getPoints() < 0 : !dirText.isPositive();
+						if (!aspectable) {
+							String text = "";
+							if (term)
+								text = planet.getName() + " " + type.getSymbol() + " " + house.getDesignation() + " дом";
+							else {
+			    				String pname = negative ? event.getPlanets().get(planet.getId()).getBadName() : event.getPlanets().get(planet.getId()).getGoodName();
+			    				text = house.getName() + " " + type.getSymbol() + " " + pname;
+							}
+							section.addSection(new Paragraph(text, fonth5));
+							if (term) {
+								String pretext = acode.equals("CONJUNCTION")
+									? (null == house.getGeneral() ? "с куспидом" : "с вершиной")
+									: (null == house.getGeneral() ? "к куспиду" : "к вершине");
+		
+								p = new Paragraph();
+					    		p.add(new Chunk(spa.getAspect().getName() + " дирекционной планеты ", grayfont));
+			    				p.add(new Chunk(planet.getSymbol(), afont));
+			    				p.add(new Chunk(" " + planet.getName(), grayfont));
+								p.add(new Chunk(" из " + CalcUtil.roundTo(planet.getLongitude(), 2) + "° (", grayfont));
+								Sign sign = planet.getSign();
+			    				p.add(new Chunk(sign.getSymbol(), afont));
+			    				p.add(new Chunk(" " + sign.getName(), grayfont));
+			    				String mark = planet.getMark("sign", term, "ru");
+			    				p.add(new Chunk((mark.isEmpty() ? "" : " " + mark) + ", ", grayfont));
+			    				House house2 = planet.getHouse();
+								p.add(new Chunk(house2.getDesignation() + " дом, сектор «" + house2.getName() + "»", grayfont));
+								mark = planet.getMark("house", term, "ru");
+			    				p.add(new Chunk((mark.isEmpty() ? "" : " " + mark) + ") ", grayfont));
+								p.add(new Chunk(pretext + " " + house.getDesignation() + " дома", grayfont));
+			    				if (!conj)
+									p.add(new Chunk(" (сектор «" + house.getName() + "»)", grayfont));
+		
+			    				if (!planet.isFictitious()) {
+				    				PlanetHousePosition position = positionService.find(planet);
+				    				if (position != null) {
+				    					long id = position.getType().getId();
+				    					boolean anegative = spa.isNegative();
+				    					boolean match = ((id < 3 && !anegative)
+				    						|| (id > 2 && anegative));
+				    					if (match) {
+					    					String s = ". " + position.getDescription() + ". " + position.getType().getDescription();
+					    					p.add(new Chunk(s, grayfont));
+				    					}
+					    			}
+			    				}
+			    				section.add(p);
+			    				if (conj)
+			    					section.add(Chunk.NEWLINE);
+							}
+						}	
+						if (dirText != null) {
+							if (!aspectable) {
+								if (acode.equals("QUADRATURE"))
+									section.add(new Paragraph("Уровень критичности: высокий", red));
+								else if (acode.equals("OPPOSITION"))
+									section.add(new Paragraph("Уровень критичности: средний", red));
+								else if (acode.equals("TRIN"))
+									section.add(new Paragraph("Уровень успеха: высокий", orange));
+								else if (acode.equals("SEXTILE"))
+									section.add(new Paragraph("Уровень успеха: средний", orange));
+							}	
+							String text = dirText.getText();
+							if (text != null) {
+								String typeColor = type.getFontColor();
+								BaseColor color = PDFUtil.htmlColor2Base(typeColor);
+								section.add(new Paragraph(PDFUtil.removeTags(text, new Font(baseFont, 12, Font.NORMAL, color))));
+	
+								//правила домов
+								List<DirectionRule> houseRules = servicer.findRules(planet, house, spa.getAspect().getType());
+								for (DirectionRule rule : houseRules) {
+									AspectType aspectType = rule.getAspectType();
+									Aspect aspect = rule.getAspect();
+									Planet planet2 = rule.getPlanet2();
+									House house2 = rule.getHouse2();
+									for (SkyPointAspect spa2 : spas2) {
+										if (aspect != null
+												&& !aspect.getId().equals(spa2.getAspect().getId()))
+											continue;
+	
+										SkyPoint sp = spa2.getSkyPoint2();
+										if (aspectType.getId().equals(spa2.getAspect().getTypeid())) {
+											if (planet2.getId().equals(sp.getId())) {
+												if (house2 != null
+														&& !house2.getId().equals(sp.getHouse().getId()))
+													continue;
+	
+												section.add(Chunk.NEWLINE);
+												boolean negative2 = spa2.isNegative();
+												String sign2 = negative2 ? "-" : "+";
+												String header2 = rule.getHouse().getName() + " " + 
+													sign2 + " " + 
+													(negative2 ? planet2.getNegative() : planet2.getPositive());
+												section.add(new Paragraph(header2, fonth6));
+												if (term) {
+													p = new Paragraph();
+										    		p.add(new Chunk(spa2.getAspect().getName() + " дирекционной планеты", grayfont));
+								    				p.add(new Chunk(" " + planet.getName(), grayfont));
+								    				p.add(new Chunk(" к натальной планете " + planet2.getName(), grayfont));
+										    		p.add(new Chunk(", находящейся в " + house2.getDesignation() + " доме (сектор «" + house2.getName() + "»)", grayfont));
+								    				section.add(p);
+												}
+												section.add(new Paragraph(PDFUtil.removeTags(rule.getText(), font)));
+												//PDFUtil.printGender(section, rule, female, child, true);
 											}
-											section.add(new Paragraph(PDFUtil.removeTags(rule.getText(), font)));
-											//PDFUtil.printGender(section, rule, female, child, true);
 										}
 									}
 								}
+								//используется для связки двух домов (дирекционного и натального)
+								if (!acode.equals("CONJUNCTION") && !acode.equals("OPPOSITION")) {
+									House h = planet.getHouse();
+									String comment = negative
+										? "Сопутствовать этому будут следующие негативные факторы"
+										: "Это станет возможным благодаря следующим позитивным факторам";
+									String htext = negative ? h.getNegative() : h.getPositive();
+									section.add(Chunk.NEWLINE);
+									section.add(new Paragraph(comment + ": " + htext, font));
+								}
+								PDFUtil.printGender(section, dirText, female, child, true, "ru");
 							}
-							//используется для связки двух домов (дирекционного и натального)
-							if (!acode.equals("CONJUNCTION") && !acode.equals("OPPOSITION")) {
-								House h = planet.getHouse();
-								String comment = negative
-									? "Сопутствовать этому будут следующие негативные факторы"
-									: "Это станет возможным благодаря следующим позитивным факторам";
-								String htext = negative ? h.getNegative() : h.getPositive();
-								section.add(Chunk.NEWLINE);
-								section.add(new Paragraph(comment + ": " + htext, font));
-							}
-							PDFUtil.printGender(section, dirText, female, child, true, "ru");
+							section.add(Chunk.NEWLINE);
 						}
-						section.add(Chunk.NEWLINE);
+						Rule rule = EventRules.ruleHouseDirection(spa, female);
+						if (rule != null)
+							section.add(new Paragraph(PDFUtil.removeTags(rule.getText(), font)));
 					}
-					Rule rule = EventRules.ruleHouseDirection(spa, female);
-					if (rule != null)
-						section.add(new Paragraph(PDFUtil.removeTags(rule.getText(), font)));
-
 				} else if (skyPoint instanceof Planet) {
 					List<Model> texts = servicea.finds(spa);
 					boolean negative = false;

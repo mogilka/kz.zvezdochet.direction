@@ -1,6 +1,7 @@
 package kz.zvezdochet.direction.bean;
 
 import kz.zvezdochet.analytics.bean.PlanetHouseText;
+import kz.zvezdochet.bean.Aspect;
 import kz.zvezdochet.core.service.ModelService;
 import kz.zvezdochet.direction.service.DirectionService;
 
@@ -66,5 +67,18 @@ public class DirectionText extends PlanetHouseText {
 
 	public void setRetro(String retro) {
 		this.retro = retro;
+	}
+
+	/**
+	 * Аспект
+	 */
+	private Aspect aspect;
+
+	public Aspect getAspect() {
+		return aspect;
+	}
+
+	public void setAspect(Aspect aspect) {
+		this.aspect = aspect;
 	}
 }
