@@ -30,7 +30,7 @@ public class DirectionRuleService extends PlanetHouseService {
 	}
 
 	/**
-	 * Поиск толкования дирекции планеты к дому
+	 * Поиск толкования для дирекции планеты к дому
 	 * @param planet дирекционная планета
 	 * @param house дирекционный астрологический дом
 	 * @param type дирекционный тип аспекта
@@ -86,7 +86,7 @@ public class DirectionRuleService extends PlanetHouseService {
 	}
 
 	/**
-	 * Поиск толкования дирекционной планеты к натальной
+	 * Поиск толкования для аспекта дирекционной планеты и натальной
 	 * @param planet дирекционная планета
 	 * @param house дирекционный астрологический дом
 	 * @param type дирекционный тип аспекта

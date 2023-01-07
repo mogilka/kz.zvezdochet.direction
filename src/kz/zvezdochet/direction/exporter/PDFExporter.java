@@ -725,7 +725,7 @@ public class PDFExporter {
 										: "Это станет возможным благодаря следующим позитивным факторам";
 									String htext = negative ? h.getNegative() : h.getPositive();
 									section.add(Chunk.NEWLINE);
-									section.add(new Paragraph(comment + ": " + htext, font));
+									section.add(new Paragraph(comment + ": " + htext, grayfont));
 								}
 								PDFUtil.printGender(section, dirText, female, child, true, "ru");
 							}
@@ -829,7 +829,7 @@ public class PDFExporter {
 										comment += ": " + (negative ? h.getNegative() : h.getPositive());
 									}
 									section.add(Chunk.NEWLINE);
-									section.add(new Paragraph(comment, font));
+									section.add(new Paragraph(comment, grayfont));
 
 									//правило домов
 									DirectionRule rule = servicer.findRule(planet, house, spa.getAspect().getType(), planet2, house2);
@@ -841,7 +841,7 @@ public class PDFExporter {
 		
 										section.add(Chunk.NEWLINE);
 										section.add(new Paragraph(PDFUtil.removeTags(rule.getText(), font)));
-										//PDFUtil.printGender(section, rule, female, child, true);
+										PDFUtil.printGender(section, rule, female, child, true, "ru");
 									}
 								}
 							}
