@@ -91,4 +91,33 @@ public class DirectionService extends PlanetHouseService {
 			dict.setAspect((Aspect)new AspectService().find(val));
 		return dict;
 	}
+
+	@Override
+	public Model find(Planet planet, House house, AspectType aspectType) throws DataAccessException {
+        PreparedStatement ps = null;
+        ResultSet rs = null;
+		String sql;
+		try {
+			sql = "select * from " + tableName + 
+				" where typeid = " + aspectType.getId() +
+				" and planetid = " + planet.getId() +
+				" and houseid = " + house.getId() +
+				" and aspectid is null";
+			ps = Connector.getInstance().getConnection().prepareStatement(sql);
+//			System.out.println(planet + " " + house);
+			rs = ps.executeQuery();
+			if (rs.next())
+				return init(rs, create());
+		} catch (Exception e) {
+			e.printStackTrace();
+		} finally {
+			try { 
+				if (rs != null) rs.close();
+				if (ps != null) ps.close();
+			} catch (SQLException e) { 
+				e.printStackTrace(); 
+			}
+		}
+		return null;
+	}
 }
