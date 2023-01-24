@@ -391,11 +391,11 @@ public class TransitSaveHandler extends Handler {
 	        doc.add(chapter);
 
 			Map<Integer, Map<Integer, List<Long>>> years = new TreeMap<Integer, Map<Integer, List<Long>>>();
-//			Map<Integer, Map<Integer, Map<Long, Map<Long, List<TimeSeriesDataItem>>>>> hyears = new TreeMap<Integer, Map<Integer, Map<Long, Map<Long, List<TimeSeriesDataItem>>>>>();
 			Map<Integer, Map<Integer, Map<Long, List<TimeSeriesDataItem>>>> myears = new TreeMap<Integer, Map<Integer, Map<Long, List<TimeSeriesDataItem>>>>();
 			Map<Integer, Map<Integer, Map<Long, Map<String, List<Object>>>>> texts = new TreeMap<Integer, Map<Integer, Map<Long, Map<String, List<Object>>>>>();
 			Map<Integer, Map<Integer, Map<Long, Integer>>> myears2 = new TreeMap<Integer, Map<Integer, Map<Long, Integer>>>();
 			Map<Integer, Map<Long, Map<Long, TreeMap<Integer, Integer>>>> hyears2 = new TreeMap<Integer, Map<Long, Map<Long, TreeMap<Integer, Integer>>>>();
+			Map<Integer, Map<Integer, Map<Long, List<Object>>>> ytops = new TreeMap<Integer, Map<Integer, Map<Long, List<Object>>>>();
 
 			System.out.println("Prepared for: " + (System.currentTimeMillis() - run));
 			run = System.currentTimeMillis();
@@ -416,10 +416,6 @@ public class TransitSaveHandler extends Handler {
 				months.put(m, dates);
 				years.put(y, months);
 
-//				Map<Integer, Map<Long, Map<Long, List<TimeSeriesDataItem>>>> months2 = hyears.containsKey(y) ? hyears.get(y) : new TreeMap<Integer, Map<Long, Map<Long, List<TimeSeriesDataItem>>>>();
-//				months2.put(m, new TreeMap<Long, Map<Long, List<TimeSeriesDataItem>>>());
-//				hyears.put(y, months2);
-
 				Map<Integer, Map<Long, List<TimeSeriesDataItem>>> months3 = myears.containsKey(y) ? myears.get(y) : new TreeMap<Integer, Map<Long, List<TimeSeriesDataItem>>>();
 				months3.put(m, new TreeMap<Long, List<TimeSeriesDataItem>>());
 				myears.put(y, months3);
@@ -432,6 +428,12 @@ public class TransitSaveHandler extends Handler {
 				for (House h : houses.values())
 					yhouses.put(h.getId(), new TreeMap<Long, TreeMap<Integer, Integer>>());
 				hyears2.put(y, yhouses);
+
+				Map<Integer, Map<Long, List<Object>>> tops = ytops.containsKey(y) ? ytops.get(y) : new TreeMap<Integer, Map<Long, List<Object>>>();
+				Map<Long, List<Object>> dtops = new TreeMap<Long, List<Object>>();
+				dtops.put(time, null);
+				tops.put(m, dtops);
+				ytops.put(y, tops);
 			}
 
 			Map<Integer, Map<String, Map<Integer,Integer>>> yitems = new TreeMap<Integer, Map<String, Map<Integer,Integer>>>();
@@ -460,6 +462,7 @@ public class TransitSaveHandler extends Handler {
 
 				Map<Integer, Map<Long, Integer>> months4 = myears2.containsKey(y) ? myears2.get(y) : new TreeMap<Integer, Map<Long, Integer>>();
 				Map<Long, Map<Long, TreeMap<Integer, Integer>>> yhouses = hyears2.containsKey(y) ? hyears2.get(y) : new TreeMap<Long, Map<Long, TreeMap<Integer, Integer>>>();
+				Map<Integer, Map<Long, List<Object>>> mtops = ytops.containsKey(y) ? ytops.get(y) : new TreeMap<Integer, Map<Long, List<Object>>>();
 
 				//считаем транзиты
 				for (Map.Entry<Integer, List<Long>> entry2 : months.entrySet()) {
@@ -472,6 +475,7 @@ public class TransitSaveHandler extends Handler {
 						dtexts = new TreeMap<Long, Map<String, List<Object>>>();
 
 					Map<Long, Integer> seriesh = months4.get(m);
+					Map<Long, List<Object>> dtops = mtops.containsKey(m) ? mtops.get(m) : new TreeMap<Long, List<Object>>();
 
 					for (Long time : dates) {
 						++j;
@@ -555,6 +559,12 @@ public class TransitSaveHandler extends Handler {
 									}
 									planet.setData(transits);
 									objects2.add(planet);
+
+									List<Object> tops = dtops.containsKey(time) ? dtops.get(time) : new ArrayList<Object>();
+									tops.add(planet);
+									dtops.put(time, tops);
+									mtops.put(m, dtops);
+									ytops.put(y, mtops);
 								}
 							}
 							ingressmap.put(key, objects2);
@@ -635,24 +645,6 @@ public class TransitSaveHandler extends Handler {
 								}
 							}
 						}
-//						Map<Integer, Map<Long, Map<Long, List<TimeSeriesDataItem>>>> months2 = hyears.containsKey(y) ? hyears.get(y) : new TreeMap<Integer, Map<Long, Map<Long, List<TimeSeriesDataItem>>>>();
-//						Map<Long, Map<Long, List<TimeSeriesDataItem>>> items = months2.containsKey(m) ? months2.get(m) : new TreeMap<Long, Map<Long, List<TimeSeriesDataItem>>>();
-//						for (Map.Entry<Long, Map<Long, Integer>> entryh : hitems.entrySet()) {
-//							Map<Long, Integer> amap = entryh.getValue();
-//							long hid = entryh.getKey();
-//							Map<Long, List<TimeSeriesDataItem>> map = items.containsKey(hid) ? items.get(hid) : new HashMap<Long, List<TimeSeriesDataItem>>();
-//							for (Map.Entry<Long, Integer> entry3 : amap.entrySet()) {
-//								long aid = entry3.getKey();
-//								List<TimeSeriesDataItem> series = map.containsKey(aid) ? map.get(aid) : new ArrayList<TimeSeriesDataItem>();
-//								TimeSeriesDataItem tsdi = new TimeSeriesDataItem(new Day(date), entry3.getValue());
-//								if (!series.contains(tsdi))
-//									series.add(tsdi);
-//								map.put(aid, series);
-//								items.put(hid, map);
-//							}
-//						}
-//						months2.put(m, items);
-
 						Map<Integer, Map<Long, List<TimeSeriesDataItem>>> months3 = myears.containsKey(y) ? myears.get(y) : new TreeMap<Integer, Map<Long, List<TimeSeriesDataItem>>>();
 						Map<Long, List<TimeSeriesDataItem>> map = months3.containsKey(m) ? months3.get(m) : new TreeMap<Long, List<TimeSeriesDataItem>>();
 						for (Map.Entry<Long, Integer> entry3 : mitems.entrySet()) {
@@ -719,10 +711,10 @@ public class TransitSaveHandler extends Handler {
 	 			section.add(p);
 				section.add(Chunk.NEXTPAGE);
 
-//				Map<Integer, Map<Long, Map<Long, List<TimeSeriesDataItem>>>> months2 = hyears.get(y);
 				Map<Integer, Map<Long, List<TimeSeriesDataItem>>> months3 = myears.get(y);
 				Map<Integer, Map<Long, Map<String, List<Object>>>> mtexts = texts.get(y);
 				Map<Integer, Map<Long, Integer>> months4 = myears2.get(y);
+				Map<Integer, Map<Long, List<Object>>> mtops = ytops.containsKey(y) ? ytops.get(y) : new TreeMap<Integer, Map<Long, List<Object>>>();
 
 				//месяцы
 				for (Map.Entry<Integer, Map<Long, Map<String, List<Object>>>> entry2 : mtexts.entrySet()) {
@@ -774,6 +766,30 @@ public class TransitSaveHandler extends Handler {
 					section.add(new Paragraph("Далее приведён прогноз по этим сферам жизни", font));
 					section.add(Chunk.NEWLINE);
 
+					//ссылки на топовые события
+					Section msection = PDFUtil.printSubsection(section, "Важное за " + ym, null);
+					Map<Long, List<Object>> dtops = mtops.containsKey(m) ? mtops.get(m) : new TreeMap<Long, List<Object>>();
+					for (Map.Entry<Long, List<Object>> dentry : dtops.entrySet()) {
+						List<Object> tops = dentry.getValue();
+						if (null == tops || tops.isEmpty())
+							continue;
+
+	    				 list = new com.itextpdf.text.List(false, false, 10);
+	    				 for (Object object : tops) {
+	    					 if (object instanceof Planet) {
+	    						 Planet planet = (Planet)object;
+	    						 li = new ListItem();
+	    						 anchor = new Anchor(planet.getCode() + planet.isRetrograde(), fonta);
+	    						 anchor.setReference("#" + planet.getCode() + dentry.getKey());
+	    						 System.out.println("Anchor" + dentry.getKey() + planet.getCode());
+	    					     li.add(anchor);
+	    						 list.add(li);
+	    					 }
+	    				 }
+	    				 msection.add(list);
+					}
+
+					//толкования дней месяца
 					Map<Long, Map<String, List<Object>>> dtexts = mtexts.get(m);
 					if (dtexts.isEmpty())
 						continue;
@@ -859,19 +875,6 @@ public class TransitSaveHandler extends Handler {
 										else if (separation)
 											prefix = "Заканчивается: ";
 									}
-/*
- * 			Anchor anchor = new Anchor("Рисунок вашего гороскопа", fonta);
-            anchor.setReference("#cosmogram");
-			Paragraph p = new Paragraph();
-	        p.add(anchor);
-			p.add(new Chunk(" показывает общую картину, которая не в деталях, а глобально описывает ваше предназначение и опыт прошлого:", font));
-			section.add(p);
-			
-        	Anchor anchorTarget = new Anchor(title, fonth3);
-        	anchorTarget.setName(anchor);
-        	p.add(anchorTarget);
-
- */
 									AspectType type = spa.getAspect().getType();
 									String typeColor = type.getFontColor();
 									BaseColor color = PDFUtil.htmlColor2Base(typeColor);
@@ -900,7 +903,9 @@ public class TransitSaveHandler extends Handler {
 										else if (!separation)
 											ptext += term ? planet.getName() + " " + type.getSymbol() + " " + house.getDesignation() + " дом" : house.getName();
 
-					    				daysection.addSection(new Paragraph(ptext, colorbold));
+							        	Anchor anchorTarget = new Anchor(ptext, colorbold);
+							        	anchorTarget.setName(dentry.getKey() + spa.getCode());
+					    				daysection.addSection(new Paragraph(anchorTarget));
 					    				if (term) {
 											String pretext = spa.getAspect().getCode().equals("CONJUNCTION")
 												? (null == house.getGeneral() ? "с куспидом" : "с вершиной")
@@ -966,7 +971,10 @@ public class TransitSaveHandler extends Handler {
 											if (!revolution)
 												ptext += " " + type.getSymbol() + " " + (term ? planet2.getName() : pname2);
 										}
-										daysection.addSection(new Paragraph(ptext, colorbold));
+
+							        	Anchor anchorTarget = new Anchor(ptext, colorbold);
+							        	anchorTarget.setName(dentry.getKey() + spa.getCode());
+					    				daysection.addSection(new Paragraph(anchorTarget));
 										if (term) {
 											String pretext = spa.getAspect().getCode().equals("CONJUNCTION")
 												? "с натальной планетой"
@@ -1059,7 +1067,10 @@ public class TransitSaveHandler extends Handler {
 									boolean direct = itexts.getKey().equals(Ingress._DIRECT);
 									String direction = direct ? "директное" : "обратное";
 									String ptext = planet.getName() + " переходит в " + direction + " движение";
-				    				daysection.addSection(new Paragraph(ptext, bold));
+						        	Anchor anchorTarget = new Anchor(ptext, bold);
+						        	anchorTarget.setName(planet.getCode() + dentry.getKey());
+						        	System.out.println("anchorTarget" + dentry.getKey() + planet.getCode());
+				    				daysection.addSection(new Paragraph(anchorTarget));
 
 									if (notransits) {
 										if (term)
@@ -1171,54 +1182,6 @@ public class TransitSaveHandler extends Handler {
 						daysection.add(Chunk.NEXTPAGE);
 					}
 //					texts = null;
-
-					//графики месяца по домам
-//					section.add(Chunk.NEXTPAGE);
-//					section = PDFUtil.printSubsection(section, ym + " по сферам жизни", "charts" + m + "" + y);
-//
-//					list = new com.itextpdf.text.List(false, false, 10);
-//					li = new ListItem();
-//			        li.add(new Chunk("Если график представляет собой точку, значит актуальность данной сферы ограничена одним днём,", font));
-//			        list.add(li);
-//
-//					li = new ListItem();
-//			        li.add(new Chunk("если график в виде линии, то точки на нём укажут на важные дни периода в данной сфере", font));
-//			        list.add(li);
-//			        section.add(list);
-//			        section.add(Chunk.NEWLINE);
-//
-//					Map<Long, Map<Long, List<TimeSeriesDataItem>>> items = entry2.getValue();
-//			        i = -1;
-//					for (Map.Entry<Long, Map<Long, List<TimeSeriesDataItem>>> entryh : items.entrySet()) {
-//						long houseid = entryh.getKey();
-//						House house = houses.get(houseid);
-//						Map<Long, List<TimeSeriesDataItem>> map = entryh.getValue();
-//						if (map.isEmpty())
-//							continue;
-//						dataset = new TimeSeriesCollection();
-//						for (Map.Entry<Long, List<TimeSeriesDataItem>> entry3 : map.entrySet()) {
-//			        		List<TimeSeriesDataItem> series = entry3.getValue();
-//			        		if (null == series || series.isEmpty())
-//			        			continue;
-//			        		Long aid = entry3.getKey();
-//			        		TimeSeries timeSeries = new TimeSeries(aid < 2 ? "Важное" : (aid < 3 ? "Негатив" : "Позитив"));
-//							for (TimeSeriesDataItem tsdi : series)
-//								timeSeries.add(tsdi);
-//							dataset.addSeries(timeSeries);
-//			        	}
-//			        	if (dataset.getSeriesCount() > 1) { //точечный график не отображаем
-//			        		if (++i > 1) {
-//			        			i = 0;
-//			        			section.add(Chunk.NEXTPAGE);
-//			        		}
-//				        	section.addSection(new Paragraph(house.getName(), hfont));
-//				        	section.add(new Paragraph(ym + ": " + house.getDescription(), font));
-//						    image = PDFUtil.printTimeChart(writer, "", "", "Баллы", dataset, 500, 0, true);
-//							section.add(image);
-//							section.add(Chunk.NEWLINE);
-//			        	}
-//					}
-//			        chapter.add(Chunk.NEXTPAGE);
 				}
 				//графики года
 				if (longterm) {
