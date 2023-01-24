@@ -505,6 +505,8 @@ public class TransitSaveHandler extends Handler {
 							if (j > 0 && key.contains("REPEAT"))
 								continue;
 
+							List<Object> tops = dtops.containsKey(time) ? dtops.get(time) : new ArrayList<Object>();
+
 							List<Object> objects2 = ingressmap.containsKey(key) ? ingressmap.get(key) : new ArrayList<Object>();
 							String[] negatives = {"Kethu", "Lilith"};
 							for (Object object : objects) {
@@ -544,6 +546,25 @@ public class TransitSaveHandler extends Handler {
 		    		                }
 									objects2.add(spa);
 
+									//топовые соединения с домами
+									if (key.equals(Ingress._EXACT_HOUSE)) {
+										if (acode.equals("CONJUNCTION")
+												&& (planet.isRetrograde() || planet.isGiant())) {
+											tops.add(spa);
+											dtops.put(time, tops);
+											mtops.put(m, dtops);
+											ytops.put(y, mtops);										
+										}
+									//топовые транзиты
+									} else if (key.equals(Ingress._EXACT)) {
+										if (planet.isGiant()) {
+											tops.add(spa);
+											dtops.put(time, tops);
+											mtops.put(m, dtops);
+											ytops.put(y, mtops);
+										}
+									}
+
 								} else if (object instanceof Planet) { //ретро или директ
 									Planet planet = (Planet)object;
 								    List<SkyPointAspect> transits = new ArrayList<SkyPointAspect>();
@@ -560,11 +581,13 @@ public class TransitSaveHandler extends Handler {
 									planet.setData(transits);
 									objects2.add(planet);
 
-									List<Object> tops = dtops.containsKey(time) ? dtops.get(time) : new ArrayList<Object>();
-									tops.add(planet);
-									dtops.put(time, tops);
-									mtops.put(m, dtops);
-									ytops.put(y, mtops);
+									//развороты планет
+									if (!planet.isFictitious()) {
+										tops.add(planet);
+										dtops.put(time, tops);
+										mtops.put(m, dtops);
+										ytops.put(y, mtops);
+									}
 								}
 							}
 							ingressmap.put(key, objects2);
@@ -680,6 +703,8 @@ public class TransitSaveHandler extends Handler {
 
 			String[] pnegative = {"Lilith", "Kethu"};
 
+			SimpleDateFormat topsdf = new SimpleDateFormat("d MMMM");
+
 	        //года
 			for (Map.Entry<Integer, Map<Integer, Map<Long, Map<String, List<Object>>>>> entry : texts.entrySet()) {
 				int y = entry.getKey();
@@ -771,23 +796,54 @@ public class TransitSaveHandler extends Handler {
 					Map<Long, List<Object>> dtops = mtops.containsKey(m) ? mtops.get(m) : new TreeMap<Long, List<Object>>();
 					for (Map.Entry<Long, List<Object>> dentry : dtops.entrySet()) {
 						List<Object> tops = dentry.getValue();
+						long ldate = dentry.getKey();
 						if (null == tops || tops.isEmpty())
 							continue;
 
+						 String shortdate = topsdf.format(new Date(ldate));
 	    				 list = new com.itextpdf.text.List(false, false, 10);
 	    				 for (Object object : tops) {
+    						 li = new ListItem();
+	    					 String ptext = shortdate + ": ";
+	    					 String link = "#";
 	    					 if (object instanceof Planet) {
 	    						 Planet planet = (Planet)object;
-	    						 li = new ListItem();
-	    						 anchor = new Anchor(planet.getCode() + planet.isRetrograde(), fonta);
-	    						 anchor.setReference("#" + planet.getCode() + dentry.getKey());
-	    						 System.out.println("Anchor" + dentry.getKey() + planet.getCode());
-	    					     li.add(anchor);
-	    						 list.add(li);
+	    						 boolean retro = planet.isRetrograde();
+	    						 String direction = retro ? "обратное" : "директное";
+	    						 ptext += planet.getName() + " переходит в " + direction + " движение";
+	    						 link += planet.getCode();
+	    					 } else if (object instanceof SkyPointAspect) {
+	    						 SkyPointAspect spa = (SkyPointAspect)object;
+	    						 link += spa.getCode();
+	    						 SkyPoint skyPoint = spa.getSkyPoint2();
+	    						 if (skyPoint instanceof House) {
+	    							 House house = (House)skyPoint;
+		    						 ptext += house.getName();
+	    						 } else {
+	    							 Planet planet = (Planet)spa.getSkyPoint1();
+	    							 Planet planet2 = (Planet)skyPoint;
+	    							 AspectType type = spa.getAspect().getType();
+	    							 boolean bad = type.getPoints() < 0
+	    									 || (type.getCode().equals("NEUTRAL")
+	    											 && (Arrays.asList(pnegative).contains(planet.getCode())
+	    													 || Arrays.asList(pnegative).contains(skyPoint.getCode())));
+	    							 String pname = bad ? planet.getAspectingBadName() : planet.getAspectingName();
+	    							 String pname2 = bad ? planet2.getAspectedBadName() : planet2.getAspectedName();
+	    							 ptext += pname;
+	    							 boolean revolution = planet.getId().equals(planet2.getId());
+	    							 if (!revolution)
+	    								 ptext += " " + type.getSymbol() + " " + pname2;
+	    						 }
 	    					 }
+    						 anchor = new Anchor(ptext, fonta);
+    						 link += ldate;
+    						 anchor.setReference(link);
+    					     li.add(anchor);
+    						 list.add(li);
 	    				 }
 	    				 msection.add(list);
 					}
+					section.add(Chunk.NEWLINE);
 
 					//толкования дней месяца
 					Map<Long, Map<String, List<Object>>> dtexts = mtexts.get(m);
@@ -903,8 +959,8 @@ public class TransitSaveHandler extends Handler {
 										else if (!separation)
 											ptext += term ? planet.getName() + " " + type.getSymbol() + " " + house.getDesignation() + " дом" : house.getName();
 
-							        	Anchor anchorTarget = new Anchor(ptext, colorbold);
-							        	anchorTarget.setName(dentry.getKey() + spa.getCode());
+							        	Chunk anchorTarget = new Chunk(ptext, colorbold);
+							        	anchorTarget.setLocalDestination(spa.getCode() + dentry.getKey());
 					    				daysection.addSection(new Paragraph(anchorTarget));
 					    				if (term) {
 											String pretext = spa.getAspect().getCode().equals("CONJUNCTION")
@@ -972,8 +1028,8 @@ public class TransitSaveHandler extends Handler {
 												ptext += " " + type.getSymbol() + " " + (term ? planet2.getName() : pname2);
 										}
 
-							        	Anchor anchorTarget = new Anchor(ptext, colorbold);
-							        	anchorTarget.setName(dentry.getKey() + spa.getCode());
+							        	Chunk anchorTarget = new Chunk(ptext, colorbold);
+							        	anchorTarget.setLocalDestination(spa.getCode() + dentry.getKey());
 					    				daysection.addSection(new Paragraph(anchorTarget));
 										if (term) {
 											String pretext = spa.getAspect().getCode().equals("CONJUNCTION")
@@ -1067,9 +1123,8 @@ public class TransitSaveHandler extends Handler {
 									boolean direct = itexts.getKey().equals(Ingress._DIRECT);
 									String direction = direct ? "директное" : "обратное";
 									String ptext = planet.getName() + " переходит в " + direction + " движение";
-						        	Anchor anchorTarget = new Anchor(ptext, bold);
-						        	anchorTarget.setName(planet.getCode() + dentry.getKey());
-						        	System.out.println("anchorTarget" + dentry.getKey() + planet.getCode());
+						        	Chunk anchorTarget = new Chunk(ptext, bold);
+						        	anchorTarget.setLocalDestination(planet.getCode() + dentry.getKey());
 				    				daysection.addSection(new Paragraph(anchorTarget));
 
 									if (notransits) {
