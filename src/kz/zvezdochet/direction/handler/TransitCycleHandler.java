@@ -360,10 +360,10 @@ public class TransitCycleHandler extends Handler {
 
 									String acode = spa.getAspect().getCode();
 									if (!acode.equals("CONJUNCTION")) {
-										if (planet.isFictitious())
+										if (planet.isFictious())
 											continue;
 
-										if (!housable && ((Planet)skyPoint).isFictitious())
+										if (!housable && ((Planet)skyPoint).isFictious())
 											continue;
 									}
 									if (optimistic) {
@@ -548,7 +548,7 @@ public class TransitCycleHandler extends Handler {
 									boolean retro = spa.isRetro();
 
 									String prefix = "";
-									if (!planet.isFictitious())
+									if (!planet.isFictious())
 										prefix = repeat ? "Продолжается: " : "Начинается: ";
 									AspectType type = spa.getAspect().getType();
 									String typeColor = type.getFontColor();
@@ -578,7 +578,7 @@ public class TransitCycleHandler extends Handler {
 	
 										DirectionText dirText = (DirectionText)service.find(planet, house, type);
 										if (dirText != null)
-											text = retro && !planet.isFictitious() ? dirText.getRetro() : dirText.getDescription();
+											text = retro && !planet.isFictious() ? dirText.getRetro() : dirText.getDescription();
 										String ptext = prefix;
 										if (null == dirText)
 											ptext += planet.getShortName() + " " + type.getSymbol() + " " + house.getName() + "<>";
@@ -620,7 +620,7 @@ public class TransitCycleHandler extends Handler {
 
 										DirectionAspectText dirText = (DirectionAspectText)servicea.find(spa, aspectid, checktype);
 										if (dirText != null)
-											text = retro && !planet.isFictitious() ? dirText.getRetro() : dirText.getDescription();
+											text = retro && !planet.isFictious() ? dirText.getRetro() : dirText.getDescription();
 										String ptext = prefix;
 										if (null == dirText) {
 											ptext += planet.getShortName() + "<>";

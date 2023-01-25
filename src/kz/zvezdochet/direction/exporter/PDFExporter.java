@@ -642,7 +642,7 @@ public class PDFExporter {
 			    				if (!conj)
 									p.add(new Chunk(" (сектор «" + house.getName() + "»)", grayfont));
 		
-			    				if (!planet.isFictitious()) {
+			    				if (!planet.isFictious()) {
 				    				PlanetHousePosition position = positionService.find(planet);
 				    				if (position != null) {
 				    					long id = position.getType().getId();

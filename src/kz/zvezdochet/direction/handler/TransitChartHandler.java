@@ -197,7 +197,7 @@ public class TransitChartHandler extends Handler {
 							if (!conj && skyPoint.isMain() && !spa.isRetro())
 								continue;
 
-							if (!conj && skyPoint.isFictitious())
+							if (!conj && skyPoint.isFictious())
 								continue;
 
 							Map<Long, List<SkyPointAspect>> dmap = yhouses.containsKey(hid) ? yhouses.get(hid) : new TreeMap<Long, List<SkyPointAspect>>();
