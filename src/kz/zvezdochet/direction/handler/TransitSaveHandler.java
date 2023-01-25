@@ -527,7 +527,8 @@ public class TransitSaveHandler extends Handler {
 										}
 									}
 
-									if (key.contains("SEPARATION") && planet.isFictitious())
+									boolean fictious = planet.isFictious();
+									if (key.contains("SEPARATION") && fictious)
 										continue;
 
 									boolean housable = skyPoint instanceof House;
@@ -538,7 +539,7 @@ public class TransitSaveHandler extends Handler {
 
 		    		                	if (housable) {
 		    		                		if (!spa.isRetro()
-		    		                				&& (planet.isMain() || planet.isFictitious()))
+		    		                				&& (planet.isMain() || fictious))
 											continue;
 		    		                	} else if (skyPoint.getCode().equals("Rakhu")
 			    		                		|| skyPoint.getCode().equals("Kethu"))
@@ -549,6 +550,7 @@ public class TransitSaveHandler extends Handler {
 									//топовые соединения с домами
 									if (key.equals(Ingress._EXACT_HOUSE)) {
 										if (acode.equals("CONJUNCTION")
+												&& !fictious
 												&& (planet.isRetrograde() || planet.isGiant())) {
 											tops.add(spa);
 											dtops.put(time, tops);
@@ -582,7 +584,7 @@ public class TransitSaveHandler extends Handler {
 									objects2.add(planet);
 
 									//развороты планет
-									if (!planet.isFictitious()) {
+									if (!planet.isFictious()) {
 										tops.add(planet);
 										dtops.put(time, tops);
 										mtops.put(m, dtops);
@@ -921,9 +923,10 @@ public class TransitSaveHandler extends Handler {
 									SkyPoint skyPoint = spa.getSkyPoint2();
 									String acode = spa.getAspect().getCode();
 			    		            String rduration = spa.isRetro() ? " и более" : "";
+			    		            boolean fictious = planet.isFictious();
 
 									String prefix = "";
-									if (!main) {
+									if (!main && !fictious) {
 		               	                if (exact)
 		               	                	prefix = "Начинается: ";
 										else if (repeat)
@@ -946,11 +949,12 @@ public class TransitSaveHandler extends Handler {
 	
 										DirectionText dirText = (DirectionText)service.find(planet, house, type);
 										if (dirText != null) {
-											text = retro && !planet.isFictitious() ? dirText.getRetro() : dirText.getDescription();
+											text = retro ? dirText.getRetro() : dirText.getDescription();
 											code = dirText.getCode();
 										}
 										String ptext = prefix;
 										if (null == dirText
+												|| (null == text || text.isEmpty())
 												|| ((!separation && !repeat) && null == dirText.getDescription())
 												|| ((separation || repeat) && (null == code || code.isEmpty()))) {
 											ptext += planet.getShortName() + " " + type.getSymbol() + " " + house.getName() + "<>";
@@ -999,11 +1003,12 @@ public class TransitSaveHandler extends Handler {
 
 										DirectionAspectText dirText = (DirectionAspectText)servicea.find(spa, aspectid, checktype);
 										if (dirText != null) {
-											text = retro && !planet.isFictitious() ? dirText.getRetro() : dirText.getDescription();
+											text = retro ? dirText.getRetro() : dirText.getDescription();
 											code = dirText.getCode();
 										}
 										String ptext = prefix;
 										if (null == dirText
+												|| (null == text || text.isEmpty())
 												|| ((!separation && !repeat) && null == dirText.getDescription())
 												|| ((separation || repeat) && (null == code || code.isEmpty()))) {
 											ptext += planet.getShortName() + "<>";
@@ -1081,7 +1086,7 @@ public class TransitSaveHandler extends Handler {
 									}
 									if (retro
 											&& !separation
-											&& !planet.isFictitious()
+											&& !fictious
 											&& !type.getCode().contains("POSITIVE")) {
 										Phrase phrase = new Phrase();
 										if (term) {
