@@ -492,6 +492,10 @@ public class TransitSaveHandler extends Handler {
 						if (ingressList.isEmpty())
 							continue;
 
+						List<Object> tops = dtops.containsKey(time) ? dtops.get(time) : new ArrayList<Object>();
+						if (null == tops)
+							tops = new ArrayList<Object>();
+
 						Map<String, List<Object>> ingressmap = new TreeMap<String, List<Object>>();
 						for (Map.Entry<String, List<Object>> daytexts : ingressList.entrySet()) {
 							String key = daytexts.getKey();
@@ -504,8 +508,6 @@ public class TransitSaveHandler extends Handler {
 
 							if (j > 0 && key.contains("REPEAT"))
 								continue;
-
-							List<Object> tops = dtops.containsKey(time) ? dtops.get(time) : new ArrayList<Object>();
 
 							List<Object> objects2 = ingressmap.containsKey(key) ? ingressmap.get(key) : new ArrayList<Object>();
 							String[] negatives = {"Kethu", "Lilith"};
@@ -906,10 +908,11 @@ public class TransitSaveHandler extends Handler {
 									SkyPointAspect spa = (SkyPointAspect)object;
 									Planet planet = (Planet)spa.getSkyPoint1();
 									boolean retro = spa.isRetro();
+			    		            boolean fictious = planet.isFictious();
 									
 									if (important) {
-			    		                if (planet.getCode().equals("Moon")
-			    		                		&& !spa.getAspect().getCode().equals("CONJUNCTION"))
+										if (!spa.getAspect().getCode().equals("CONJUNCTION")
+												&& (fictious || planet.getCode().equals("Moon")))
 	    		                			continue;
 		    		                }
 
@@ -923,7 +926,6 @@ public class TransitSaveHandler extends Handler {
 									SkyPoint skyPoint = spa.getSkyPoint2();
 									String acode = spa.getAspect().getCode();
 			    		            String rduration = spa.isRetro() ? " и более" : "";
-			    		            boolean fictious = planet.isFictious();
 
 									String prefix = "";
 									if (!main && !fictious) {
