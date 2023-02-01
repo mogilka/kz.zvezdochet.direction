@@ -16,6 +16,7 @@ import org.eclipse.e4.core.contexts.Active;
 import org.eclipse.e4.core.di.annotations.Execute;
 import org.eclipse.e4.ui.model.application.ui.basic.MPart;
 
+import com.itextpdf.text.Anchor;
 import com.itextpdf.text.BaseColor;
 import com.itextpdf.text.Chapter;
 import com.itextpdf.text.ChapterAutoNumber;
@@ -227,6 +228,7 @@ public class TransitCycleHandler extends Handler {
 			Map<Integer, Map<Integer, Map<Long, Integer>>> myears = new TreeMap<Integer, Map<Integer, Map<Long, Integer>>>();
 			Map<Integer, Map<Integer, Map<Long, Map<String, List<Object>>>>> texts = new TreeMap<Integer, Map<Integer, Map<Long, Map<String, List<Object>>>>>();
 			Map<Integer, Map<Long, Map<Long, TreeMap<Integer, Integer>>>> hyears2 = new TreeMap<Integer, Map<Long, Map<Long, TreeMap<Integer, Integer>>>>();
+			Map<Integer, Map<Integer, Map<Long, List<Object>>>> ytops = new TreeMap<Integer, Map<Integer, Map<Long, List<Object>>>>();
 
 			Map<Integer, Long[]> categoriesh = new HashMap<Integer, Long[]>() {
 				private static final long serialVersionUID = -1169666525576512947L;
@@ -274,6 +276,12 @@ public class TransitCycleHandler extends Handler {
 				for (House h : houses.values())
 					yhouses.put(h.getId(), new TreeMap<Long, TreeMap<Integer, Integer>>());
 				hyears2.put(y, yhouses);
+
+				Map<Integer, Map<Long, List<Object>>> tops = ytops.containsKey(y) ? ytops.get(y) : new TreeMap<Integer, Map<Long, List<Object>>>();
+				Map<Long, List<Object>> dtops = new TreeMap<Long, List<Object>>();
+				dtops.put(time, null);
+				tops.put(m, dtops);
+				ytops.put(y, tops);
 			}
 
 			Map<String, List<DatePeriod>> periods = new HashMap<String, List<DatePeriod>>();
@@ -292,6 +300,7 @@ public class TransitCycleHandler extends Handler {
 
 				Map<Integer, Map<Long, Integer>> months2 = myears.containsKey(y) ? myears.get(y) : new TreeMap<Integer, Map<Long, Integer>>();
 				Map<Long, Map<Long, TreeMap<Integer, Integer>>> yhouses = hyears2.containsKey(y) ? hyears2.get(y) : new TreeMap<Long, Map<Long, TreeMap<Integer, Integer>>>();
+				Map<Integer, Map<Long, List<Object>>> mtops = ytops.containsKey(y) ? ytops.get(y) : new TreeMap<Integer, Map<Long, List<Object>>>();
 
 				//считаем транзиты
 				for (Map.Entry<Integer, List<Long>> entry2 : months.entrySet()) {
@@ -304,6 +313,7 @@ public class TransitCycleHandler extends Handler {
 
 					//данные для графика месяца
 					Map<Long, Integer> seriesh = months2.get(m);
+					Map<Long, List<Object>> dtops = mtops.containsKey(m) ? mtops.get(m) : new TreeMap<Long, List<Object>>();
 
 					for (Long time : dates) {
 						Date date = new Date(time);
@@ -322,6 +332,10 @@ public class TransitCycleHandler extends Handler {
 						Map<String, List<Object>> ingressList = person.initIngresses(event, term);
 						if (ingressList.isEmpty())
 							continue;
+
+						List<Object> tops = dtops.containsKey(time) ? dtops.get(time) : new ArrayList<Object>();
+						if (null == tops)
+							tops = new ArrayList<Object>();
 
 						Map<String, List<Object>> ingressmap = new TreeMap<String, List<Object>>();
 						for (Map.Entry<String, List<Object>> daytexts : ingressList.entrySet()) {
@@ -359,8 +373,9 @@ public class TransitCycleHandler extends Handler {
 		    		                }									
 
 									String acode = spa.getAspect().getCode();
+									boolean fictious = planet.isFictious();
 									if (!acode.equals("CONJUNCTION")) {
-										if (planet.isFictious())
+										if (fictious)
 											continue;
 
 										if (!housable && ((Planet)skyPoint).isFictious())
@@ -403,6 +418,26 @@ public class TransitCycleHandler extends Handler {
 										period.initdate = time;
 										plist.add(period);
 										periods.put(code, plist);
+									}
+
+									//топовые соединения с домами
+									if (key.equals(Ingress._EXACT_HOUSE)) {
+										if (acode.equals("CONJUNCTION")
+												&& !fictious
+												&& (planet.isRetrograde() || planet.isGiant())) {
+											tops.add(spa);
+											dtops.put(time, tops);
+											mtops.put(m, dtops);
+											ytops.put(y, mtops);										
+										}
+									//топовые транзиты
+									} else if (key.equals(Ingress._EXACT)) {
+										if (planet.isGiant()) {
+											tops.add(spa);
+											dtops.put(time, tops);
+											mtops.put(m, dtops);
+											ytops.put(y, mtops);
+										}
 									}
 
 									//данные для диаграммы месяца
@@ -454,7 +489,15 @@ public class TransitCycleHandler extends Handler {
 									}
 									planet.setData(transits);
 									objects2.add(planet);
-								} 
+
+									//развороты планет
+									if (!planet.isFictious()) {
+										tops.add(planet);
+										dtops.put(time, tops);
+										mtops.put(m, dtops);
+										ytops.put(y, mtops);
+									}
+								}
 							}
 							ingressmap.put(key, objects2);
 						}
@@ -479,6 +522,9 @@ public class TransitCycleHandler extends Handler {
 			Font hfont = new Font(baseFont, 16, Font.BOLD, PDFUtil.FONTCOLOR);
 	        Font grayfont = PDFUtil.getAnnotationFont(false);
 	        Font afont = PDFUtil.getHeaderAstroFont();
+        	Font fonta = PDFUtil.getLinkFont();
+			SimpleDateFormat topsdf = new SimpleDateFormat("d MMMM");
+			String[] pnegative = {"Lilith", "Kethu"};
 
 	        //года
 			for (Map.Entry<Integer, Map<Integer, Map<Long, Integer>>> entry : myears.entrySet()) {
@@ -490,6 +536,7 @@ public class TransitCycleHandler extends Handler {
 				//месяцы
 				Map<Integer, Map<Long, Integer>> months2 = myears.get(y);
 				Map<Integer, Map<Long, Map<String, List<Object>>>> mtexts = texts.get(y);
+				Map<Integer, Map<Long, List<Object>>> mtops = ytops.containsKey(y) ? ytops.get(y) : new TreeMap<Integer, Map<Long, List<Object>>>();
 
 				for (Map.Entry<Integer, Map<Long, Map<String, List<Object>>>> entry2 : mtexts.entrySet()) {
 					int m = entry2.getKey();
@@ -515,6 +562,59 @@ public class TransitCycleHandler extends Handler {
 					section.add(PDFUtil.printBars(writer, "", null, "Сферы жизни", "Баллы", items, 500, 300, false, false, false));
 					section.add(new Paragraph("Ниже приведён прогноз по этим сферам жизни", font));
 					section.add(Chunk.NEWLINE);
+
+					//ссылки на топовые события
+					Section msection = PDFUtil.printSubsection(section, "Важное за " + ym, null);
+					Map<Long, List<Object>> dtops = mtops.containsKey(m) ? mtops.get(m) : new TreeMap<Long, List<Object>>();
+					for (Map.Entry<Long, List<Object>> dentry : dtops.entrySet()) {
+						List<Object> tops = dentry.getValue();
+						long ldate = dentry.getKey();
+						if (null == tops || tops.isEmpty())
+							continue;
+
+						 String shortdate = topsdf.format(new Date(ldate));
+	    				 list = new com.itextpdf.text.List(false, false, 10);
+	    				 for (Object object : tops) {
+    						 li = new ListItem();
+	    					 String ptext = shortdate + ": ";
+	    					 String link = "#";
+	    					 if (object instanceof Planet) {
+	    						 Planet planet = (Planet)object;
+	    						 boolean retro = planet.isRetrograde();
+	    						 String direction = retro ? "обратное" : "директное";
+	    						 ptext += planet.getName() + " переходит в " + direction + " движение";
+	    						 link += planet.getCode();
+	    					 } else if (object instanceof SkyPointAspect) {
+	    						 SkyPointAspect spa = (SkyPointAspect)object;
+	    						 link += spa.getCode();
+	    						 SkyPoint skyPoint = spa.getSkyPoint2();
+	    						 if (skyPoint instanceof House) {
+	    							 House house = (House)skyPoint;
+		    						 ptext += house.getName();
+	    						 } else {
+	    							 Planet planet = (Planet)spa.getSkyPoint1();
+	    							 Planet planet2 = (Planet)skyPoint;
+	    							 AspectType type = spa.getAspect().getType();
+	    							 boolean bad = type.getPoints() < 0
+	    									 || (type.getCode().equals("NEUTRAL")
+	    											 && (Arrays.asList(pnegative).contains(planet.getCode())
+	    													 || Arrays.asList(pnegative).contains(skyPoint.getCode())));
+	    							 String pname = bad ? planet.getAspectingBadName() : planet.getAspectingName();
+	    							 String pname2 = bad ? planet2.getAspectedBadName() : planet2.getAspectedName();
+	    							 ptext += pname;
+	    							 boolean revolution = planet.getId().equals(planet2.getId());
+	    							 if (!revolution)
+	    								 ptext += " " + type.getSymbol() + " " + pname2;
+	    						 }
+	    					 }
+	    					 Anchor anchor = new Anchor(ptext, fonta);
+    						 link += ldate;
+    						 anchor.setReference(link);
+    					     li.add(anchor);
+    						 list.add(li);
+	    				 }
+	    				 msection.add(list);
+					}
 
 					Map<Long, Map<String, List<Object>>> dtexts = mtexts.get(m);
 					if (dtexts.isEmpty())
@@ -585,7 +685,9 @@ public class TransitCycleHandler extends Handler {
 										else
 											ptext += term ? planet.getName() + " " + type.getSymbol() + " " + house.getDesignation() + " дом" : house.getName();
 
-					    				daysection.addSection(new Paragraph(ptext + til, colorbold));
+							        	Chunk anchorTarget = new Chunk(ptext + til, colorbold);
+							        	anchorTarget.setLocalDestination(spa.getCode() + dentry.getKey());
+					    				daysection.addSection(new Paragraph(anchorTarget));
 
 					    				if (term) {
 											String pretext = spa.getAspect().getCode().equals("CONJUNCTION")
@@ -627,11 +729,19 @@ public class TransitCycleHandler extends Handler {
 											if (!revolution)
 												ptext += " " + type.getSymbol() + " " + planet2.getShortName() + "<>";
 										} else {
-											ptext += term ? planet.getName() : planet.getShortName();
+											boolean bad = type.getPoints() < 0
+													|| (type.getCode().equals("NEUTRAL")
+														&& (Arrays.asList(pnegative).contains(planet.getCode())
+															|| Arrays.asList(pnegative).contains(skyPoint.getCode())));
+						    				String pname = bad ? planet.getAspectingBadName() : planet.getAspectingName();
+						    				String pname2 = bad ? planet2.getAspectedBadName() : planet2.getAspectedName();
+											ptext += term ? planet.getName() : pname;
 											if (!revolution)
-												ptext += " " + type.getSymbol() + " " + (term ? planet2.getName() : planet2.getShortName());
+												ptext += " " + type.getSymbol() + " " + (term ? planet2.getName() : pname2);
 										}
-										daysection.addSection(new Paragraph(ptext + til, colorbold));
+							        	Chunk anchorTarget = new Chunk(ptext + til, colorbold);
+							        	anchorTarget.setLocalDestination(spa.getCode() + dentry.getKey());
+					    				daysection.addSection(new Paragraph(anchorTarget));
 
 										if (term) {
 											String pretext = spa.getAspect().getCode().equals("CONJUNCTION")
@@ -686,7 +796,9 @@ public class TransitCycleHandler extends Handler {
 									boolean direct = itexts.getKey().equals(Ingress._DIRECT);
 									String direction = direct ? "директное" : "обратное";
 									String ptext = planet.getName() + " переходит в " + direction + " движение";
-				    				daysection.addSection(new Paragraph(ptext, bold));
+						        	Chunk anchorTarget = new Chunk(ptext, bold);
+						        	anchorTarget.setLocalDestination(planet.getCode() + dentry.getKey());
+				    				daysection.addSection(new Paragraph(anchorTarget));
 
 									if (notransits) {
 										daysection.add(new Paragraph("Как-то ощутимо на вас это не повлияет", grayfont));
