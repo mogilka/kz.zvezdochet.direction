@@ -798,15 +798,17 @@ public class TransitSaveHandler extends Handler {
 					//ссылки на топовые события
 					Section msection = PDFUtil.printSubsection(section, "Важное за " + ym, null);
 					Map<Long, List<Object>> dtops = mtops.containsKey(m) ? mtops.get(m) : new TreeMap<Long, List<Object>>();
+					boolean mempty = true;
 					for (Map.Entry<Long, List<Object>> dentry : dtops.entrySet()) {
 						List<Object> tops = dentry.getValue();
 						long ldate = dentry.getKey();
 						if (null == tops || tops.isEmpty())
 							continue;
 
-						 String shortdate = topsdf.format(new Date(ldate));
-	    				 list = new com.itextpdf.text.List(false, false, 10);
-	    				 for (Object object : tops) {
+						mempty = false;
+						String shortdate = topsdf.format(new Date(ldate));
+	    				list = new com.itextpdf.text.List(false, false, 10);
+	    				for (Object object : tops) {
     						 li = new ListItem();
 	    					 String ptext = shortdate + ": ";
 	    					 String link = "#";
@@ -847,6 +849,8 @@ public class TransitSaveHandler extends Handler {
 	    				 }
 	    				 msection.add(list);
 					}
+					if (mempty)
+						msection.add(new Paragraph("Ничего важного не ожидается", font));
 					section.add(Chunk.NEWLINE);
 
 					//толкования дней месяца
