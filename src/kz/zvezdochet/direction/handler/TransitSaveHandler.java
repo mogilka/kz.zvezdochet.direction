@@ -965,9 +965,9 @@ public class TransitSaveHandler extends Handler {
 												|| ((separation || repeat) && (null == code || code.isEmpty()))) {
 											ptext += planet.getShortName() + " " + type.getSymbol() + " " + house.getName() + "<>";
 										} else if (repeat)
-											ptext += term ? planet.getName() + " " + type.getSymbol() + " " + house.getDesignation() + " дом" : code;
+											ptext += code;
 										else if (!separation)
-											ptext += term ? planet.getName() + " " + type.getSymbol() + " " + house.getDesignation() + " дом" : house.getName();
+											ptext += house.getName();
 
 							        	Chunk anchorTarget = new Chunk(ptext, colorbold);
 							        	anchorTarget.setLocalDestination(spa.getCode() + dentry.getKey());
@@ -1021,12 +1021,7 @@ public class TransitSaveHandler extends Handler {
 											if (!revolution)
 												ptext += " " + type.getSymbol() + " " + planet2.getShortName() + "<>";
 										} else if (repeat) {
-											if (term) {
-												ptext += planet.getName();
-												if (!revolution)
-													ptext += " " + type.getSymbol() + " " + planet2.getName();
-											} else
-												ptext += code;
+											ptext += code;
 										} else if (!separation) {
 											boolean bad = type.getPoints() < 0
 												|| (type.getCode().equals("NEUTRAL")
@@ -1034,9 +1029,9 @@ public class TransitSaveHandler extends Handler {
 														|| Arrays.asList(pnegative).contains(skyPoint.getCode())));
 						    				String pname = bad ? planet.getAspectingBadName() : planet.getAspectingName();
 						    				String pname2 = bad ? planet2.getAspectedBadName() : planet2.getAspectedName();
-											ptext += term ? planet.getName() : pname;
+											ptext += pname;
 											if (!revolution)
-												ptext += " " + type.getSymbol() + " " + (term ? planet2.getName() : pname2);
+												ptext += " " + type.getSymbol() + " " + pname2;
 										}
 
 							        	Chunk anchorTarget = new Chunk(ptext, colorbold);

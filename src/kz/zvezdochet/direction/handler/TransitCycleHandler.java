@@ -642,13 +642,14 @@ public class TransitCycleHandler extends Handler {
 								if (object instanceof SkyPointAspect) {
 									SkyPointAspect spa = (SkyPointAspect)object;
 									Planet planet = (Planet)spa.getSkyPoint1();
+									boolean fictious = planet.isFictious();
 		    		                boolean repeat = itexts.getKey().contains("REPEAT");
 									SkyPoint skyPoint = spa.getSkyPoint2();
 									String acode = spa.getAspect().getCode();
 									boolean retro = spa.isRetro();
 
 									String prefix = "";
-									if (!planet.isFictious())
+									if (!fictious)
 										prefix = repeat ? "Продолжается: " : "Начинается: ";
 									AspectType type = spa.getAspect().getType();
 									String typeColor = type.getFontColor();
@@ -656,19 +657,20 @@ public class TransitCycleHandler extends Handler {
 									Font colorbold = new Font(baseFont, 12, Font.BOLD, color);
 
 									String til = "";
-									List<DatePeriod> plist = periods.get(spa.getCode());
-									if (plist != null && !plist.isEmpty()) {
-										for (DatePeriod per : plist) {
-											long time = dentry.getKey();
-											if (per.finaldate > 0
-													&& time == per.initdate) {
-												Date pdate = new Date(per.finaldate);
-												til = " (до " + spf.format(pdate) + " " + y + ")";
-												break;
+									if (!fictious) {
+										List<DatePeriod> plist = periods.get(spa.getCode());
+										if (plist != null && !plist.isEmpty()) {
+											for (DatePeriod per : plist) {
+												long time = dentry.getKey();
+												if (per.finaldate > 0
+														&& time == per.initdate) {
+													Date pdate = new Date(per.finaldate);
+													til = " (до " + spf.format(pdate) + " " + y + ")";
+													break;
+												}
 											}
 										}
 									}
-
 									if (skyPoint instanceof House) {
 										House house = (House)skyPoint;
 	
@@ -678,12 +680,12 @@ public class TransitCycleHandler extends Handler {
 	
 										DirectionText dirText = (DirectionText)service.find(planet, house, type);
 										if (dirText != null)
-											text = retro && !planet.isFictious() ? dirText.getRetro() : dirText.getDescription();
+											text = retro && !fictious ? dirText.getRetro() : dirText.getDescription();
 										String ptext = prefix;
 										if (null == dirText)
 											ptext += planet.getShortName() + " " + type.getSymbol() + " " + house.getName() + "<>";
 										else
-											ptext += term ? planet.getName() + " " + type.getSymbol() + " " + house.getDesignation() + " дом" : house.getName();
+											ptext += house.getName();
 
 							        	Chunk anchorTarget = new Chunk(ptext + til, colorbold);
 							        	anchorTarget.setLocalDestination(spa.getCode() + dentry.getKey());
@@ -722,7 +724,7 @@ public class TransitCycleHandler extends Handler {
 
 										DirectionAspectText dirText = (DirectionAspectText)servicea.find(spa, aspectid, checktype);
 										if (dirText != null)
-											text = retro && !planet.isFictious() ? dirText.getRetro() : dirText.getDescription();
+											text = retro && !fictious ? dirText.getRetro() : dirText.getDescription();
 										String ptext = prefix;
 										if (null == dirText) {
 											ptext += planet.getShortName() + "<>";
@@ -735,9 +737,9 @@ public class TransitCycleHandler extends Handler {
 															|| Arrays.asList(pnegative).contains(skyPoint.getCode())));
 						    				String pname = bad ? planet.getAspectingBadName() : planet.getAspectingName();
 						    				String pname2 = bad ? planet2.getAspectedBadName() : planet2.getAspectedName();
-											ptext += term ? planet.getName() : pname;
+											ptext += pname;
 											if (!revolution)
-												ptext += " " + type.getSymbol() + " " + (term ? planet2.getName() : pname2);
+												ptext += " " + type.getSymbol() + " " + pname2;
 										}
 							        	Chunk anchorTarget = new Chunk(ptext + til, colorbold);
 							        	anchorTarget.setLocalDestination(spa.getCode() + dentry.getKey());

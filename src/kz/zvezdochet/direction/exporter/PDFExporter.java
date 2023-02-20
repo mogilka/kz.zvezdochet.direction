@@ -33,7 +33,6 @@ import kz.zvezdochet.bean.AspectType;
 import kz.zvezdochet.bean.Event;
 import kz.zvezdochet.bean.House;
 import kz.zvezdochet.bean.Planet;
-import kz.zvezdochet.bean.PlanetHousePosition;
 import kz.zvezdochet.bean.PositionType;
 import kz.zvezdochet.bean.Sign;
 import kz.zvezdochet.bean.SkyPoint;
@@ -56,7 +55,6 @@ import kz.zvezdochet.export.bean.Bar;
 import kz.zvezdochet.export.handler.PageEventHandler;
 import kz.zvezdochet.export.util.PDFUtil;
 import kz.zvezdochet.service.HouseService;
-import kz.zvezdochet.service.PlanetHousePositionService;
 import kz.zvezdochet.service.PlanetService;
 import kz.zvezdochet.service.PositionTypeService;
 import kz.zvezdochet.util.HouseMap;
@@ -568,7 +566,6 @@ public class PDFExporter {
 			DirectionService service = new DirectionService();
 			DirectionAspectService servicea = new DirectionAspectService();
 			DirectionRuleService servicer = new DirectionRuleService();
-			PlanetHousePositionService positionService = new PlanetHousePositionService();
 
 			boolean child = event.isChild();
 			String[] adult = {"II_3", "V_2", "V_3", "VII"};
@@ -611,13 +608,8 @@ public class PDFExporter {
 
 						boolean negative = (null == dirText) ? type.getPoints() < 0 : !dirText.isPositive();
 						if (!aspectable) {
-							String text = "";
-							if (term)
-								text = planet.getName() + " " + type.getSymbol() + " " + house.getDesignation() + " дом";
-							else {
-			    				String pname = negative ? event.getPlanets().get(planet.getId()).getBadName() : event.getPlanets().get(planet.getId()).getGoodName();
-			    				text = house.getName() + " " + type.getSymbol() + " " + pname;
-							}
+		    				String pname = negative ? event.getPlanets().get(planet.getId()).getBadName() : event.getPlanets().get(planet.getId()).getGoodName();
+							String text = house.getName() + " " + type.getSymbol() + " " + pname;
 							section.addSection(new Paragraph(text, fonth5));
 							if (term) {
 								String pretext = acode.equals("CONJUNCTION")
@@ -641,20 +633,6 @@ public class PDFExporter {
 								p.add(new Chunk(pretext + " " + house.getDesignation() + " дома", grayfont));
 			    				if (!conj)
 									p.add(new Chunk(" (сектор «" + house.getName() + "»)", grayfont));
-		
-			    				if (!planet.isFictious()) {
-				    				PlanetHousePosition position = positionService.find(planet);
-				    				if (position != null) {
-				    					long id = position.getType().getId();
-				    					boolean anegative = spa.isNegative();
-				    					boolean match = ((id < 3 && !anegative)
-				    						|| (id > 2 && anegative));
-				    					if (match) {
-					    					String s = ". " + position.getDescription() + ". " + position.getType().getDescription();
-					    					p.add(new Chunk(s, grayfont));
-				    					}
-					    			}
-			    				}
 			    				section.add(p);
 			    				if (conj)
 			    					section.add(Chunk.NEWLINE);
@@ -750,9 +728,7 @@ public class PDFExporter {
     				String phouse = house.getName();
     				String phouse2 = house2.getName();
 
-					String text = term
-						? planet.getName() + " " + type.getSymbol() + " " + planet2.getName()
-						: pname + "-" + phouse + " " + type.getSymbol() + " " + pname2 + "-" + phouse2;
+					String text = pname + "-" + phouse + " " + type.getSymbol() + " " + pname2 + "-" + phouse2;
     				section.addSection(new Paragraph(text, fonth5));
 
 					if (!texts.isEmpty())
