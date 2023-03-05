@@ -6,6 +6,7 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.SortedSet;
 import java.util.TreeMap;
@@ -81,12 +82,17 @@ public class PDFExporter {
 	 * Признак оптимистичного прогноза
 	 */
 	private boolean optimistic = false;
+	/**
+	 * Язык файла
+	 */
+	private String lang = "ru";
 
 	public PDFExporter() {
 		try {
 			baseFont = PDFUtil.getBaseFont();
 			font = PDFUtil.getRegularFont();
 			fonth5 = PDFUtil.getHeaderFont();
+			lang = Locale.getDefault().getLanguage();
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -108,7 +114,9 @@ public class PDFExporter {
 		try {
 			String filename = PlatformUtil.getPath(Activator.PLUGIN_ID, "/out/longterm.pdf").getPath();
 			PdfWriter writer = PdfWriter.getInstance(doc, new FileOutputStream(filename));
-	        writer.setPageEvent(new PageEventHandler());
+			PageEventHandler handler = new PageEventHandler();
+			handler.setLang(lang);
+	        writer.setPageEvent(handler);
 	        doc.open();
 
 	        //metadata
@@ -537,6 +545,7 @@ public class PDFExporter {
 			if (spas.isEmpty())
 				return null;
 
+			boolean rus = lang.equals("ru");
 			Font grayfont = PDFUtil.getAnnotationFont(false);
 			Font red = PDFUtil.getDangerFont();
 			Font orange = PDFUtil.getWarningFont();
@@ -662,6 +671,8 @@ public class PDFExporter {
 									Aspect aspect = rule.getAspect();
 									Planet planet2 = rule.getPlanet2();
 									House house2 = rule.getHouse2();
+
+									//дирекционные аспекты планет между собой
 									for (SkyPointAspect spa2 : spas2) {
 										if (aspect != null
 												&& !aspect.getId().equals(spa2.getAspect().getId()))
@@ -691,6 +702,42 @@ public class PDFExporter {
 												}
 												section.add(new Paragraph(PDFUtil.removeTags(rule.getText(), font)));
 												//PDFUtil.printGender(section, rule, female, child, true);
+											}
+										}
+									}
+
+									//дирекционные аспекты планет с домами
+									for (SkyPointAspect spa2 : spas) {
+										SkyPoint sp = spa2.getSkyPoint2();
+										if (sp instanceof Planet)
+											continue;
+
+										if (aspect != null
+												&& !aspect.getId().equals(spa2.getAspect().getId()))
+											continue;
+	
+										if (aspectType.getId().equals(spa2.getAspect().getTypeid())) {
+											SkyPoint sp1 = spa2.getSkyPoint1();
+											if (planet2.getId().equals(sp1.getId())) {
+												if (!house2.getId().equals(sp.getId()))
+													continue;
+	
+												section.add(Chunk.NEWLINE);
+												boolean negative2 = spa2.isNegative();
+												String sign2 = negative2 ? "-" : "+";
+												String header2 = rule.getHouse().getName() + " " + 
+													sign2 + " " + 
+													(negative2 ? planet2.getNegative() : planet2.getPositive());
+												section.add(new Paragraph(header2, fonth6));
+												if (term) {
+													if (acode.equals("CONJUNCTION"))
+									    				section.add(new Paragraph((rus ? "Соединение дирекционных планет " : "") + planet.getName()
+								    						+ (rus ? " и " : " and ") + planet2.getName() +
+								    					(house.isAngled() ? (rus ? " на " : " on ") + house.getDesignation() :
+								    						(rus ? " с куспидом сектора «" : " in sector «") + house.getName() + "» " + (rus ? "" : "of ") +
+								    							house.getDesignation() + (rus ? " дома" : " house")), grayfont));
+												}
+												section.add(new Paragraph(PDFUtil.removeTags(rule.getText(), font)));
 											}
 										}
 									}
@@ -789,7 +836,6 @@ public class PDFExporter {
 					    			String typeColor = type.getFontColor();
 									BaseColor color = PDFUtil.htmlColor2Base(typeColor);
 									section.add(new Paragraph(PDFUtil.removeTags(text, new Font(baseFont, 12, Font.NORMAL, color))));
-									PDFUtil.printGender(section, dirText, female, child, true, "ru");
 								}
 								//используется для связки двух домов (дирекционного и натального)
 								if (null == dasp) {
@@ -806,6 +852,7 @@ public class PDFExporter {
 									}
 									section.add(Chunk.NEWLINE);
 									section.add(new Paragraph(comment, grayfont));
+									PDFUtil.printGender(section, dirText, female, child, true, "ru");
 
 									//правило домов
 									DirectionRule rule = servicer.findRule(planet, house, spa.getAspect().getType(), planet2, house2);
