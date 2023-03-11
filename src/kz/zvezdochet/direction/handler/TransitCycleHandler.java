@@ -1,6 +1,7 @@
 package kz.zvezdochet.direction.handler;
 
 import java.io.FileOutputStream;
+import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -9,6 +10,7 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.TreeMap;
 
@@ -47,6 +49,7 @@ import kz.zvezdochet.core.util.DateUtil;
 import kz.zvezdochet.core.util.OsUtil;
 import kz.zvezdochet.core.util.PlatformUtil;
 import kz.zvezdochet.direction.Activator;
+import kz.zvezdochet.direction.Messages;
 import kz.zvezdochet.direction.bean.DirectionAspectText;
 import kz.zvezdochet.direction.bean.DirectionText;
 import kz.zvezdochet.direction.part.TransitPart;
@@ -82,6 +85,9 @@ public class TransitCycleHandler extends Handler {
 			TransitPart periodPart = (TransitPart)activePart.getObject();
 			if (!periodPart.check(0)) return;
 
+			String lang = Locale.getDefault().getLanguage();
+			//boolean rus = lang.equals("ru");
+
 			Event person = periodPart.getPerson();
 			Map<Long, House> houses = person.getHouses();
 			int choice = DialogUtil.alertQuestion("Вопрос", "Выберите тип прогноза:", new String[] {"Реалистичный", "Оптимистичный"});
@@ -113,7 +119,7 @@ public class TransitCycleHandler extends Handler {
 	    	Font font = PDFUtil.getRegularFont();
 
 	        //metadata
-	        PDFUtil.getMetaData(doc, "Важные периоды", "ru");
+	        PDFUtil.getMetaData(doc, "Важные периоды", lang);
 
 	        //раздел
 			Chapter chapter = new ChapterAutoNumber("Важные периоды");
@@ -124,7 +130,8 @@ public class TransitCycleHandler extends Handler {
 			PDFUtil.printHeader(p, "Важные периоды", null);
 			chapter.add(p);
 
-			String text = person.getCallname("ru") + ", прогноз на период: ";
+			String text = (person.isCelebrity() ? person.getName(lang) : person.getCallname(lang));
+			text += ", " + Messages.getString("forecast for the period") + ": ";
 			SimpleDateFormat sdf = new SimpleDateFormat("EEEE, d MMMM yyyy");
 			SimpleDateFormat spf = new SimpleDateFormat("d MMMM");
 			text += sdf.format(initDate);
@@ -147,7 +154,8 @@ public class TransitCycleHandler extends Handler {
 			chapter.add(p);
 
 			Font fontgray = PDFUtil.getAnnotationFont(false);
-			text = "Дата составления: " + DateUtil.fulldtf.format(new Date());
+			text = kz.zvezdochet.core.Messages.getString("Created at") + ": " +
+				DateFormat.getDateInstance(DateFormat.FULL, Locale.getDefault()).format(person.isCelebrity() ? person.getDate() : new Date());
 			p = new Paragraph(text, fontgray);
 	        p.setAlignment(Element.ALIGN_CENTER);
 			chapter.add(p);
@@ -156,8 +164,8 @@ public class TransitCycleHandler extends Handler {
 	        p.setAlignment(Element.ALIGN_CENTER);
 			p.setSpacingAfter(20);
 	        p.add(new Chunk("Автор: ", fontgray));
-	        Chunk chunk = new Chunk(PDFUtil.getAuthor("ru"), new Font(baseFont, 10, Font.UNDERLINE, PDFUtil.FONTCOLOR));
-	        chunk.setAnchor(PDFUtil.getWebsite("ru"));
+	        Chunk chunk = new Chunk(PDFUtil.getAuthor(lang), new Font(baseFont, 10, Font.UNDERLINE, PDFUtil.FONTCOLOR));
+	        chunk.setAnchor(PDFUtil.getWebsite(lang));
 	        p.add(chunk);
 	        chapter.add(p);
 
@@ -165,7 +173,7 @@ public class TransitCycleHandler extends Handler {
 			p.add(new Chunk("Файл содержит большой объём информации, и нет смысла пытаться его весь прочитать. "
 				+ "Используйте прогноз в начале каждого месяца как путеводитель, помогающий понять тенденции и учесть риски. ", font));
 	        chunk = new Chunk("Пояснения к прогнозу", new Font(baseFont, 12, Font.UNDERLINE, PDFUtil.FONTCOLOR));
-	        chunk.setAnchor("https://zvezdochet.guru/post/223/poyasnenie-k-ezhednevnym-prognozam");
+	        chunk.setAnchor("https://zvezdochet.guru/ru/post/223/poyasnenie-k-ezhednevnym-prognozam");
 	        p.add(chunk);
 			chapter.add(p);
 			chapter.add(Chunk.NEWLINE);
@@ -704,11 +712,11 @@ public class TransitCycleHandler extends Handler {
 											Sign sign = planet.getSign();
 						    				p.add(new Chunk(sign.getSymbol(), afont));
 						    				p.add(new Chunk(" " + sign.getName(), grayfont));
-						    				String mark = planet.getMark("sign", term, "ru");
+						    				String mark = planet.getMark("sign", term, lang);
 						    				p.add(new Chunk((mark.isEmpty() ? "" : " " + mark) + ", ", grayfont));
 						    				House house2 = planet.getHouse();
 											p.add(new Chunk(house2.getDesignation() + " дом, сектор «" + house2.getName() + "»", grayfont));
-											mark = planet.getMark("house", term, "ru");
+											mark = planet.getMark("house", term, lang);
 						    				p.add(new Chunk((mark.isEmpty() ? "" : " " + mark) + ") ", grayfont));
 											p.add(new Chunk(pretext + " " + house.getDesignation() + " дома", grayfont));
 						    				if (!acode.equals("CONJUNCTION"))
@@ -844,7 +852,7 @@ public class TransitCycleHandler extends Handler {
 														: (null == house.getGeneral() ? "к куспиду" : "к вершине");
 
 													p = new Paragraph();
-													p.add(new Chunk(planet.getMark("house", term, "ru") + " ", grayfont));
+													p.add(new Chunk(planet.getMark("house", term, lang) + " ", grayfont));
 													p.add(new Chunk(spa.getAspect().getName() + " транзитной ретро-планеты ", grayfont));
 													p.add(new Chunk(planet.getSymbol(), afont));
 													p.add(new Chunk(" " + planet.getName(), grayfont));
@@ -953,7 +961,7 @@ public class TransitCycleHandler extends Handler {
 				doc.add(chapter);
 			}
 			myears = null;
-	        doc.add(PDFUtil.printCopyright("ru"));
+	        doc.add(PDFUtil.printCopyright(lang));
 
 	        long time = System.currentTimeMillis();
 			System.out.println("Finished for: " + (time - run));

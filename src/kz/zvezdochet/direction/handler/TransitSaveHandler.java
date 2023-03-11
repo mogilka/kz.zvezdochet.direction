@@ -166,7 +166,8 @@ public class TransitSaveHandler extends Handler {
 			chapter.add(p);
 
 			Font fontgray = PDFUtil.getAnnotationFont(false);
-			text = kz.zvezdochet.core.Messages.getString("Created at") + ": " + DateFormat.getDateInstance(DateFormat.FULL, Locale.getDefault()).format(new Date());
+			text = kz.zvezdochet.core.Messages.getString("Created at") + ": " +
+					DateFormat.getDateInstance(DateFormat.FULL, Locale.getDefault()).format(person.isCelebrity() ? person.getDate() : new Date());
 			p = new Paragraph(text, fontgray);
 	        p.setAlignment(Element.ALIGN_CENTER);
 			chapter.add(p);
@@ -191,7 +192,7 @@ public class TransitSaveHandler extends Handler {
 			p.add(new Chunk("Общая погрешность прогноза составляет ±" + divergence + ". ", red));
 			p.add(new Chunk("Это значит, что описанное событие может произойти на день раньше, если длительность прогноза составляет более одного дня (в толковании вы это увидите). ", font));
 	        chunk = new Chunk("Пояснения к прогнозу", new Font(baseFont, 12, Font.UNDERLINE, PDFUtil.FONTCOLOR));
-	        chunk.setAnchor(rus ? "https://zvezdochet.guru/post/223/poyasnenie-k-ezhednevnym-prognozam" : "https://zvezdochet.guru/post/225/explanation-of-daily-forecasts");
+	        chunk.setAnchor(rus ? "https://zvezdochet.guru/ru/post/223/poyasnenie-k-ezhednevnym-prognozam" : "https://zvezdochet.guru/post/225/explanation-of-daily-forecasts");
 	        p.add(chunk);
 			chapter.add(p);
 			chapter.add(Chunk.NEWLINE);
