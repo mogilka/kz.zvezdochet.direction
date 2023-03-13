@@ -1,6 +1,7 @@
 package kz.zvezdochet.direction.exporter;
 
 import java.io.FileOutputStream;
+import java.text.DateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
@@ -119,15 +120,18 @@ public class PDFExporter {
 	        writer.setPageEvent(handler);
 	        doc.open();
 
+			String lang = Locale.getDefault().getLanguage();
+			boolean rus = lang.equals("ru");
+
 	        //metadata
-	        PDFUtil.getMetaData(doc, "Долгосрочный прогноз", "ru");
+	        PDFUtil.getMetaData(doc, "Долгосрочный прогноз", lang);
 
 	        //раздел
 			Chapter chapter = new ChapterAutoNumber(PDFUtil.printHeader(new Paragraph(), "Долгосрочный прогноз", null));
 			chapter.setNumberDepth(0);
 
 			//шапка
-			String text = (event.isCelebrity() ? event.getName("ru") : event.getCallname("ru"));
+			String text = (event.isCelebrity() ? event.getName(lang) : event.getCallname(lang));
 			text += " - прогноз на " + CoreUtil.getAgeString(years);
 			Paragraph p = new Paragraph(text, font);
 			if (!event.isRectified())
@@ -140,7 +144,8 @@ public class PDFExporter {
 			chapter.add(p);
 
 			Font fontgray = PDFUtil.getAnnotationFont(false);
-			text = "Дата составления: " + DateUtil.fulldtf.format(new Date());
+			text = kz.zvezdochet.core.Messages.getString("Created at") + ": " +
+				DateFormat.getDateInstance(DateFormat.FULL, Locale.getDefault()).format(event.isCelebrity() ? event.getDate() : new Date());
 			p = new Paragraph(text, fontgray);
 	        p.setAlignment(Element.ALIGN_CENTER);
 			chapter.add(p);
@@ -149,8 +154,8 @@ public class PDFExporter {
 	        p.setAlignment(Element.ALIGN_CENTER);
 			p.setSpacingAfter(20);
 	        p.add(new Chunk("Автор: ", fontgray));
-	        Chunk chunk = new Chunk(PDFUtil.getAuthor("ru"), new Font(baseFont, 10, Font.UNDERLINE, PDFUtil.FONTCOLOR));
-	        chunk.setAnchor(PDFUtil.getWebsite("ru"));
+	        Chunk chunk = new Chunk(PDFUtil.getAuthor(lang), new Font(baseFont, 10, Font.UNDERLINE, PDFUtil.FONTCOLOR));
+	        chunk.setAnchor(PDFUtil.getWebsite(lang));
 	        p.add(chunk);
 	        chapter.add(p);
 
@@ -401,7 +406,7 @@ public class PDFExporter {
 				chapter.add(Chunk.NEXTPAGE);
 
 				for (Map.Entry<Integer, List<SkyPointAspect>> subentry : agemap.entrySet())
-					printEvents(event, chapter, age, subentry.getKey(), subentry.getValue(), agemap.get(2));
+					printEvents(event, chapter, age, subentry.getKey(), subentry.getValue(), agemap.get(2), rus);
 				doc.add(chapter);
 				doc.add(Chunk.NEXTPAGE);
 			}
@@ -523,7 +528,7 @@ public class PDFExporter {
 		        }
 				doc.add(chapter);
 	        }
-	        doc.add(PDFUtil.printCopyright("ru"));
+	        doc.add(PDFUtil.printCopyright(lang));
 		} catch(Exception e) {
 			e.printStackTrace();
 		} finally {
@@ -539,13 +544,13 @@ public class PDFExporter {
 	 * @param code код подраздела
 	 * @param spas список событий
 	 * @param spas2 список аспектов дирекционных планет возраста
+	 * @param rus true - русский язык
 	 */
-	private Section printEvents(Event event, Chapter chapter, int age, int code, List<SkyPointAspect> spas, List<SkyPointAspect> spas2) {
+	private Section printEvents(Event event, Chapter chapter, int age, int code, List<SkyPointAspect> spas, List<SkyPointAspect> spas2, boolean rus) {
 		try {
 			if (spas.isEmpty())
 				return null;
 
-			boolean rus = lang.equals("ru");
 			Font grayfont = PDFUtil.getAnnotationFont(false);
 			Font red = PDFUtil.getDangerFont();
 			Font orange = PDFUtil.getWarningFont();
@@ -633,11 +638,11 @@ public class PDFExporter {
 								Sign sign = planet.getSign();
 			    				p.add(new Chunk(sign.getSymbol(), afont));
 			    				p.add(new Chunk(" " + sign.getName(), grayfont));
-			    				String mark = planet.getMark("sign", term, "ru");
+			    				String mark = planet.getMark("sign", term, lang);
 			    				p.add(new Chunk((mark.isEmpty() ? "" : " " + mark) + ", ", grayfont));
 			    				House house2 = planet.getHouse();
 								p.add(new Chunk(house2.getDesignation() + " дом, сектор «" + house2.getName() + "»", grayfont));
-								mark = planet.getMark("house", term, "ru");
+								mark = planet.getMark("house", term, lang);
 			    				p.add(new Chunk((mark.isEmpty() ? "" : " " + mark) + ") ", grayfont));
 								p.add(new Chunk(pretext + " " + house.getDesignation() + " дома", grayfont));
 			    				if (!conj)
@@ -752,7 +757,7 @@ public class PDFExporter {
 									section.add(Chunk.NEWLINE);
 									section.add(new Paragraph(comment + ": " + htext, grayfont));
 								}
-								PDFUtil.printGender(section, dirText, female, child, true, "ru");
+								PDFUtil.printGender(section, dirText, female, child, true, lang);
 							}
 							section.add(Chunk.NEWLINE);
 						}
@@ -802,10 +807,10 @@ public class PDFExporter {
 								Sign sign = planet.getSign();
 			    				p.add(new Chunk(sign.getSymbol(), afont));
 			    				p.add(new Chunk(" " + sign.getName(), grayfont));
-			    				String mark = planet.getMark("sign", term, "ru");
+			    				String mark = planet.getMark("sign", term, lang);
 			    				p.add(new Chunk((mark.isEmpty() ? "" : " " + mark) + ", ", grayfont));
 			    				p.add(new Chunk(house.getDesignation() + " дом, сектор «" + house.getName() + "»", grayfont));
-			    				mark = planet.getMark("house", term, "ru");
+			    				mark = planet.getMark("house", term, lang);
 			    				p.add(new Chunk((mark.isEmpty() ? "" : " " + mark) + ") ", grayfont));
 					    		p.add(new Chunk(pretext + " ", grayfont));
 			    				p.add(new Chunk(planet2.getSymbol(), afont));
@@ -852,7 +857,7 @@ public class PDFExporter {
 									}
 									section.add(Chunk.NEWLINE);
 									section.add(new Paragraph(comment, grayfont));
-									PDFUtil.printGender(section, dirText, female, child, true, "ru");
+									PDFUtil.printGender(section, dirText, female, child, true, lang);
 
 									//правило домов
 									DirectionRule rule = servicer.findRule(planet, house, spa.getAspect().getType(), planet2, house2);
@@ -864,7 +869,7 @@ public class PDFExporter {
 		
 										section.add(Chunk.NEWLINE);
 										section.add(new Paragraph(PDFUtil.removeTags(rule.getText(), font)));
-										PDFUtil.printGender(section, rule, female, child, true, "ru");
+										PDFUtil.printGender(section, rule, female, child, true, lang);
 									}
 								}
 							}
