@@ -963,11 +963,13 @@ public class TransitSaveHandler extends Handler {
 										if (null == dirText
 												|| (null == text || text.isEmpty())
 												|| ((!separation && !repeat) && null == dirText.getDescription())
-												|| ((separation || repeat) && (null == code || code.isEmpty()))) {
+												|| ((!fictious && (separation || repeat)) && (null == code || code.isEmpty()))) {
 											ptext += planet.getShortName() + " " + type.getSymbol() + " " + house.getName() + "<>";
-										} else if (repeat)
+										} else if (!fictious && repeat)
 											ptext += code;
 										else if (!separation)
+											ptext += house.getName();
+										else if (fictious)
 											ptext += house.getName();
 
 							        	Chunk anchorTarget = new Chunk(ptext, colorbold);
