@@ -519,57 +519,72 @@ public class TransitSaveHandler extends Handler {
 									Planet planet = (Planet)spa.getSkyPoint1();
 									SkyPoint skyPoint = spa.getSkyPoint2();
 
-									if (optimistic) {
-										if (2 == spa.getAspect().getTypeid())
-											continue;
+									if (key.equals(Ingress._EXACT_GLOBAL)) {
+									    List<SkyPointAspect> transits = new ArrayList<SkyPointAspect>();
+										List<Object> pobjects = new ArrayList<Object>();
+										pobjects.addAll(ingressList.get(Ingress._REPEAT));
+										pobjects.addAll(ingressList.get(Ingress._REPEAT_HOUSE));
 
-										if (acode.equals("CONJUNCTION")) {
-											if (Arrays.asList(negatives).contains(planet.getCode())
-													|| Arrays.asList(negatives).contains(skyPoint.getCode()))
+										for (Object object2 : pobjects) {
+											SkyPointAspect spa2 = (SkyPointAspect)object2;
+											if (!spa2.getSkyPoint1().getId().equals(skyPoint.getId()))
 												continue;
+											transits.add(spa2);
 										}
-									}
-
-									boolean fictious = planet.isFictious();
-									if (key.contains("SEPARATION") && fictious)
-										continue;
-
-									boolean housable = skyPoint instanceof House;
-		    		                if (acode.equals("OPPOSITION")) {
-		    		                	if (planet.getCode().equals("Rakhu")
-		    		                			|| planet.getCode().equals("Kethu"))
-		    		                		continue;
-
-		    		                	if (housable) {
-		    		                		if (!spa.isRetro()
-		    		                				&& (planet.isMain() || fictious))
+										spa.setData(transits);
+										objects2.add(spa);
+									} else {
+										if (optimistic) {
+											if (2 == spa.getAspect().getTypeid())
+												continue;
+	
+											if (acode.equals("CONJUNCTION")) {
+												if (Arrays.asList(negatives).contains(planet.getCode())
+														|| Arrays.asList(negatives).contains(skyPoint.getCode()))
+													continue;
+											}
+										}
+	
+										boolean fictious = planet.isFictious();
+										if (key.contains("SEPARATION") && fictious)
 											continue;
-		    		                	} else if (skyPoint.getCode().equals("Rakhu")
-			    		                		|| skyPoint.getCode().equals("Kethu"))
-			    		                	continue;
-		    		                }
-									objects2.add(spa);
-
-									//топовые соединения с домами
-									if (key.equals(Ingress._EXACT_HOUSE)) {
-										if (acode.equals("CONJUNCTION")
-												&& !fictious
-												&& (planet.isRetrograde() || planet.isGiant())) {
-											tops.add(spa);
-											dtops.put(time, tops);
-											mtops.put(m, dtops);
-											ytops.put(y, mtops);										
-										}
-									//топовые транзиты
-									} else if (key.equals(Ingress._EXACT)) {
-										if (planet.isGiant()) {
-											tops.add(spa);
-											dtops.put(time, tops);
-											mtops.put(m, dtops);
-											ytops.put(y, mtops);
+	
+										boolean housable = skyPoint instanceof House;
+			    		                if (acode.equals("OPPOSITION")) {
+			    		                	if (planet.getCode().equals("Rakhu")
+			    		                			|| planet.getCode().equals("Kethu"))
+			    		                		continue;
+	
+			    		                	if (housable) {
+			    		                		if (!spa.isRetro()
+			    		                				&& (planet.isMain() || fictious))
+												continue;
+			    		                	} else if (skyPoint.getCode().equals("Rakhu")
+				    		                		|| skyPoint.getCode().equals("Kethu"))
+				    		                	continue;
+			    		                }
+										objects2.add(spa);
+	
+										//топовые соединения с домами
+										if (key.equals(Ingress._EXACT_HOUSE)) {
+											if (acode.equals("CONJUNCTION")
+													&& !fictious
+													&& (planet.isRetrograde() || planet.isGiant())) {
+												tops.add(spa);
+												dtops.put(time, tops);
+												mtops.put(m, dtops);
+												ytops.put(y, mtops);										
+											}
+										//топовые транзиты
+										} else if (key.equals(Ingress._EXACT)) {
+											if (planet.isGiant()) {
+												tops.add(spa);
+												dtops.put(time, tops);
+												mtops.put(m, dtops);
+												ytops.put(y, mtops);
+											}
 										}
 									}
-
 								} else if (object instanceof Planet) { //ретро или директ
 									Planet planet = (Planet)object;
 								    List<SkyPointAspect> transits = new ArrayList<SkyPointAspect>();
@@ -903,6 +918,10 @@ public class TransitSaveHandler extends Handler {
 
 						for (Map.Entry<String, List<Object>> itexts : imap.entrySet()) {
 	    		            boolean main = false;
+	    		            String key = itexts.getKey();
+    		                boolean exact = key.contains("EXACT");
+    		                boolean separation = key.contains("SEPARATION");
+    		                boolean repeat = key.contains("REPEAT");
 
 							List<Object> ingresses = itexts.getValue();
 							for (Object object : ingresses) {
@@ -912,211 +931,313 @@ public class TransitSaveHandler extends Handler {
 								if (object instanceof SkyPointAspect) {
 									SkyPointAspect spa = (SkyPointAspect)object;
 									Planet planet = (Planet)spa.getSkyPoint1();
-									boolean retro = spa.isRetro();
-			    		            boolean fictious = planet.isFictious();
-									
-									if (important) {
-										if (!spa.getAspect().getCode().equals("CONJUNCTION")
-												&& (fictious || planet.getCode().equals("Moon")))
-	    		                			continue;
-		    		                }
-
-		    		                main = planet.isMain();
-		    		                boolean exact = itexts.getKey().contains("EXACT");
-		    		                boolean separation = itexts.getKey().contains("SEPARATION");
-		    		                boolean repeat = itexts.getKey().contains("REPEAT");
-		    		                if (main && (separation || repeat))
-		        		                continue;
-
 									SkyPoint skyPoint = spa.getSkyPoint2();
-									String acode = spa.getAspect().getCode();
-			    		            String rduration = spa.isRetro() ? " и более" : "";
 
-									String prefix = "";
-									if (!main && !fictious) {
-		               	                if (exact)
-		               	                	prefix = "Начинается: ";
-										else if (repeat)
-											prefix = "Продолжается: ";
-										else if (separation)
-											prefix = "Заканчивается: ";
-									}
-									AspectType type = spa.getAspect().getType();
-									String typeColor = type.getFontColor();
-									BaseColor color = PDFUtil.htmlColor2Base(typeColor);
-									Font colorbold = new Font(baseFont, 12, Font.BOLD, color);
-				    				String tduration = separation ? "" : spa.getTransitDuration();
+									if (key.equals(Ingress._EXACT_GLOBAL)) {
+					    				@SuppressWarnings("unchecked")
+										List<SkyPointAspect> transits = (List<SkyPointAspect>)spa.getData();
+					    				boolean notransits = (null == transits || transits.isEmpty());
+					    				if (!term && notransits)
+					    					continue;
 
-									if (skyPoint instanceof House) {
-										House house = (House)skyPoint;
-	
-			    		                if (!acode.equals("CONJUNCTION")
-												&& planet.getCode().equals("Moon"))
-											continue;
-	
-										DirectionText dirText = (DirectionText)service.find(planet, house, type);
-										if (dirText != null) {
-											text = retro ? dirText.getRetro() : dirText.getDescription();
-											code = dirText.getCode();
-										}
-										String ptext = prefix;
-										if (null == dirText
-												|| (null == text || text.isEmpty())
-												|| ((!separation && !repeat) && null == dirText.getDescription())
-												|| ((!fictious && (separation || repeat)) && (null == code || code.isEmpty()))) {
-											ptext += planet.getShortName() + " " + type.getSymbol() + " " + house.getName() + "<>";
-										} else if (!fictious && repeat)
-											ptext += code;
-										else if (!separation)
-											ptext += house.getName();
-										else if (fictious)
-											ptext += house.getName();
-
-							        	Chunk anchorTarget = new Chunk(ptext, colorbold);
+										String ptext = planet.getName() + " и " + skyPoint.getName() + " в соединении";
+							        	Chunk anchorTarget = new Chunk(ptext, bold);
 							        	anchorTarget.setLocalDestination(spa.getCode() + dentry.getKey());
 					    				daysection.addSection(new Paragraph(anchorTarget));
-					    				if (term) {
-											String pretext = spa.getAspect().getCode().equals("CONJUNCTION")
-												? (null == house.getGeneral() ? "с куспидом" : "с вершиной")
-												: (null == house.getGeneral() ? "к куспиду" : "к вершине");
 
-											p = new Paragraph();
-											p.add(new Chunk(spa.getAspect().getName() + " транзитной " + (retro ? "ретро-" : "") + "планеты ", grayfont));
-											p.add(new Chunk(planet.getSymbol(), afont));
-											p.add(new Chunk(" " + planet.getName(), grayfont));
-											p.add(new Chunk(" из " + CalcUtil.roundTo(planet.getLongitude(), 2) + "° (", grayfont));
-											Sign sign = planet.getSign();
-						    				p.add(new Chunk(sign.getSymbol(), afont));
-						    				p.add(new Chunk(" " + sign.getName(), grayfont));
-						    				String mark = planet.getMark("sign", term, lang);
-						    				p.add(new Chunk((mark.isEmpty() ? "" : " " + mark) + ", ", grayfont));
-						    				House house2 = planet.getHouse();
-											p.add(new Chunk(house2.getDesignation() + " дом, сектор «" + house2.getName() + "»", grayfont));
-											mark = planet.getMark("house", term, lang);
-						    				p.add(new Chunk((mark.isEmpty() ? "" : " " + mark) + ") ", grayfont));
-											p.add(new Chunk(pretext + " " + house.getDesignation() + " дома", grayfont));
-						    				if (!acode.equals("CONJUNCTION"))
-												p.add(new Chunk(" (сектор «" + house.getName() + "»)", grayfont));
-											daysection.add(p);
-					    				} else if (tduration.length() > 0 && !repeat)
-						    				daysection.add(new Paragraph("Длительность прогноза: " + tduration + rduration, grayfont));
-
-									} else if (skyPoint instanceof Planet) {
-										long aspectid = 0;
-										boolean checktype = false;
-										Planet planet2 = (Planet)skyPoint;
-										boolean revolution = planet.getId().equals(planet2.getId());
-										if (planet.getCode().equals("Moon")
-												&& !acode.equals("CONJUNCTION"))
-								            aspectid = spa.getAspect().getId();
-
-										DirectionAspectText dirText = (DirectionAspectText)servicea.find(spa, aspectid, checktype);
-										if (dirText != null) {
-											text = retro ? dirText.getRetro() : dirText.getDescription();
-											code = dirText.getCode();
-										}
-										String ptext = prefix;
-										if (null == dirText
-												|| (null == text || text.isEmpty())
-												|| ((!separation && !repeat) && null == dirText.getDescription())
-												|| ((separation || repeat) && (null == code || code.isEmpty()))) {
-											ptext += planet.getShortName() + "<>";
-											if (!revolution)
-												ptext += " " + type.getSymbol() + " " + planet2.getShortName() + "<>";
-										} else if (repeat) {
-											ptext += code;
-										} else if (!separation) {
-											boolean bad = type.getPoints() < 0
-												|| (type.getCode().equals("NEUTRAL")
-													&& (Arrays.asList(pnegative).contains(planet.getCode())
-														|| Arrays.asList(pnegative).contains(skyPoint.getCode())));
-						    				String pname = bad ? planet.getAspectingBadName() : planet.getAspectingName();
-						    				String pname2 = bad ? planet2.getAspectedBadName() : planet2.getAspectedName();
-											ptext += pname;
-											if (!revolution)
-												ptext += " " + type.getSymbol() + " " + pname2;
-										}
-
-							        	Chunk anchorTarget = new Chunk(ptext, colorbold);
-							        	anchorTarget.setLocalDestination(spa.getCode() + dentry.getKey());
-					    				daysection.addSection(new Paragraph(anchorTarget));
-										if (term) {
-											String pretext = spa.getAspect().getCode().equals("CONJUNCTION")
-												? "с натальной планетой"
-												: "к натальной планете";
-
-						    				p = new Paragraph();
-						    				if (dirText != null)
-						    					p.add(new Chunk(dirText.getMark() + " ", grayfont));
-								    		p.add(new Chunk(spa.getAspect().getName() + " транзитной " + (retro ? "ретро-" : "") + "планеты ", grayfont));
-						    				p.add(new Chunk(planet.getSymbol(), afont));
-						    				p.add(new Chunk(" " + planet.getName(), grayfont));
-											p.add(new Chunk(" из " + CalcUtil.roundTo(planet.getLongitude(), 2) + "° (", grayfont));
-											Sign sign = planet.getSign();
-						    				p.add(new Chunk(sign.getSymbol(), afont));
-						    				p.add(new Chunk(" " + sign.getName() + ", ", grayfont));
-						    				House house = planet.getHouse();
-						    				p.add(new Chunk(house.getDesignation() + " дом, сектор «" + house.getName() + "») ", grayfont));
-								    		p.add(new Chunk(pretext + " ", grayfont));
-						    				p.add(new Chunk(planet2.getSymbol(), afont));
-						    				p.add(new Chunk(" " + planet2.getName(), grayfont));
-						    				if (acode.equals("CONJUNCTION")) {
-												Sign sign2 = planet2.getSign();
-							    				p.add(new Chunk(" (" + sign2.getSymbol(), afont));
-							    				p.add(new Chunk(" " + sign2.getName() + ", ", grayfont));
-							    				House house2 = planet2.getHouse();
-							    				p.add(new Chunk(house2.getDesignation() + " дом, сектор «" + house2.getName() + "») ", grayfont));
-						    				}
-						    				daysection.add(p);
-										} else if (tduration.length() > 0 && !repeat)
-						    				daysection.add(new Paragraph("Длительность прогноза: " + tduration + rduration, grayfont));
-									}
-	
-									if (text != null) {
-										String descr = "";
-			               	            if (main)
-			               	                descr = text;
-			               	            else {
-			               	                if (exact)
-			               	                    descr = text;
-			               	            	else
-			               	                    descr = repeat ? text : code;
-			               	            }
-										p = new Paragraph();
-										if (null == descr)
-											descr = "";
-										p.add(new Chunk(descr, new Font(baseFont, 12, Font.NORMAL, color)));
-										daysection.add(p);
-									}
-									if (retro
-											&& !separation
-											&& !fictious
-											&& !type.getCode().contains("POSITIVE")) {
-										Phrase phrase = new Phrase();
-										if (term) {
-											phrase.add(new Chunk("В этот период " + planet.getName() + " находится в ", grayfont));
-											PlanetText planetText = (PlanetText)servicep.findByPlanet(planet.getId(), "retro");
-											if (planetText != null && planetText.getUrl() != null) {
-										        Chunk ch = new Chunk("ретро-фазе", PDFUtil.getLinkFont());
-										        ch.setAnchor(planetText.getUrl());
-										        phrase.add(ch);
-											} else
-												phrase.add(new Chunk("ретро-фазе", grayfont));
-											phrase.add(new Chunk(", поэтому длительность прогноза затянется, а описанные события ", grayfont));
-											String str = acode.equals("CONJUNCTION")
-												? "приобретут для вас особую важность и в будущем ещё напомнят о себе"
-												: "будут носить необратимый характер";
-											phrase.add(new Chunk(str, grayfont));
+										if (notransits) {
+											if (term)
+												daysection.add(new Paragraph("Как-то ощутимо на вас это не повлияет", grayfont));
 										} else {
-											phrase.add(new Chunk("Длительность прогноза затянется, а описанные события ", grayfont));
-											String str = acode.equals("CONJUNCTION")
-												? "приобретут для вас особую важность и в будущем ещё напомнят о себе"
-												: "будут носить необратимый характер";
-											phrase.add(new Chunk(str, grayfont));											
-										}
-										daysection.add(new Paragraph(phrase));
-									}
+											if (term) {
+												daysection.add(new Paragraph("Сегодня орбиты планет " + planet.getName() + " и " + skyPoint.getName() + " пересеклись, поэтому снова станут актуальны следующие прогнозы:", font));
+											} else
+												daysection.add(new Paragraph("Поэтому сегодня ожидается пик прогноза, озвученного ранее:", grayfont));
 
+											for (SkyPointAspect spa2 : transits) {
+												Planet planet1 = (Planet)spa2.getSkyPoint1();
+												SkyPoint skyPoint2 = spa2.getSkyPoint2();
+												AspectType type = spa2.getAspect().getType();
+												String typeColor = type.getFontColor();
+												BaseColor color = PDFUtil.htmlColor2Base(typeColor);
+												Font colorbold = new Font(baseFont, 12, Font.NORMAL, color);
+												daysection.add(Chunk.NEWLINE);
+
+												if (skyPoint2 instanceof House) {
+													House house = (House)skyPoint2;
+													DirectionText dirText = (DirectionText)service.find(planet1, house, type);
+													if (dirText != null)
+														text = planet1.isRetrograde() ? dirText.getRetro() : dirText.getDescription();
+
+													ptext = (null == dirText || null == dirText.getDescription())
+														? planet.getShortName() + " " + type.getSymbol() + " " + house.getName() + "<>"
+														: text;
+
+								    				if (term) {
+														String pretext = spa2.getAspect().getCode().equals("CONJUNCTION")
+															? (null == house.getGeneral() ? "с куспидом" : "с вершиной")
+															: (null == house.getGeneral() ? "к куспиду" : "к вершине");
+
+														p = new Paragraph();
+														p.add(new Chunk(planet.getMark("house", term, lang) + " ", grayfont));
+														p.add(new Chunk(spa2.getAspect().getName() + " транзитной планеты ", grayfont));
+														p.add(new Chunk(planet.getSymbol(), afont));
+														p.add(new Chunk(" " + planet.getName(), grayfont));
+														p.add(new Chunk(" из " + CalcUtil.roundTo(planet.getLongitude(), 2) + "° (", grayfont));
+														Sign sign = planet.getSign();
+									    				p.add(new Chunk(sign.getSymbol(), afont));
+									    				p.add(new Chunk(" " + sign.getName() + ", ", grayfont));
+									    				House house2 = planet.getHouse();
+														p.add(new Chunk(house2.getDesignation() + " дом, сектор «" + house2.getName() + "») ", grayfont));
+														p.add(new Chunk(pretext + " " + house.getDesignation() + " дома (сектор «" + house.getName() + "»)", grayfont));
+														daysection.add(p);					    					
+								    				}
+													daysection.add(new Paragraph(ptext, colorbold));
+												} else if (skyPoint2 instanceof Planet) {
+													long aspectid = 0;
+													Planet planet2 = (Planet)skyPoint2;
+													boolean revolution = planet.getId().equals(planet2.getId());
+				
+													DirectionAspectText dirText = (DirectionAspectText)servicea.find(spa2, aspectid, false);
+													if (dirText != null)
+														text = planet2.isRetrograde() ? dirText.getRetro() : dirText.getDescription();
+
+													ptext = (null == dirText || null == dirText.getDescription())
+														? planet.getShortName() + (revolution ? "" : " " + type.getSymbol() + " " + planet2.getShortName() + "<>")
+														: text;
+
+													if (term) {
+														String pretext = spa2.getAspect().getCode().equals("CONJUNCTION")
+															? "с натальной планетой"
+															: "к натальной планете";
+
+									    				p = new Paragraph();
+									    				if (dirText != null)
+									    					p.add(new Chunk(dirText.getMark() + " ", grayfont));
+											    		p.add(new Chunk(spa2.getAspect().getName() + " транзитной планеты ", grayfont));
+									    				p.add(new Chunk(planet.getSymbol(), afont));
+									    				p.add(new Chunk(" " + planet.getName(), grayfont));
+														p.add(new Chunk(" из " + CalcUtil.roundTo(planet.getLongitude(), 2) + "° (", grayfont));
+														Sign sign = planet.getSign();
+									    				p.add(new Chunk(sign.getSymbol(), afont));
+									    				p.add(new Chunk(" " + sign.getName() + ", ", grayfont));
+									    				House house = planet.getHouse();
+									    				p.add(new Chunk(house.getDesignation() + " дом, сектор «" + house.getName() + "») ", grayfont));
+											    		p.add(new Chunk(pretext + " ", grayfont));
+									    				p.add(new Chunk(planet2.getSymbol(), afont));
+									    				p.add(new Chunk(" " + planet2.getName(), grayfont));
+														Sign sign2 = planet2.getSign();
+									    				p.add(new Chunk(" (" + sign2.getSymbol(), afont));
+									    				p.add(new Chunk(" " + sign2.getName() + ", ", grayfont));
+									    				House house2 = planet2.getHouse();
+									    				p.add(new Chunk(house2.getDesignation() + " дом, сектор «" + house2.getName() + "») ", grayfont));
+									    				daysection.add(p);
+													}
+													daysection.add(new Paragraph(ptext, colorbold));												
+												}
+											}
+										}
+									} else {
+										boolean retro = spa.isRetro();
+				    		            boolean fictious = planet.isFictious();
+										
+										if (important) {
+											if (!spa.getAspect().getCode().equals("CONJUNCTION")
+													&& (fictious || planet.getCode().equals("Moon")))
+		    		                			continue;
+			    		                }
+	
+			    		                main = planet.isMain();
+			    		                if (main && (separation || repeat))
+			        		                continue;
+	
+										String acode = spa.getAspect().getCode();
+				    		            String rduration = spa.isRetro() ? " и более" : "";
+	
+										String prefix = "";
+										if (!main && !fictious) {
+			               	                if (exact)
+			               	                	prefix = "Начинается: ";
+											else if (repeat)
+												prefix = "Продолжается: ";
+											else if (separation)
+												prefix = "Заканчивается: ";
+										}
+										AspectType type = spa.getAspect().getType();
+										String typeColor = type.getFontColor();
+										BaseColor color = PDFUtil.htmlColor2Base(typeColor);
+										Font colorbold = new Font(baseFont, 12, Font.BOLD, color);
+					    				String tduration = separation ? "" : spa.getTransitDuration();
+	
+										if (skyPoint instanceof House) {
+											House house = (House)skyPoint;
+		
+				    		                if (!acode.equals("CONJUNCTION")
+													&& planet.getCode().equals("Moon"))
+												continue;
+		
+											DirectionText dirText = (DirectionText)service.find(planet, house, type);
+											if (dirText != null) {
+												text = retro ? dirText.getRetro() : dirText.getDescription();
+												code = dirText.getCode();
+											}
+											String ptext = prefix;
+											if (null == dirText
+													|| (null == text || text.isEmpty())
+													|| ((!separation && !repeat) && null == dirText.getDescription())
+													|| ((!fictious && (separation || repeat)) && (null == code || code.isEmpty()))) {
+												ptext += planet.getShortName() + " " + type.getSymbol() + " " + house.getName() + "<>";
+											} else if (!fictious && repeat)
+												ptext += code;
+											else if (!separation)
+												ptext += house.getName();
+											else if (fictious)
+												ptext += house.getName();
+	
+								        	Chunk anchorTarget = new Chunk(ptext, colorbold);
+								        	anchorTarget.setLocalDestination(spa.getCode() + dentry.getKey());
+						    				daysection.addSection(new Paragraph(anchorTarget));
+						    				if (term) {
+												String pretext = spa.getAspect().getCode().equals("CONJUNCTION")
+													? (null == house.getGeneral() ? "с куспидом" : "с вершиной")
+													: (null == house.getGeneral() ? "к куспиду" : "к вершине");
+	
+												p = new Paragraph();
+												p.add(new Chunk(spa.getAspect().getName() + " транзитной " + (retro ? "ретро-" : "") + "планеты ", grayfont));
+												p.add(new Chunk(planet.getSymbol(), afont));
+												p.add(new Chunk(" " + planet.getName(), grayfont));
+												p.add(new Chunk(" из " + CalcUtil.roundTo(planet.getLongitude(), 2) + "° (", grayfont));
+												Sign sign = planet.getSign();
+							    				p.add(new Chunk(sign.getSymbol(), afont));
+							    				p.add(new Chunk(" " + sign.getName(), grayfont));
+							    				String mark = planet.getMark("sign", term, lang);
+							    				p.add(new Chunk((mark.isEmpty() ? "" : " " + mark) + ", ", grayfont));
+							    				House house2 = planet.getHouse();
+												p.add(new Chunk(house2.getDesignation() + " дом, сектор «" + house2.getName() + "»", grayfont));
+												mark = planet.getMark("house", term, lang);
+							    				p.add(new Chunk((mark.isEmpty() ? "" : " " + mark) + ") ", grayfont));
+												p.add(new Chunk(pretext + " " + house.getDesignation() + " дома", grayfont));
+							    				if (!acode.equals("CONJUNCTION"))
+													p.add(new Chunk(" (сектор «" + house.getName() + "»)", grayfont));
+												daysection.add(p);
+						    				} else if (tduration.length() > 0 && !repeat)
+							    				daysection.add(new Paragraph("Длительность прогноза: " + tduration + rduration, grayfont));
+	
+										} else if (skyPoint instanceof Planet) {
+											long aspectid = 0;
+											boolean checktype = false;
+											Planet planet2 = (Planet)skyPoint;
+											boolean revolution = planet.getId().equals(planet2.getId());
+											if (planet.getCode().equals("Moon")
+													&& !acode.equals("CONJUNCTION"))
+									            aspectid = spa.getAspect().getId();
+	
+											DirectionAspectText dirText = (DirectionAspectText)servicea.find(spa, aspectid, checktype);
+											if (dirText != null) {
+												text = retro ? dirText.getRetro() : dirText.getDescription();
+												code = dirText.getCode();
+											}
+											String ptext = prefix;
+											if (null == dirText
+													|| (null == text || text.isEmpty())
+													|| ((!separation && !repeat) && null == dirText.getDescription())
+													|| ((separation || repeat) && (null == code || code.isEmpty()))) {
+												ptext += planet.getShortName() + "<>";
+												if (!revolution)
+													ptext += " " + type.getSymbol() + " " + planet2.getShortName() + "<>";
+											} else if (repeat) {
+												ptext += code;
+											} else if (!separation) {
+												boolean bad = type.getPoints() < 0
+													|| (type.getCode().equals("NEUTRAL")
+														&& (Arrays.asList(pnegative).contains(planet.getCode())
+															|| Arrays.asList(pnegative).contains(skyPoint.getCode())));
+							    				String pname = bad ? planet.getAspectingBadName() : planet.getAspectingName();
+							    				String pname2 = bad ? planet2.getAspectedBadName() : planet2.getAspectedName();
+												ptext += pname;
+												if (!revolution)
+													ptext += " " + type.getSymbol() + " " + pname2;
+											}
+	
+								        	Chunk anchorTarget = new Chunk(ptext, colorbold);
+								        	anchorTarget.setLocalDestination(spa.getCode() + dentry.getKey());
+						    				daysection.addSection(new Paragraph(anchorTarget));
+											if (term) {
+												String pretext = spa.getAspect().getCode().equals("CONJUNCTION")
+													? "с натальной планетой"
+													: "к натальной планете";
+	
+							    				p = new Paragraph();
+							    				if (dirText != null)
+							    					p.add(new Chunk(dirText.getMark() + " ", grayfont));
+									    		p.add(new Chunk(spa.getAspect().getName() + " транзитной " + (retro ? "ретро-" : "") + "планеты ", grayfont));
+							    				p.add(new Chunk(planet.getSymbol(), afont));
+							    				p.add(new Chunk(" " + planet.getName(), grayfont));
+												p.add(new Chunk(" из " + CalcUtil.roundTo(planet.getLongitude(), 2) + "° (", grayfont));
+												Sign sign = planet.getSign();
+							    				p.add(new Chunk(sign.getSymbol(), afont));
+							    				p.add(new Chunk(" " + sign.getName() + ", ", grayfont));
+							    				House house = planet.getHouse();
+							    				p.add(new Chunk(house.getDesignation() + " дом, сектор «" + house.getName() + "») ", grayfont));
+									    		p.add(new Chunk(pretext + " ", grayfont));
+							    				p.add(new Chunk(planet2.getSymbol(), afont));
+							    				p.add(new Chunk(" " + planet2.getName(), grayfont));
+							    				if (acode.equals("CONJUNCTION")) {
+													Sign sign2 = planet2.getSign();
+								    				p.add(new Chunk(" (" + sign2.getSymbol(), afont));
+								    				p.add(new Chunk(" " + sign2.getName() + ", ", grayfont));
+								    				House house2 = planet2.getHouse();
+								    				p.add(new Chunk(house2.getDesignation() + " дом, сектор «" + house2.getName() + "») ", grayfont));
+							    				}
+							    				daysection.add(p);
+											} else if (tduration.length() > 0 && !repeat)
+							    				daysection.add(new Paragraph("Длительность прогноза: " + tduration + rduration, grayfont));
+										}
+										if (text != null) {
+											String descr = "";
+				               	            if (main)
+				               	                descr = text;
+				               	            else {
+				               	                if (exact)
+				               	                    descr = text;
+				               	            	else
+				               	                    descr = repeat ? text : code;
+				               	            }
+											p = new Paragraph();
+											if (null == descr)
+												descr = "";
+											p.add(new Chunk(descr, new Font(baseFont, 12, Font.NORMAL, color)));
+											daysection.add(p);
+										}
+										if (retro
+												&& !separation
+												&& !fictious
+												&& !type.getCode().contains("POSITIVE")) {
+											Phrase phrase = new Phrase();
+											if (term) {
+												phrase.add(new Chunk("В этот период " + planet.getName() + " находится в ", grayfont));
+												PlanetText planetText = (PlanetText)servicep.findByPlanet(planet.getId(), "retro");
+												if (planetText != null && planetText.getUrl() != null) {
+											        Chunk ch = new Chunk("ретро-фазе", PDFUtil.getLinkFont());
+											        ch.setAnchor(planetText.getUrl());
+											        phrase.add(ch);
+												} else
+													phrase.add(new Chunk("ретро-фазе", grayfont));
+												phrase.add(new Chunk(", поэтому длительность прогноза затянется, а описанные события ", grayfont));
+												String str = acode.equals("CONJUNCTION")
+													? "приобретут для вас особую важность и в будущем ещё напомнят о себе"
+													: "будут носить необратимый характер";
+												phrase.add(new Chunk(str, grayfont));
+											} else {
+												phrase.add(new Chunk("Длительность прогноза затянется, а описанные события ", grayfont));
+												String str = acode.equals("CONJUNCTION")
+													? "приобретут для вас особую важность и в будущем ещё напомнят о себе"
+													: "будут носить необратимый характер";
+												phrase.add(new Chunk(str, grayfont));											
+											}
+											daysection.add(new Paragraph(phrase));
+										}
+									}
 								//изменение движения планеты
 								} else if (object instanceof Planet) {
 									Planet planet = (Planet)object;
@@ -1126,10 +1247,10 @@ public class TransitSaveHandler extends Handler {
 				    				if (!term && notransits)
 				    					continue;
 
-									boolean motion = itexts.getKey().contains("MOTION");
+									boolean motion = key.contains("MOTION");
 									if (!motion)
 										continue;
-									boolean direct = itexts.getKey().equals(Ingress._DIRECT);
+									boolean direct = key.equals(Ingress._DIRECT);
 									String direction = direct ? "директное" : "обратное";
 									String ptext = planet.getName() + " переходит в " + direction + " движение";
 						        	Chunk anchorTarget = new Chunk(ptext, bold);
