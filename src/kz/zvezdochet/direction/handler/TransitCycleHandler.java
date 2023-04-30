@@ -85,11 +85,13 @@ public class TransitCycleHandler extends Handler {
 			TransitPart periodPart = (TransitPart)activePart.getObject();
 			if (!periodPart.check(0)) return;
 
+			Event person = periodPart.getPerson();
+			Place place = periodPart.getPlace();
+			Map<Long, House> houses = person.getHouses();
+
 			String lang = Locale.getDefault().getLanguage();
 			//boolean rus = lang.equals("ru");
 
-			Event person = periodPart.getPerson();
-			Map<Long, House> houses = person.getHouses();
 			int choice = DialogUtil.alertQuestion("Вопрос", "Выберите тип прогноза:", new String[] {"Реалистичный", "Оптимистичный"});
 			boolean optimistic = choice > 0;
 			int category = DialogUtil.alertQuestion("Вопрос", "Выберите тип прогноза:", new String[] {"Полный", "Работа"});
@@ -130,9 +132,13 @@ public class TransitCycleHandler extends Handler {
 			PDFUtil.printHeader(p, "Важные периоды", null);
 			chapter.add(p);
 
+			if (null == place)
+				place = new Place().getDefault();
+			boolean pdefault = place.getId().equals(place.getDefault().getId());
+
 			String text = (person.isCelebrity() ? person.getName(lang) : person.getCallname(lang));
 			text += ", " + Messages.getString("forecast for the period") + ": ";
-			SimpleDateFormat sdf = new SimpleDateFormat("EEEE, d MMMM yyyy");
+			SimpleDateFormat sdf = new SimpleDateFormat("d MMMM yyyy");
 			SimpleDateFormat spf = new SimpleDateFormat("d MMMM");
 			text += sdf.format(initDate);
 			boolean days = (DateUtil.getDateFromDate(initDate) != DateUtil.getDateFromDate(finalDate)
@@ -151,6 +157,8 @@ public class TransitCycleHandler extends Handler {
 			}
 			p = new Paragraph(text, font);
 	        p.setAlignment(Element.ALIGN_CENTER);
+			if (!person.isRectified())
+				p.add(new Chunk(" (" + kz.zvezdochet.core.Messages.getString("not rectified") + ")", PDFUtil.getDangerFont()));
 			chapter.add(p);
 
 			Font fontgray = PDFUtil.getAnnotationFont(false);
@@ -182,9 +190,17 @@ public class TransitCycleHandler extends Handler {
 			p = new Paragraph();
 			String divergence = person.isRectified() ? "1 день" : "2 дня";
 			p.add(new Chunk("Общая погрешность прогноза составляет ±" + divergence + ". ", red));
+			p.add(new Chunk("Это значит, что описанное событие может произойти на день раньше, если длительность прогноза составляет более одного дня (в толковании вы это увидите).", font));
 			chapter.add(p);
 			chapter.add(Chunk.NEWLINE);
 
+	        if (!pdefault) {
+	        	divergence = person.isRectified() ? "2 дня" : "3 дня";
+				chapter.add(new Paragraph("Прогноз сделан для локации «" + place.getName(lang) + "». "
+					+ "Если в течение прогнозного периода вы переедете в более отдалённое место (в другой часовой пояс или с ощутимой сменой географической широты), "
+					+ "то погрешность некоторых прогнозов может составить ±" + divergence + ".", font));
+				chapter.add(Chunk.NEWLINE);
+	        }
 			chapter.add(new Paragraph("Если длительность прогноза исчисляется днями, неделями и месяцами, то это не значит, что каждый день будет что-то происходить. "
 	        	+ "Просто вероятность описанных событий будет сохраняться в течение всего периода. "
 	        	+ "Чаще всего прогноз ярко проявляет себя в первый же день периода, но может сбыться и позже.", font));
@@ -333,7 +349,7 @@ public class TransitCycleHandler extends Handler {
 						Event event = new Event();
 						Date edate = DateUtil.getDatabaseDateTime(sdate);
 						event.setBirth(edate);
-						event.setPlace(new Place().getDefault());
+						event.setPlace(place);
 						event.setZone(0);
 						event.calc(true);
 
