@@ -42,9 +42,7 @@ import com.itextpdf.text.pdf.BaseFont;
 import com.itextpdf.text.pdf.PdfWriter;
 
 import kz.zvezdochet.analytics.bean.PlanetAspectText;
-import kz.zvezdochet.analytics.bean.Rule;
 import kz.zvezdochet.analytics.bean.Sphere;
-import kz.zvezdochet.analytics.exporter.EventRules;
 import kz.zvezdochet.analytics.service.SphereService;
 import kz.zvezdochet.bean.Aspect;
 import kz.zvezdochet.bean.AspectType;
@@ -498,13 +496,6 @@ public class DayTimesExportHandler extends Handler {
 											li.setSpacingAfter(10);
 									        alist.add(li);
 										};
-									}
-									Rule rule = EventRules.ruleDirectionAspect(item.getPlanetAspect());
-									if (rule != null) {
-										li = new ListItem();
-										li.add(new Phrase(PDFUtil.removeTags(rule.getText(), afont)));
-										li.setSpacingAfter(10);
-								        alist.add(li);
 									}
 								}
 							}
